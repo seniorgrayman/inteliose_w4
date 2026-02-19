@@ -25,17 +25,17 @@ const HeroSection = () => {
       </div>
 
       {/* Floating Badge */}
-      <div className="absolute bottom-12 right-12 z-20 hidden md:flex items-center gap-3 bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-blue-500/20 p-4 rounded-2xl max-w-xs">
+      <a href="/dashboard" className="absolute bottom-12 right-12 z-20 hidden md:flex items-center gap-3 bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-blue-500/20 p-4 rounded-2xl max-w-xs">
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Status</p>
           <p className="text-sm leading-snug">Plain-English intelligence.<br />Actionable next steps.<br />Built for Base.</p>
         </div>
         <div className="flex gap-2 ml-4 self-end">
-          <button className="h-8 w-8 rounded-full bg-white flex items-center justify-center hover:bg-gray-200 transition">
+          <span className="h-8 w-8 rounded-full bg-white flex items-center justify-center hover:bg-gray-200 transition">
             <ArrowRight className="text-foreground" size={16} />
-          </button>
+          </span>
         </div>
-      </div>
+      </a>
     </section>
   );
 };

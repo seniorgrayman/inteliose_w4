@@ -96,9 +96,9 @@ const HowItWorksSection = () => {
               <p className="text-blue-200 leading-relaxed mb-12 text-[15px]">
                 Analyze your token. Understand your risk. Act before narratives form.
               </p>
-              <button className="w-full py-3 bg-white text-primary rounded-full font-medium hover:bg-blue-50 transition-colors">
+              <a href="/dashboard" className="w-full py-3 bg-white text-primary rounded-full font-medium hover:bg-blue-50 transition-colors block text-center">
                 Analyze Token
-              </button>
+              </a>
             </div>
 
             {/* Glow */}

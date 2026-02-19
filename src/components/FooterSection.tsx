@@ -1,5 +1,18 @@
-import { ArrowRight, Radar, Twitter, MessageCircle, Circle } from "lucide-react";
+import { ArrowRight, Radar, Send } from "lucide-react";
+import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import footerBgVideo from "@/assets/footer-bg-video.mp4";
+
+const scrollTo = (id: string) => {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+const XIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
+);
 
 const FooterSection = () => {
   return (
@@ -9,7 +22,6 @@ const FooterSection = () => {
         <video autoPlay muted loop playsInline className="w-full h-full object-cover">
           <source src={footerBgVideo} type="video/mp4" />
         </video>
-        
       </div>
       {/* Glow */}
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
@@ -28,9 +40,9 @@ const FooterSection = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button className="px-8 py-3 rounded-full bg-gradient-to-b from-primary to-blue-800 text-white hover:brightness-110 transition-all shadow-[0_0_25px_rgba(0,0,255,0.2)] flex items-center gap-2 border border-primary/20">
+          <Link to="/dashboard" className="px-8 py-3 rounded-full bg-gradient-to-b from-primary to-blue-800 text-white hover:brightness-110 transition-all shadow-[0_0_25px_rgba(0,0,255,0.2)] flex items-center gap-2 border border-primary/20">
             Analyze Your Token Now <ArrowRight size={16} />
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -48,11 +60,17 @@ const FooterSection = () => {
             Inteliose provides intelligence tools and risk analysis. It does not provide financial advice.
           </p>
           <div className="flex gap-4 pt-2">
-            {[Twitter, MessageCircle, Circle].map((Icon, i) => (
-              <a key={i} href="#" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors text-primary/70 hover:text-primary border border-primary/20">
-                <Icon size={18} />
-              </a>
-            ))}
+            {/* X (Twitter) */}
+            <a href="https://x.com/inteliose" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors text-primary/70 hover:text-primary border border-primary/20">
+              <XIcon size={16} />
+            </a>
+            {/* Telegram - Coming Soon */}
+            <button
+              onClick={() => toast.info("Telegram coming soon!")}
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors text-primary/70 hover:text-primary border border-primary/20"
+            >
+              <Send size={16} />
+            </button>
           </div>
         </div>
 
@@ -60,18 +78,16 @@ const FooterSection = () => {
           <div className="space-y-6">
             <h4 className="text-primary">Product</h4>
             <ul className="space-y-3 text-sm text-primary/60">
-              <li><a href="#" className="hover:text-primary transition-colors">Modules</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Dashboard</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Docs</a></li>
+              <li><button onClick={() => scrollTo("modules")} className="hover:text-primary transition-colors">Modules</button></li>
+              <li><Link to="/dashboard" className="hover:text-primary transition-colors">Dashboard</Link></li>
+              <li><button onClick={() => scrollTo("faq")} className="hover:text-primary transition-colors">FAQ</button></li>
             </ul>
           </div>
           <div className="space-y-6">
             <h4 className="text-primary">Company</h4>
             <ul className="space-y-3 text-sm text-primary/60">
-              <li><a href="#" className="hover:text-primary transition-colors">About</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Privacy</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Terms</a></li>
+              <li><button onClick={() => scrollTo("context")} className="hover:text-primary transition-colors">About</button></li>
+              <li><button onClick={() => scrollTo("how-it-works")} className="hover:text-primary transition-colors">How It Works</button></li>
             </ul>
           </div>
         </div>

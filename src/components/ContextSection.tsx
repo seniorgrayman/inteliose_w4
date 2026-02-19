@@ -27,7 +27,10 @@ const ContextSection = () => {
             We help founders classify profiles, identify risk baselines, and detect early-stage failure modes.
           </p>
 
-          <button className="group flex items-center gap-3 bg-primary text-white pl-5 pr-2 py-2 rounded-full text-base font-medium hover:opacity-90 transition-all">
+          <button
+            onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="group flex items-center gap-3 bg-primary text-white pl-5 pr-2 py-2 rounded-full text-base font-medium hover:opacity-90 transition-all"
+          >
             <span>See How It Works</span>
             <span className="bg-white text-primary rounded-full w-8 h-8 flex items-center justify-center group-hover:scale-110 transition-transform">
               <ArrowDown size={16} />
@@ -87,9 +90,9 @@ const ContextSection = () => {
               <p className="text-sm text-primary/70 line-clamp-3 mb-4">
                 Inteliose runs on Base for a reason. Low-cost transactions, Ethereum-grade security, and seamless Coinbase ecosystem access.
               </p>
-              <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full text-sm hover:opacity-90 transition">
+              <a href="/dashboard" className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full text-sm hover:opacity-90 transition">
                 Explore Ecosystem <ArrowRight size={14} />
-              </button>
+              </a>
             </div>
           </div>
         </div>
