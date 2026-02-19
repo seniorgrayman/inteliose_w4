@@ -4,11 +4,11 @@ import founderVideo from "@/assets/dashboard-bg-video.mp4";
 
 const HowItWorksSection = () => {
   return (
-    <section className="overflow-hidden bg-secondary/50 border-border/60 border-b pt-24 pb-24 relative">
+    <section id="how-it-works" className="overflow-hidden bg-secondary/50 border-border/60 border-b pt-16 pb-16 md:pt-24 md:pb-24 relative">
       <div className="lg:px-8 max-w-[1400px] mx-auto px-6">
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-20 gap-8">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl text-foreground max-w-4xl leading-[1.05] font-display font-medium tracking-tighter">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-foreground max-w-4xl leading-[1.05] font-display font-medium tracking-tighter">
             From Contract Address <span className="text-primary">to Clear Action.</span>
           </h2>
           <a href="#" className="group inline-flex items-center text-sm text-foreground hover:text-primary transition-colors border-b border-foreground hover:border-primary pb-0.5 whitespace-nowrap">
@@ -18,9 +18,9 @@ const HowItWorksSection = () => {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1: Steps */}
-          <div className="bg-card p-8 min-h-[520px] flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] transition-shadow duration-500 group rounded-3xl">
+          <div className="bg-card p-6 md:p-8 min-h-[400px] md:min-h-[520px] flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] transition-shadow duration-500 group rounded-3xl">
             <div>
               <h3 className="text-xl text-foreground mb-6 leading-snug font-display font-medium tracking-tighter">How It Works</h3>
               <ul className="space-y-6 text-muted-foreground text-[15px]">
@@ -44,7 +44,7 @@ const HowItWorksSection = () => {
           </div>
 
           {/* Card 2: Dashboard Visual */}
-          <div className="relative min-h-[520px] bg-surface-dark overflow-hidden group rounded-3xl">
+          <div className="relative min-h-[350px] md:min-h-[520px] bg-surface-dark overflow-hidden group rounded-3xl">
             <video
               autoPlay
               muted
@@ -64,7 +64,7 @@ const HowItWorksSection = () => {
           </div>
 
           {/* Card 3: Metric */}
-          <div className="min-h-[520px] flex flex-col overflow-hidden group text-center bg-card p-8 relative items-center justify-between rounded-3xl">
+          <div className="min-h-[350px] md:min-h-[520px] flex flex-col overflow-hidden group text-center bg-card p-6 md:p-8 relative items-center justify-between rounded-3xl">
             <p className="text-muted-foreground text-lg mt-8">We Don't Investigate.<br /> We Prevent.</p>
 
             <div className="relative flex items-center justify-center w-56 h-56 my-8">
@@ -84,7 +84,7 @@ const HowItWorksSection = () => {
           </div>
 
           {/* Card 4: CTA - Blue background with glassmorphic style */}
-          <div className="min-h-[520px] flex flex-col group overflow-hidden text-white bg-primary p-8 relative justify-between rounded-3xl">
+          <div className="min-h-[350px] md:min-h-[520px] flex flex-col group overflow-hidden text-white bg-primary p-6 md:p-8 relative justify-between rounded-3xl">
             <div className="flex justify-between items-start z-10">
               <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-3 py-1 text-xs text-white">
                 <span className="text-xl font-display font-medium tracking-tighter">Don't Launch Blind</span>
