@@ -119,17 +119,17 @@ const GlassCard = ({ children, className = "", glow = false }: { children: React
   <div
     className={`
       relative rounded-[28px] 
-      bg-gradient-to-b from-card/80 to-card/60 
+      bg-gradient-to-b from-primary to-[hsl(240_100%_40%)] 
       backdrop-blur-3xl 
-      border border-[hsl(var(--border)/0.4)]
+      border border-[hsl(0_0%_100%/0.15)]
       p-7 md:p-9
-      shadow-[0_1px_0_0_hsl(0_0%_100%/0.6)_inset,0_-1px_0_0_hsl(0_0%_0%/0.04)_inset,0_20px_60px_-15px_hsl(0_0%_0%/0.08),0_2px_8px_-2px_hsl(0_0%_0%/0.06)]
-      ${glow ? 'shadow-[0_1px_0_0_hsl(0_0%_100%/0.6)_inset,0_-1px_0_0_hsl(0_0%_0%/0.04)_inset,0_20px_60px_-15px_hsl(var(--primary)/0.1),0_2px_8px_-2px_hsl(0_0%_0%/0.06)]' : ''}
+      shadow-[0_1px_0_0_hsl(0_0%_100%/0.2)_inset,0_-1px_0_0_hsl(0_0%_0%/0.2)_inset,0_20px_60px_-15px_hsl(240_100%_30%/0.4),0_2px_8px_-2px_hsl(0_0%_0%/0.15)]
+      ${glow ? 'shadow-[0_1px_0_0_hsl(0_0%_100%/0.25)_inset,0_-1px_0_0_hsl(0_0%_0%/0.2)_inset,0_20px_60px_-15px_hsl(240_100%_50%/0.4),0_2px_8px_-2px_hsl(0_0%_0%/0.15)]' : ''}
       ${className}
     `}
   >
-    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(0_0%_100%/0.8)] to-transparent rounded-t-[28px] pointer-events-none" />
-    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[hsl(0_0%_0%/0.06)] to-transparent rounded-b-[28px] pointer-events-none" />
+    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(0_0%_100%/0.3)] to-transparent rounded-t-[28px] pointer-events-none" />
+    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[hsl(0_0%_100%/0.1)] to-transparent rounded-b-[28px] pointer-events-none" />
     {children}
   </div>
 );
@@ -145,15 +145,15 @@ const StatPill = ({ label, value, icon: Icon, delay = 0 }: { label: string; valu
       animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
       transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -4, scale: 1.02 }}
-      className="bg-gradient-to-b from-secondary/50 to-secondary/30 rounded-[20px] border border-[hsl(var(--border)/0.4)] p-5 shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.05)] group cursor-default"
+      className="bg-[hsl(240_100%_45%/0.6)] rounded-[20px] border border-[hsl(0_0%_100%/0.15)] p-5 shadow-[0_1px_0_0_hsl(0_0%_100%/0.1)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.1)] group cursor-default"
     >
       <div className="flex items-center gap-2.5 mb-3">
-        <div className="w-8 h-8 rounded-xl bg-primary/[0.07] border border-primary/15 flex items-center justify-center group-hover:bg-primary/[0.12] group-hover:border-primary/25 transition-all duration-500 group-hover:shadow-[0_0_20px_hsl(var(--primary)/0.1)]">
-          <Icon size={14} className="text-primary" />
+        <div className="w-8 h-8 rounded-xl bg-[hsl(0_0%_100%/0.15)] border border-[hsl(0_0%_100%/0.2)] flex items-center justify-center group-hover:bg-[hsl(0_0%_100%/0.25)] group-hover:border-[hsl(0_0%_100%/0.3)] transition-all duration-500 group-hover:shadow-[0_0_20px_hsl(0_0%_100%/0.1)]">
+          <Icon size={14} className="text-primary-foreground" />
         </div>
-        <span className="text-[10px] text-muted-foreground/60 font-display font-bold uppercase tracking-[0.15em]">{label}</span>
+        <span className="text-[10px] text-[hsl(0_0%_100%/0.6)] font-display font-bold uppercase tracking-[0.15em]">{label}</span>
       </div>
-      <p className="text-2xl font-display font-semibold text-foreground tracking-tighter">{value}</p>
+      <p className="text-2xl font-display font-semibold text-primary-foreground tracking-tighter">{value}</p>
     </motion.div>
   );
 };
@@ -165,12 +165,12 @@ const AnimBar = ({ label, percent, delay = 0, color = "primary" }: { label: stri
   return (
     <div ref={ref} className="space-y-2">
       <div className="flex justify-between text-xs">
-        <span className="text-muted-foreground/70 font-display">{label}</span>
-        <span className="text-foreground font-display font-semibold">{percent}%</span>
+        <span className="text-[hsl(0_0%_100%/0.7)] font-display">{label}</span>
+        <span className="text-primary-foreground font-display font-semibold">{percent}%</span>
       </div>
-      <div className="h-2 bg-secondary/60 rounded-full overflow-hidden border border-[hsl(var(--border)/0.3)]">
+      <div className="h-2 bg-[hsl(0_0%_100%/0.15)] rounded-full overflow-hidden border border-[hsl(0_0%_100%/0.1)]">
         <motion.div
-          className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full"
+          className="h-full bg-gradient-to-r from-primary-foreground to-[hsl(0_0%_100%/0.7)] rounded-full"
           initial={{ width: 0 }}
           animate={isInView ? { width: `${percent}%` } : {}}
           transition={{ duration: 1.5, delay: delay + 0.3, ease: [0.22, 1, 0.36, 1] }}
@@ -282,8 +282,8 @@ const TechnologySection = () => {
               {/* Right: Live Stats Dashboard */}
               <div className="space-y-5">
                 <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_12px_hsl(var(--primary)/0.5)] animate-pulse" />
-                  <span className="text-[10px] font-display font-bold text-muted-foreground tracking-[0.15em] uppercase">Live Engine Metrics</span>
+                <div className="w-2 h-2 rounded-full bg-primary-foreground shadow-[0_0_12px_hsl(0_0%_100%/0.5)] animate-pulse" />
+                   <span className="text-[10px] font-display font-bold text-[hsl(0_0%_100%/0.6)] tracking-[0.15em] uppercase">Live Engine Metrics</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -312,13 +312,13 @@ const TechnologySection = () => {
           <GlassCard>
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-primary/[0.08] border border-primary/15 flex items-center justify-center">
-                  <Shield size={13} className="text-primary" />
+                <div className="w-7 h-7 rounded-lg bg-[hsl(0_0%_100%/0.15)] border border-[hsl(0_0%_100%/0.2)] flex items-center justify-center">
+                  <Shield size={13} className="text-primary-foreground" />
                 </div>
-                <span className="text-xs font-display font-semibold text-muted-foreground tracking-widest uppercase">Risk Vector Analysis</span>
+                <span className="text-xs font-display font-semibold text-[hsl(0_0%_100%/0.8)] tracking-widest uppercase">Risk Vector Analysis</span>
               </div>
-              <span className="flex items-center gap-1.5 text-[10px] text-primary bg-primary/[0.06] px-3 py-1.5 rounded-full border border-primary/15 font-display font-semibold">
-                <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
+              <span className="flex items-center gap-1.5 text-[10px] text-primary-foreground bg-[hsl(0_0%_100%/0.15)] px-3 py-1.5 rounded-full border border-[hsl(0_0%_100%/0.2)] font-display font-semibold">
+                <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />
                 LIVE
               </span>
             </div>
@@ -369,13 +369,13 @@ const TechnologySection = () => {
               whileHover={{ y: -6, scale: 1.02 }}
               className="group"
             >
-              <GlassCard className="h-full text-center flex flex-col items-center transition-all duration-500 group-hover:shadow-[0_1px_0_0_hsl(0_0%_100%/0.6)_inset,0_-1px_0_0_hsl(0_0%_0%/0.04)_inset,0_30px_80px_-20px_hsl(var(--primary)/0.12),0_2px_8px_-2px_hsl(0_0%_0%/0.06)] group-hover:border-primary/20">
+              <GlassCard className="h-full text-center flex flex-col items-center transition-all duration-500 group-hover:shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset,0_-1px_0_0_hsl(0_0%_0%/0.2)_inset,0_30px_80px_-20px_hsl(240_100%_50%/0.5),0_2px_8px_-2px_hsl(0_0%_0%/0.15)] group-hover:border-[hsl(0_0%_100%/0.3)]">
                 {/* Icon */}
-                <div className="w-14 h-14 rounded-2xl bg-primary/[0.07] border border-primary/15 flex items-center justify-center mb-6 group-hover:bg-primary/[0.12] group-hover:border-primary/25 group-hover:shadow-[0_0_30px_hsl(var(--primary)/0.15)] transition-all duration-500">
-                  <feature.icon size={22} className="text-primary" />
+                <div className="w-14 h-14 rounded-2xl bg-[hsl(0_0%_100%/0.12)] border border-[hsl(0_0%_100%/0.2)] flex items-center justify-center mb-6 group-hover:bg-[hsl(0_0%_100%/0.2)] group-hover:border-[hsl(0_0%_100%/0.3)] group-hover:shadow-[0_0_30px_hsl(0_0%_100%/0.15)] transition-all duration-500">
+                  <feature.icon size={22} className="text-primary-foreground" />
                 </div>
-                <h3 className="text-lg font-display font-medium text-foreground mb-3 tracking-tight">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg font-display font-medium text-primary-foreground mb-3 tracking-tight">{feature.title}</h3>
+                <p className="text-sm text-[hsl(0_0%_100%/0.7)] leading-relaxed">{feature.description}</p>
               </GlassCard>
             </motion.div>
           ))}
