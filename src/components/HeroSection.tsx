@@ -1,34 +1,13 @@
 import { ArrowRight } from "lucide-react";
-import { useEffect } from "react";
 import Navbar from "./Navbar";
 import heroBgNew from "@/assets/hero-bg-new.jpg";
 
 const HeroSection = () => {
-  useEffect(() => {
-    const w = window as any;
-    if (w.UnicornStudio?.isInitialized) {
-      w.UnicornStudio.init();
-      return;
-    }
-    w.UnicornStudio = { isInitialized: false };
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.0.5/dist/unicornStudio.umd.js";
-    script.onload = () => w.UnicornStudio.init();
-    document.head.appendChild(script);
-    return () => {
-      script.remove();
-    };
-  }, []);
-
   return (
     <section id="hero" className="relative w-full rounded-3xl md:rounded-4xl overflow-hidden bg-surface-dark text-surface-dark-foreground min-h-[500px] md:min-h-[600px] flex flex-col justify-between p-5 md:p-8 lg:p-12 shadow-2xl">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img src={heroBgNew} alt="" className="w-full h-full object-cover" />
-      </div>
-      {/* UnicornStudio Overlay */}
-      <div className="absolute inset-0 z-[1]">
-        <div data-us-project="ai6mDjHzHBRV4tIPQpck" style={{ width: "100%", height: "100%" }} />
       </div>
 
       <Navbar />
