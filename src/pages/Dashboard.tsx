@@ -145,9 +145,14 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
       {/* Background Video */}
       <div className="fixed inset-0 z-0">
-        <video autoPlay muted loop playsInline className="w-full h-full object-cover opacity-30">
-          <source src={dashboardBgVideo} type="video/webm" />
-        </video>
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          src={dashboardBgVideo}
+          className="w-full h-full object-cover opacity-30"
+        />
         <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
       </div>
 
