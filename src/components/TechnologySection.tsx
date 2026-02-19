@@ -86,7 +86,7 @@ const TypingASCII = ({ lines, delay = 0 }: { lines: string[]; delay?: number }) 
           initial={{ opacity: 0, x: -5 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.15 }}
-          className="text-primary/70"
+          className="text-white/90"
         >
           {line}
         </motion.div>
@@ -95,7 +95,7 @@ const TypingASCII = ({ lines, delay = 0 }: { lines: string[]; delay?: number }) 
         <motion.span
           animate={{ opacity: [1, 0] }}
           transition={{ repeat: Infinity, duration: 0.6 }}
-          className="text-primary"
+          className="text-white"
         >
           █
         </motion.span>
@@ -267,14 +267,14 @@ const TechnologySection = () => {
 
             <div className="grid md:grid-cols-2 gap-8 relative z-10">
               {/* Left: ASCII Terminal */}
-              <div className="bg-gradient-to-b from-[hsl(228_14%_8%)] to-[hsl(228_14%_6%)] rounded-[20px] border border-[hsl(0_0%_100%/0.08)] p-6 overflow-hidden relative">
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <div className="bg-gradient-to-b from-primary to-primary/90 rounded-[20px] border border-[hsl(0_0%_100%/0.15)] p-6 overflow-hidden relative">
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(0_0%_100%/0.4)] to-transparent" />
                 {/* Terminal header */}
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-3 h-3 rounded-full bg-destructive/60" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                   <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                  <span className="ml-3 text-[10px] text-white/30 font-mono">inteliose://dyor-engine</span>
+                  <span className="ml-3 text-[10px] text-white/50 font-mono">inteliose://dyor-engine</span>
                 </div>
                 <TypingASCII lines={ASCII_LINES} delay={500} />
               </div>
@@ -294,7 +294,7 @@ const TechnologySection = () => {
                 </div>
 
                 {/* Mini ASCII */}
-                <div className="bg-gradient-to-b from-[hsl(228_14%_8%)] to-[hsl(228_14%_6%)] rounded-2xl border border-[hsl(0_0%_100%/0.08)] p-4 overflow-hidden">
+                <div className="bg-gradient-to-b from-primary to-primary/90 rounded-2xl border border-[hsl(0_0%_100%/0.15)] p-4 overflow-hidden">
                   <TypingASCII lines={ASCII_MINI} delay={2500} />
                 </div>
               </div>
