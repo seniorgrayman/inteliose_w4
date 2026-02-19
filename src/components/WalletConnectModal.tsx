@@ -15,25 +15,6 @@ interface WalletConnectModalProps {
 const truncateAddress = (addr: string) =>
   addr.length > 10 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
 
-/* ─── ASCII Art Block ─── */
-const ASCII_ART = [
-  "┌──────────────────────────────┐",
-  "│  WALLET AUTH v2.0            │",
-  "│  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  READY   │",
-  "│  > handshake.init   [OK]    │",
-  "│  > encrypt.channel  [OK]    │",
-  "│  > verify.identity  [WAIT]  │",
-  "└──────────────────────────────┘",
-];
-
-/* ─── Scan Line ─── */
-const ScanLine = () => (
-  <motion.div
-    className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent pointer-events-none z-30"
-    animate={{ top: ["0%", "100%", "0%"] }}
-    transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-  />
-);
 
 const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModalProps) => {
   const [connecting, setConnecting] = useState<WalletType | null>(null);
@@ -133,8 +114,6 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
                 {/* Bevel highlights */}
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(0_0%_100%/0.9)] to-transparent rounded-t-[28px] pointer-events-none z-20" />
                 <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[hsl(0_0%_0%/0.06)] to-transparent rounded-b-[28px] pointer-events-none z-20" />
-                <ScanLine />
-
                 {/* Dot grid */}
                 <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.025]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, hsl(var(--foreground)) 0.5px, transparent 0)", backgroundSize: "24px 24px" }} />
 
@@ -174,33 +153,6 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
                     </motion.button>
                   </div>
 
-                  {/* ASCII Terminal Mini */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25 }}
-                    className="bg-gradient-to-b from-[hsl(228_14%_8%)] to-[hsl(228_14%_6%)] rounded-2xl border border-[hsl(0_0%_100%/0.08)] p-4 mb-6 overflow-hidden relative"
-                  >
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <div className="w-2 h-2 rounded-full bg-destructive/50" />
-                      <div className="w-2 h-2 rounded-full bg-yellow-500/50" />
-                      <div className="w-2 h-2 rounded-full bg-green-500/50" />
-                      <span className="ml-2 text-[9px] text-white/25 font-mono">inteliose://auth</span>
-                    </div>
-                    <div className="font-mono text-[9px] md:text-[10px] leading-relaxed text-primary/60 space-y-px">
-                      {ASCII_ART.map((line, i) => (
-                        <motion.div
-                          key={i}
-                          initial={{ opacity: 0, x: -5 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.4 + i * 0.08 }}
-                        >
-                          {line}
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
                 </div>
 
                 {/* Wallet Options */}
