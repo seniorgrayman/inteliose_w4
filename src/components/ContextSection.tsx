@@ -76,18 +76,18 @@ const ContextSection = () => {
             
           </div>
 
-          <div className="absolute top-6 left-6 text-white">
-            <p className="text-lg tracking-tight">Why Base</p>
-            <p className="text-sm text-gray-400">L2 Scalability</p>
+          <div className="absolute top-6 left-6 text-primary">
+            <p className="text-lg tracking-tight font-semibold">Why Base</p>
+            <p className="text-sm text-primary/70">L2 Scalability</p>
           </div>
 
-          <div className="absolute bottom-6 w-full px-6 flex justify-between items-end text-white">
+          <div className="absolute bottom-6 w-full px-6 flex justify-between items-end text-primary">
             <div className="max-w-[90%]">
               <p className="text-xl mb-2 font-display font-medium tracking-tighter">Built for Scale</p>
-              <p className="text-sm text-gray-400 line-clamp-3 mb-4">
+              <p className="text-sm text-primary/70 line-clamp-3 mb-4">
                 Inteliose runs on Base for a reason. Low-cost transactions, Ethereum-grade security, and seamless Coinbase ecosystem access.
               </p>
-              <button className="flex items-center gap-2 bg-white text-foreground px-4 py-2 rounded-full text-sm hover:bg-gray-200 transition">
+              <button className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full text-sm hover:opacity-90 transition">
                 Explore Ecosystem <ArrowRight size={14} />
               </button>
             </div>
