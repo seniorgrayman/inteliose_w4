@@ -8,7 +8,7 @@ const HowItWorksSection = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-20 gap-8">
           <h2 className="text-4xl md:text-5xl lg:text-6xl text-foreground max-w-4xl leading-[1.05] font-display font-medium tracking-tighter">
-            From Contract Address <span className="text-muted-foreground">to Clear Action.</span>
+            From Contract Address <span className="text-primary">to Clear Action.</span>
           </h2>
           <a href="#" className="group inline-flex items-center text-sm text-foreground hover:text-primary transition-colors border-b border-foreground hover:border-primary pb-0.5 whitespace-nowrap">
             Founder Dashboard
