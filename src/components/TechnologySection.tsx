@@ -1,5 +1,5 @@
 import { ArrowRight, BarChart3, Users, Bot, ExternalLink, Shield, Zap, Activity } from "lucide-react";
-import { motion, useInView, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, useInView, animate } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 
 /* ─── ASCII Intelligence Matrix ─── */
@@ -44,10 +44,12 @@ const AnimCounter = ({ target, suffix = "", prefix = "" }: { target: number; suf
 
   useEffect(() => {
     if (!isInView) return;
-    const mv = useMotionValue(0);
-    const unsub = mv.on("change", (v) => setVal(Math.round(v)));
-    animate(mv, target, { duration: 2, ease: [0.22, 1, 0.36, 1] });
-    return unsub;
+    const controls = animate(0, target, {
+      duration: 2,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (v) => setVal(Math.round(v)),
+    });
+    return () => controls.stop();
   }, [isInView, target]);
 
   return <span ref={ref}>{prefix}{val.toLocaleString()}{suffix}</span>;
