@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
+import dashboardBgVideo from "@/assets/dashboard-bg-video.webm";
 
 /* ─── Mock Data ─── */
 const MOCK_TOKEN = {
@@ -142,14 +143,19 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+      {/* Background Video */}
+      <div className="fixed inset-0 z-0">
+        <video autoPlay muted loop playsInline className="w-full h-full object-cover opacity-30">
+          <source src={dashboardBgVideo} type="video/webm" />
+        </video>
+        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+      </div>
+
       {/* Ambient orbs */}
       <FloatingOrb size={700} x="-10%" y="5%" delay={0} />
       <FloatingOrb size={500} x="60%" y="40%" delay={3} />
       <FloatingOrb size={350} x="30%" y="-8%" delay={6} color="accent" />
       <FloatingOrb size={400} x="80%" y="70%" delay={9} color="accent" />
-
-      {/* Ultra-subtle grid */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.025]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, hsl(var(--foreground)) 0.5px, transparent 0)", backgroundSize: "40px 40px" }} />
 
       {/* Premium Navbar */}
       <nav className="relative z-50 bg-gradient-to-b from-card/70 to-card/50 backdrop-blur-2xl border-b border-[hsl(var(--border)/0.3)]">
