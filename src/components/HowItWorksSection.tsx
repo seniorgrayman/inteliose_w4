@@ -1,5 +1,6 @@
 import { ArrowUpRight, ShieldCheck, ArrowRight } from "lucide-react";
 import dashboardBg from "@/assets/dashboard-bg.jpg";
+import founderVideo from "@/assets/dashboard-bg-video.mp4";
 
 const HowItWorksSection = () => {
   return (
@@ -44,7 +45,14 @@ const HowItWorksSection = () => {
 
           {/* Card 2: Dashboard Visual */}
           <div className="relative min-h-[520px] bg-surface-dark overflow-hidden group rounded-3xl">
-            <img src={dashboardBg} alt="" className="group-hover:scale-105 group-hover:opacity-60 transition-all duration-700 opacity-70 w-full h-full object-cover absolute inset-0" />
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              src={founderVideo}
+              className="w-full h-full object-cover absolute inset-0 opacity-70 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700"
+            />
             <div className="bg-gradient-to-t from-black/80 via-transparent to-black/20 absolute inset-0" />
 
             <div className="absolute top-8 left-8 right-8 flex justify-between items-start z-10">
