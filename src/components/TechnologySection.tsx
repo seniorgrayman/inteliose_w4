@@ -101,7 +101,7 @@ const TechnologySection = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative rounded-3xl bg-surface-dark text-surface-dark-foreground p-8 lg:p-16 overflow-hidden"
+      className="relative rounded-3xl bg-card/50 border border-border/60 p-8 lg:p-16 overflow-hidden"
     >
       {/* Animated background particles */}
       <FloatingParticle delay={0} x="10%" y="20%" size={4} />
@@ -149,10 +149,10 @@ const TechnologySection = () => {
           <Zap size={12} className="text-primary" />
           Technology
         </motion.p>
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-medium tracking-tighter leading-[1.05] mb-6">
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-medium tracking-tighter leading-[1.05] mb-6 text-foreground">
           DYOR <span className="text-primary">Intelligence</span>
         </h2>
-        <p className="text-lg text-white/60 leading-relaxed">
+        <p className="text-lg text-muted-foreground leading-relaxed">
           Inteliose helps you dyor faster: real-time market telemetry, liquidity signals, authority checks, and neutral AI summaries. Choose the chain first, then paste the token address.
         </p>
       </motion.div>
@@ -162,7 +162,7 @@ const TechnologySection = () => {
         {chains.map((chain, i) => (
           <motion.div
             key={chain.name}
-            className="relative flex items-center justify-between bg-[hsl(var(--glass-bg))] backdrop-blur-sm border border-[hsl(var(--glass-border))] rounded-3xl p-6 hover:border-primary/40 transition-all duration-500 group cursor-pointer overflow-hidden"
+            className="relative flex items-center justify-between bg-secondary/80 backdrop-blur-sm border border-border rounded-3xl p-6 hover:border-primary/40 transition-all duration-500 group cursor-pointer overflow-hidden"
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.3 + i * 0.15 }}
@@ -179,7 +179,7 @@ const TechnologySection = () => {
             />
 
             <div className="relative z-10">
-              <p className="text-white font-display font-medium text-lg flex items-center gap-3">
+              <p className="text-foreground font-display font-medium text-lg flex items-center gap-3">
                 <motion.span
                   className="inline-block w-2 h-2 rounded-full bg-primary"
                   animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
@@ -187,7 +187,7 @@ const TechnologySection = () => {
                 />
                 {chain.name}
               </p>
-              <p className="text-white/40 text-sm mt-1">{chain.detail}</p>
+              <p className="text-muted-foreground text-sm mt-1">{chain.detail}</p>
             </div>
             <motion.div
               className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors relative z-10"
@@ -223,7 +223,7 @@ const TechnologySection = () => {
         </motion.a>
         <motion.a
           href="#"
-          className="inline-flex items-center gap-2 bg-[hsl(var(--glass-bg))] backdrop-blur-sm border border-[hsl(var(--glass-border))] text-white px-6 py-3 rounded-full text-sm font-medium hover:border-primary/30 transition-all duration-300"
+          className="inline-flex items-center gap-2 bg-secondary border border-border text-foreground px-6 py-3 rounded-full text-sm font-medium hover:border-primary/30 transition-all duration-300"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -260,7 +260,7 @@ const TechnologySection = () => {
           {features.map((feature, i) => (
             <motion.div
               key={feature.title}
-              className="relative border border-[hsl(var(--glass-border))] rounded-3xl p-8 bg-[hsl(var(--glass-bg))] backdrop-blur-sm hover:border-primary/30 transition-all duration-500 group overflow-hidden"
+              className="relative border border-border rounded-3xl p-8 bg-card hover:border-primary/30 transition-all duration-500 group overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)]"
               initial={{ opacity: 0, y: 40 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: 0.9 + i * 0.15 }}
@@ -295,12 +295,12 @@ const TechnologySection = () => {
                 </motion.div>
               </div>
 
-              <h4 className="text-white font-display font-medium text-lg mb-3">{feature.title}</h4>
-              <p className="text-white/50 text-sm leading-relaxed">{feature.description}</p>
+              <h4 className="text-foreground font-display font-medium text-lg mb-3">{feature.title}</h4>
+              <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
 
               {/* Bottom stat */}
-              <div className="mt-6 pt-4 border-t border-[hsl(var(--glass-border))] flex items-center justify-between">
-                <span className="text-xs text-white/30 uppercase tracking-wider">Active</span>
+              <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
+                <span className="text-xs text-muted-foreground uppercase tracking-wider">Active</span>
                 <motion.span
                   className="inline-block w-2 h-2 rounded-full bg-primary"
                   animate={{ opacity: [1, 0.3, 1] }}
