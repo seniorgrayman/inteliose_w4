@@ -8,7 +8,7 @@ import FooterSection from "@/components/FooterSection";
 
 const Index = () => {
   return (
-    <div className="mx-auto max-w-7xl border-l border-r border-dashed border-border min-h-screen relative bg-background">
+    <div className="mx-auto max-w-7xl border-l border-r border-dashed border-border min-h-screen relative bg-secondary/50">
       {/* Vertical Grid Lines */}
       <div className="absolute inset-0 pointer-events-none flex justify-between px-4 opacity-20 z-0">
         <div className="w-px h-full bg-border" />

@@ -43,9 +43,9 @@ const HowItWorksSection = () => {
           </div>
 
           {/* Card 2: Dashboard Visual */}
-          <div className="relative min-h-[520px] bg-primary overflow-hidden group rounded-3xl">
-            <img src={dashboardBg} alt="" className="group-hover:scale-105 group-hover:opacity-60 transition-all duration-700 opacity-70 w-full h-full object-cover absolute inset-0 mix-blend-overlay" />
-            <div className="bg-gradient-to-t from-primary/80 via-transparent to-primary/40 absolute inset-0" />
+          <div className="relative min-h-[520px] bg-surface-dark overflow-hidden group rounded-3xl">
+            <img src={dashboardBg} alt="" className="group-hover:scale-105 group-hover:opacity-60 transition-all duration-700 opacity-70 w-full h-full object-cover absolute inset-0" />
+            <div className="bg-gradient-to-t from-black/80 via-transparent to-black/20 absolute inset-0" />
 
             <div className="absolute top-8 left-8 right-8 flex justify-between items-start z-10">
               <span className="text-white text-lg tracking-tight mix-blend-overlay">The Founder Workspace</span>
