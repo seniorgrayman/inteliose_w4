@@ -73,7 +73,7 @@ const ContextSection = () => {
             <video autoPlay muted loop playsInline className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
               <source src={whyBaseVideo} type="video/mp4" />
             </video>
-            <div className="absolute inset-0 bg-black/40" />
+            
           </div>
 
           <div className="absolute top-6 left-6 text-white">
