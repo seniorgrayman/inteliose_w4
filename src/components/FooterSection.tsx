@@ -1,8 +1,16 @@
 import { ArrowRight, Radar, Twitter, MessageCircle, Circle } from "lucide-react";
+import footerBgVideo from "@/assets/footer-bg-video.mp4";
 
 const FooterSection = () => {
   return (
-    <footer className="mt-8 w-full bg-[hsl(0_0%_2%)] rounded-4xl overflow-hidden relative shadow-2xl border border-[hsl(var(--glass-border))]">
+    <footer className="mt-8 w-full rounded-4xl overflow-hidden relative shadow-2xl border border-[hsl(var(--glass-border))]">
+      {/* Video Background */}
+      <div className="absolute inset-0 z-0">
+        <video autoPlay muted loop playsInline className="w-full h-full object-cover">
+          <source src={footerBgVideo} type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-black/70" />
+      </div>
       {/* Glow */}
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
 
