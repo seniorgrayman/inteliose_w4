@@ -17,10 +17,10 @@ const Navbar = () => {
           <a href="#" className="text-gray-300 hover:text-white transition-colors whitespace-nowrap">Pricing</a>
         </div>
         <div className="flex items-center gap-2">
-          <button className="bg-transparent border border-[hsl(0_0%_100%/0.2)] text-white px-4 py-1.5 rounded-full text-sm hover:bg-[hsl(0_0%_100%/0.1)] transition-colors whitespace-nowrap">
+        <button className="bg-transparent border border-[hsl(0_0%_100%/0.2)] text-white px-4 py-1.5 rounded-full text-sm hover:bg-[hsl(0_0%_100%/0.1)] transition-colors whitespace-nowrap">
             Launch App
           </button>
-          <button className="bg-white text-foreground px-4 py-1.5 rounded-full text-sm hover:bg-emerald-50 transition-colors whitespace-nowrap">
+          <button className="bg-white text-foreground px-4 py-1.5 rounded-full text-sm hover:bg-blue-50 transition-colors whitespace-nowrap">
             Analyze Token
           </button>
         </div>

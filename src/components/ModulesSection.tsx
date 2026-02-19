@@ -24,7 +24,7 @@ const ModulesSection = () => {
             <div className="relative h-48 w-full flex items-center justify-center mb-8">
               <div className="w-64 bg-card rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-border p-5 relative z-10 transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)]">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                  <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
                     <Scan className="text-primary" size={14} />
                   </div>
                   <div className="text-left space-y-1.5">
@@ -40,7 +40,7 @@ const ModulesSection = () => {
                 </div>
                 <div className="flex items-center justify-between border-t border-muted pt-3">
                   <div className="h-1.5 w-10 bg-secondary rounded-full" />
-                  <span className="flex items-center gap-1.5 text-[10px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100/50">
+                  <span className="flex items-center gap-1.5 text-[10px] text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100/50">
                     <CheckCircle2 size={10} /> Mapped
                   </span>
                 </div>
@@ -60,7 +60,7 @@ const ModulesSection = () => {
                   <circle cx="50" cy="50" r="38" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
                   <circle cx="50" cy="50" r="38" fill="none" stroke="hsl(var(--primary))" strokeWidth="3" strokeDasharray="238" strokeDashoffset="160" strokeLinecap="round" className="transition-all duration-[1.5s] ease-out" />
                 </svg>
-                <div className="w-16 h-16 bg-card shadow-[0_10px_30px_-5px_rgba(16,185,129,0.15)] rounded-2xl flex items-center justify-center border border-border z-10 relative transform transition-transform duration-500 group-hover:scale-110">
+                <div className="w-16 h-16 bg-card shadow-[0_10px_30px_-5px_rgba(0,0,255,0.15)] rounded-2xl flex items-center justify-center border border-border z-10 relative transform transition-transform duration-500 group-hover:scale-110">
                   <ShieldAlert className="text-primary" size={24} />
                 </div>
               </div>

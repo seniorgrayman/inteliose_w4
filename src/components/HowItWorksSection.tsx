@@ -61,7 +61,7 @@ const HowItWorksSection = () => {
                   <div className="h-2 w-full bg-white/20 rounded" />
                   <div className="h-2 w-2/3 bg-white/20 rounded" />
                   <div className="h-8 w-full bg-primary/20 rounded mt-4 border border-primary/30 flex items-center px-2">
-                    <span className="text-[10px] text-emerald-400">Risk Level: Low</span>
+                    <span className="text-[10px] text-blue-400">Risk Level: Low</span>
                   </div>
                 </div>
               </div>
@@ -92,24 +92,26 @@ const HowItWorksSection = () => {
             </div>
           </div>
 
-          {/* Card 4: CTA */}
-          <div className="min-h-[520px] flex flex-col group overflow-hidden text-white bg-surface-dark p-8 relative justify-between rounded-3xl">
+          {/* Card 4: CTA - Blue background with glassmorphic style */}
+          <div className="min-h-[520px] flex flex-col group overflow-hidden text-white bg-primary p-8 relative justify-between rounded-3xl">
             <div className="flex justify-between items-start z-10">
-              <span className="text-xl font-display font-medium tracking-tighter">Don't Launch Blind</span>
-              <ArrowUpRight className="text-gray-500 group-hover:text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300" size={20} />
+              <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-3 py-1 text-xs text-white">
+                <span className="text-xl font-display font-medium tracking-tighter">Don't Launch Blind</span>
+              </span>
+              <ArrowUpRight className="text-white/50 group-hover:text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300" size={20} />
             </div>
 
             <div className="z-10 relative">
-              <p className="text-gray-400 leading-relaxed mb-12 text-[15px]">
+              <p className="text-blue-200 leading-relaxed mb-12 text-[15px]">
                 Analyze your token. Understand your risk. Act before narratives form.
               </p>
-              <button className="w-full py-3 bg-white text-foreground rounded-full font-medium hover:bg-emerald-50 transition-colors">
+              <button className="w-full py-3 bg-white text-primary rounded-full font-medium hover:bg-blue-50 transition-colors">
                 Analyze Token
               </button>
             </div>
 
             {/* Glow */}
-            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-primary/10 rounded-full blur-[80px] group-hover:bg-primary/20 transition-all duration-700 pointer-events-none" />
+            <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-white/10 rounded-full blur-[80px] group-hover:bg-white/20 transition-all duration-700 pointer-events-none" />
           </div>
         </div>
       </div>

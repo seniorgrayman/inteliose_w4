@@ -26,9 +26,9 @@ const ContextSection = () => {
             We help founders classify profiles, identify risk baselines, and detect early-stage failure modes.
           </p>
 
-          <button className="group flex items-center gap-3 bg-foreground text-background pl-5 pr-2 py-2 rounded-full text-base font-medium hover:opacity-90 transition-all">
+          <button className="group flex items-center gap-3 bg-primary text-white pl-5 pr-2 py-2 rounded-full text-base font-medium hover:opacity-90 transition-all">
             <span>See How It Works</span>
-            <span className="bg-background text-foreground rounded-full w-8 h-8 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <span className="bg-white text-primary rounded-full w-8 h-8 flex items-center justify-center group-hover:scale-110 transition-transform">
               <ArrowDown size={16} />
             </span>
           </button>
