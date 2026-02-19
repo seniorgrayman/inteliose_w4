@@ -22,7 +22,7 @@ const FooterSection = () => {
           </div>
         </div>
 
-        <h2 className="text-4xl md:text-5xl lg:text-6xl text-primary mb-6 font-display font-medium tracking-tighter">Don't Launch Blind.</h2>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-primary mb-6 font-display font-medium tracking-tighter">Don't Launch Blind.</h2>
         <p className="text-primary/70 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
           Analyze your token. Understand your risk. Act before narratives form.
         </p>

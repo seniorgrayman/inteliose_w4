@@ -4,7 +4,7 @@ import whyBaseVideo from "@/assets/why-base-bg.mp4";
 
 const ContextSection = () => {
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-12">
+    <section id="context" className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-12">
       {/* Col 1: Text */}
       <div className="lg:col-span-4 flex flex-col justify-between space-y-12 py-4">
         <div className="flex justify-between border-b border-border pb-4">
@@ -38,7 +38,7 @@ const ContextSection = () => {
 
       {/* Col 2: Card Light */}
       <div className="lg:col-span-4 relative group cursor-pointer">
-        <div className="relative h-[550px] w-full rounded-3xl overflow-hidden bg-secondary">
+        <div className="relative h-[400px] lg:h-[550px] w-full rounded-3xl overflow-hidden bg-secondary">
           {/* Chart SVG */}
           <div className="absolute inset-0 flex items-center justify-center opacity-30">
             <svg viewBox="0 0 200 100" className="w-full px-8 text-muted-foreground fill-current">
@@ -68,7 +68,7 @@ const ContextSection = () => {
 
       {/* Col 3: Card Dark */}
       <div className="lg:col-span-4 relative group cursor-pointer">
-        <div className="relative h-[550px] w-full rounded-3xl overflow-hidden">
+        <div className="relative h-[400px] lg:h-[550px] w-full rounded-3xl overflow-hidden">
           <div className="absolute inset-0">
             <video autoPlay muted loop playsInline className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
               <source src={whyBaseVideo} type="video/mp4" />

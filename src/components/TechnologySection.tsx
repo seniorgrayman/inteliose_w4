@@ -214,8 +214,9 @@ const TechnologySection = () => {
 
   return (
     <section
+      id="technology"
       ref={sectionRef}
-      className="py-32 relative overflow-hidden"
+      className="py-20 md:py-32 relative overflow-hidden"
     >
       {/* Ambient */}
       <FloatingOrb size={600} x="-15%" y="10%" delay={0} />
@@ -235,7 +236,7 @@ const TechnologySection = () => {
             Intelligence Engine
           </motion.div>
           <motion.h2
-            className="text-5xl md:text-7xl text-foreground mb-6 leading-[0.95] font-display font-medium tracking-tighter"
+            className="text-4xl sm:text-5xl md:text-7xl text-foreground mb-6 leading-[0.95] font-display font-medium tracking-tighter"
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.1 }}

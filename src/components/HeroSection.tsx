@@ -4,7 +4,7 @@ import heroBg from "@/assets/hero-bg.png";
 
 const HeroSection = () => {
   return (
-    <section className="relative w-full rounded-4xl overflow-hidden bg-surface-dark text-surface-dark-foreground min-h-[600px] flex flex-col justify-between p-8 lg:p-12 shadow-2xl">
+    <section id="hero" className="relative w-full rounded-3xl md:rounded-4xl overflow-hidden bg-surface-dark text-surface-dark-foreground min-h-[500px] md:min-h-[600px] flex flex-col justify-between p-5 md:p-8 lg:p-12 shadow-2xl">
       {/* Background */}
       <div className="absolute inset-0 z-0">
         <img src={heroBg} alt="" className="w-full h-full object-cover" />
@@ -14,12 +14,12 @@ const HeroSection = () => {
 
       {/* Hero Content */}
       <div className="relative z-10 mt-auto max-w-4xl">
-        <h1 className="text-5xl md:text-7xl leading-[1.1] mb-8 font-display font-medium tracking-tighter text-white">
+        <h1 className="text-3xl sm:text-5xl md:text-7xl leading-[1.1] mb-6 md:mb-8 font-display font-medium tracking-tighter text-white">
           Build Smarter Tokens. <br />
           <span className="text-primary">Avoid Predictable</span> <br />
           Failure.
         </h1>
-        <p className="text-lg text-white/70 max-w-2xl mb-8">
+        <p className="text-base md:text-lg text-white/70 max-w-2xl mb-6 md:mb-8">
           Inteliose is a founder-centric intelligence platform on Base. We analyze your token, classify risk baselines, and surface failure modes before they burn your project.
         </p>
       </div>

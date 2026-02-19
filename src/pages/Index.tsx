@@ -17,7 +17,7 @@ const Index = () => {
         <div className="w-px h-full bg-border" />
       </div>
 
-      <main className="relative z-10 p-4 md:p-6 lg:p-8 space-y-6">
+      <main className="relative z-10 p-3 md:p-6 lg:p-8 space-y-6">
         <HeroSection />
         <ContextSection />
         <TechnologySection />
