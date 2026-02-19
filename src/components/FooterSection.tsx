@@ -8,9 +8,9 @@ const FooterSection = () => {
 
       {/* CTA */}
       <div className="pt-24 pb-16 px-8 text-center relative z-10">
-        <div className="mx-auto w-20 h-20 bg-emerald-900/20 rounded-2xl flex items-center justify-center mb-8 border border-primary/20 shadow-[0_0_40px_rgba(16,185,129,0.15)] backdrop-blur-sm">
+        <div className="mx-auto w-20 h-20 bg-blue-900/20 rounded-2xl flex items-center justify-center mb-8 border border-primary/20 shadow-[0_0_40px_rgba(0,0,255,0.15)] backdrop-blur-sm">
           <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center border border-primary/30">
-            <Radar className="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" size={24} />
+            <Radar className="text-blue-400 drop-shadow-[0_0_8px_rgba(0,0,255,0.5)]" size={24} />
           </div>
         </div>
 
@@ -20,7 +20,7 @@ const FooterSection = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button className="px-8 py-3 rounded-full bg-gradient-to-b from-primary to-emerald-700 text-white hover:brightness-110 transition-all shadow-[0_0_25px_rgba(16,185,129,0.2)] flex items-center gap-2 border border-primary/20">
+          <button className="px-8 py-3 rounded-full bg-gradient-to-b from-primary to-blue-800 text-white hover:brightness-110 transition-all shadow-[0_0_25px_rgba(0,0,255,0.2)] flex items-center gap-2 border border-primary/20">
             Analyze Your Token Now <ArrowRight size={16} />
           </button>
         </div>
@@ -52,18 +52,18 @@ const FooterSection = () => {
           <div className="space-y-6">
             <h4 className="text-white">Product</h4>
             <ul className="space-y-3 text-sm text-gray-500">
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Modules</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Dashboard</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Docs</a></li>
+              <li><a href="#" className="hover:text-blue-400 transition-colors">Modules</a></li>
+              <li><a href="#" className="hover:text-blue-400 transition-colors">Dashboard</a></li>
+              <li><a href="#" className="hover:text-blue-400 transition-colors">Docs</a></li>
             </ul>
           </div>
           <div className="space-y-6">
             <h4 className="text-white">Company</h4>
             <ul className="space-y-3 text-sm text-gray-500">
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">About</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Privacy</a></li>
-              <li><a href="#" className="hover:text-emerald-400 transition-colors">Terms</a></li>
+              <li><a href="#" className="hover:text-blue-400 transition-colors">About</a></li>
+              <li><a href="#" className="hover:text-blue-400 transition-colors">Contact</a></li>
+              <li><a href="#" className="hover:text-blue-400 transition-colors">Privacy</a></li>
+              <li><a href="#" className="hover:text-blue-400 transition-colors">Terms</a></li>
             </ul>
           </div>
         </div>

@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --background: 220 10% 92%;
+    --background: 0 0% 100%;
     --foreground: 220 15% 10%;
 
     --card: 0 0% 100%;
@@ -16,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 10%;
 
-    --primary: 160 84% 39%;
+    --primary: 240 100% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 10% 96%;
@@ -33,15 +33,15 @@
 
     --border: 220 10% 88%;
     --input: 220 10% 88%;
-    --ring: 160 84% 39%;
+    --ring: 240 100% 50%;
 
     --radius: 0.75rem;
 
     /* Custom Inteliose tokens */
     --surface-dark: 228 14% 8%;
     --surface-dark-foreground: 0 0% 100%;
-    --emerald-glow: 160 84% 39%;
-    --emerald-muted: 160 30% 20%;
+    --emerald-glow: 240 100% 50%;
+    --emerald-muted: 240 30% 20%;
     --glass-bg: 0 0% 100% / 0.05;
     --glass-border: 0 0% 100% / 0.1;
 
@@ -62,7 +62,7 @@
     --card-foreground: 0 0% 96%;
     --popover: 228 14% 8%;
     --popover-foreground: 0 0% 96%;
-    --primary: 160 84% 39%;
+    --primary: 240 100% 50%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 20% 14%;
     --secondary-foreground: 0 0% 96%;
@@ -74,7 +74,7 @@
     --destructive-foreground: 0 0% 96%;
     --border: 220 20% 14%;
     --input: 220 20% 14%;
-    --ring: 160 84% 39%;
+    --ring: 240 100% 50%;
   }
 }
 

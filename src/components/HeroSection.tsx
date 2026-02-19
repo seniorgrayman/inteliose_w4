@@ -26,7 +26,7 @@ const HeroSection = () => {
       </div>
 
       {/* Floating Badge */}
-      <div className="absolute bottom-12 right-12 z-20 hidden md:flex items-center gap-3 bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] p-4 rounded-2xl max-w-xs">
+      <div className="absolute bottom-12 right-12 z-20 hidden md:flex items-center gap-3 bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-blue-500/20 p-4 rounded-2xl max-w-xs">
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Status</p>
           <p className="text-sm leading-snug">Plain-English intelligence.<br />Actionable next steps.<br />Built for Base.</p>
