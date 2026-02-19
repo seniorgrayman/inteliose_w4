@@ -67,10 +67,10 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
     {
       id: "phantom" as WalletType,
       name: "Phantom",
-      description: "Solana wallet",
+      description: "Base wallet",
       logo: phantomLogo,
       connect: connectPhantom,
-      chain: "Solana",
+      chain: "Base / Solana",
     },
     {
       id: "metamask" as WalletType,
