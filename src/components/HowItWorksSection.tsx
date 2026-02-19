@@ -53,9 +53,26 @@ const HowItWorksSection = () => {
               src={founderVideo}
               className="w-full h-full object-cover absolute inset-0 opacity-70 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700"
             />
+            <div className="bg-gradient-to-t from-black/80 via-transparent to-black/20 absolute inset-0" />
 
             <div className="absolute top-8 left-8 right-8 flex justify-between items-start z-10">
               <span className="text-white text-lg tracking-tight mix-blend-overlay">The Founder Workspace</span>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center z-0">
+              <div className="bg-black/50 backdrop-blur-md border border-[hsl(var(--glass-border))] rounded-xl p-4 w-3/4 transform group-hover:scale-105 transition-transform duration-500">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-2 w-full bg-white/20 rounded" />
+                  <div className="h-2 w-2/3 bg-white/20 rounded" />
+                  <div className="h-8 w-full bg-primary/20 rounded mt-4 border border-primary/30 flex items-center px-2">
+                    <span className="text-[10px] text-blue-400">Risk Level: Low</span>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="absolute bottom-8 right-8 z-10 text-right">
               <span className="block text-white font-medium">Operational Intelligence</span>
