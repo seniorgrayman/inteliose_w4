@@ -22,8 +22,8 @@ const FooterSection = () => {
           </div>
         </div>
 
-        <h2 className="text-4xl md:text-5xl lg:text-6xl text-white mb-6 font-display font-medium tracking-tighter">Don't Launch Blind.</h2>
-        <p className="text-gray-400 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
+        <h2 className="text-4xl md:text-5xl lg:text-6xl text-primary mb-6 font-display font-medium tracking-tighter">Don't Launch Blind.</h2>
+        <p className="text-primary/70 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
           Analyze your token. Understand your risk. Act before narratives form.
         </p>
 
@@ -35,21 +35,21 @@ const FooterSection = () => {
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent w-full my-8 opacity-50" />
+      <div className="h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent w-full my-8 opacity-50" />
 
       {/* Links */}
       <div className="px-8 md:px-16 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-12 relative z-10">
         <div className="lg:col-span-5 space-y-6">
-          <h3 className="text-3xl text-white font-display font-medium tracking-tighter">inteliose™</h3>
-          <p className="text-gray-500 text-sm leading-relaxed max-w-sm">
+          <h3 className="text-3xl text-primary font-display font-medium tracking-tighter">inteliose™</h3>
+          <p className="text-primary/60 text-sm leading-relaxed max-w-sm">
             Founder-Centric Token Intelligence. Built on Base. Powered by structural risk detection.
           </p>
-          <p className="text-gray-600 text-xs max-w-sm">
+          <p className="text-primary/40 text-xs max-w-sm">
             Inteliose provides intelligence tools and risk analysis. It does not provide financial advice.
           </p>
           <div className="flex gap-4 pt-2">
             {[Twitter, MessageCircle, Circle].map((Icon, i) => (
-              <a key={i} href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors text-gray-400 hover:text-white border border-white/5">
+              <a key={i} href="#" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors text-primary/70 hover:text-primary border border-primary/20">
                 <Icon size={18} />
               </a>
             ))}
@@ -58,20 +58,20 @@ const FooterSection = () => {
 
         <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8 lg:pl-12">
           <div className="space-y-6">
-            <h4 className="text-white">Product</h4>
-            <ul className="space-y-3 text-sm text-gray-500">
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Modules</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Dashboard</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Docs</a></li>
+            <h4 className="text-primary">Product</h4>
+            <ul className="space-y-3 text-sm text-primary/60">
+              <li><a href="#" className="hover:text-primary transition-colors">Modules</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Dashboard</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Docs</a></li>
             </ul>
           </div>
           <div className="space-y-6">
-            <h4 className="text-white">Company</h4>
-            <ul className="space-y-3 text-sm text-gray-500">
-              <li><a href="#" className="hover:text-blue-400 transition-colors">About</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Contact</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Privacy</a></li>
-              <li><a href="#" className="hover:text-blue-400 transition-colors">Terms</a></li>
+            <h4 className="text-primary">Company</h4>
+            <ul className="space-y-3 text-sm text-primary/60">
+              <li><a href="#" className="hover:text-primary transition-colors">About</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Contact</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Privacy</a></li>
+              <li><a href="#" className="hover:text-primary transition-colors">Terms</a></li>
             </ul>
           </div>
         </div>
