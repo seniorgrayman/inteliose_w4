@@ -1,5 +1,6 @@
 import { ArrowDown, AlertCircle, ArrowRight } from "lucide-react";
 import darkTexture from "@/assets/dark-texture.jpg";
+import whyBaseVideo from "@/assets/why-base-bg.mp4";
 
 const ContextSection = () => {
   return (
@@ -68,9 +69,11 @@ const ContextSection = () => {
       {/* Col 3: Card Dark */}
       <div className="lg:col-span-4 relative group cursor-pointer">
         <div className="relative h-[550px] w-full rounded-3xl overflow-hidden">
-          <div className="absolute inset-0 bg-surface-dark">
-            <img src={darkTexture} alt="" className="w-full h-full object-cover opacity-60 transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[hsl(221,100%,50%)]/20 to-black/60 mix-blend-overlay" />
+          <div className="absolute inset-0">
+            <video autoPlay muted loop playsInline className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+              <source src={whyBaseVideo} type="video/mp4" />
+            </video>
+            <div className="absolute inset-0 bg-black/40" />
           </div>
 
           <div className="absolute top-6 left-6 text-white">
