@@ -1,6 +1,5 @@
 import { ArrowUpRight, ShieldCheck, ArrowRight } from "lucide-react";
 import dashboardBg from "@/assets/dashboard-bg.jpg";
-import whyBaseVideo from "@/assets/why-base-bg.mp4";
 
 const HowItWorksSection = () => {
   return (
@@ -94,18 +93,15 @@ const HowItWorksSection = () => {
           </div>
 
           {/* Card 4: CTA - Blue background with glassmorphic style */}
-          <div className="min-h-[520px] flex flex-col group overflow-hidden text-white relative justify-between rounded-3xl bg-black">
-            <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover z-0">
-              <source src={whyBaseVideo} type="video/mp4" />
-            </video>
-            <div className="flex justify-between items-start z-10 p-8">
+          <div className="min-h-[520px] flex flex-col group overflow-hidden text-white bg-primary p-8 relative justify-between rounded-3xl">
+            <div className="flex justify-between items-start z-10">
               <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-3 py-1 text-xs text-white">
                 <span className="text-xl font-display font-medium tracking-tighter">Don't Launch Blind</span>
               </span>
               <ArrowUpRight className="text-white/50 group-hover:text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-all duration-300" size={20} />
             </div>
 
-            <div className="z-10 relative p-8 pb-8">
+            <div className="z-10 relative">
               <p className="text-blue-200 leading-relaxed mb-12 text-[15px]">
                 Analyze your token. Understand your risk. Act before narratives form.
               </p>
