@@ -1,16 +1,13 @@
 import { ArrowRight } from "lucide-react";
 import Navbar from "./Navbar";
-import heroBgVideo from "@/assets/hero-bg-video.mp4";
+import heroBg from "@/assets/hero-bg.webp";
 
 const HeroSection = () => {
   return (
     <section className="relative w-full rounded-4xl overflow-hidden bg-surface-dark text-surface-dark-foreground min-h-[600px] flex flex-col justify-between p-8 lg:p-12 shadow-2xl">
       {/* Background */}
       <div className="absolute inset-0 z-0">
-        <video autoPlay muted loop playsInline className="opacity-60 mix-blend-overlay w-full h-full object-cover">
-          <source src={heroBgVideo} type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-t from-surface-dark via-transparent to-surface-dark/80" />
+        <img src={heroBg} alt="" className="w-full h-full object-cover" />
       </div>
 
       <Navbar />
