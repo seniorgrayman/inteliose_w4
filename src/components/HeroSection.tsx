@@ -16,12 +16,12 @@ const HeroSection = () => {
 
       {/* Hero Content */}
       <div className="relative z-10 mt-auto max-w-4xl">
-        <h1 className="text-5xl md:text-7xl leading-[1.1] mb-8 font-display font-medium tracking-tighter">
+        <h1 className="text-5xl md:text-7xl leading-[1.1] mb-8 font-display font-medium tracking-tighter text-primary">
           Build Smarter Tokens. <br />
-          <span className="text-muted-foreground">Avoid Predictable</span> <br />
+          <span className="text-white">Avoid Predictable</span> <br />
           Failure.
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mb-8">
+        <p className="text-lg text-primary/70 max-w-2xl mb-8">
           Inteliose is a founder-centric intelligence platform on Base. We analyze your token, classify risk baselines, and surface failure modes before they burn your project.
         </p>
       </div>
