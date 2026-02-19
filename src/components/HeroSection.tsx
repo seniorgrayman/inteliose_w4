@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Navbar from "./Navbar";
-import heroBg from "@/assets/hero-bg.webp";
+import heroBg from "@/assets/hero-bg.png";
 
 const HeroSection = () => {
   return (
