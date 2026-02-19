@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { useEffect } from "react";
 import Navbar from "./Navbar";
+import heroBgNew from "@/assets/hero-bg-new.jpg";
 
 const HeroSection = () => {
   useEffect(() => {
@@ -21,10 +22,13 @@ const HeroSection = () => {
 
   return (
     <section id="hero" className="relative w-full rounded-3xl md:rounded-4xl overflow-hidden bg-surface-dark text-surface-dark-foreground min-h-[500px] md:min-h-[600px] flex flex-col justify-between p-5 md:p-8 lg:p-12 shadow-2xl">
-      {/* Background */}
+      {/* Background Image */}
       <div className="absolute inset-0 z-0">
+        <img src={heroBgNew} alt="" className="w-full h-full object-cover" />
+      </div>
+      {/* UnicornStudio Overlay */}
+      <div className="absolute inset-0 z-[1]">
         <div data-us-project="ai6mDjHzHBRV4tIPQpck" style={{ width: "100%", height: "100%" }} />
-        <div className="absolute inset-0 bg-black/40" />
       </div>
 
       <Navbar />
