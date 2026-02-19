@@ -9,7 +9,7 @@ const FooterSection = () => {
         <video autoPlay muted loop playsInline className="w-full h-full object-cover">
           <source src={footerBgVideo} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-black/70" />
+        
       </div>
       {/* Glow */}
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
