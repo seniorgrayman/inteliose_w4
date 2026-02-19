@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   ArrowRight, Clock, DollarSign, BarChart3, Droplets, TrendingUp,
   Percent, Activity, Globe, FileText, MessageCircle, ExternalLink,
-  ChevronDown, Search, Sparkles
+  ChevronDown, Search, Sparkles, Wallet
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useRef } from "react";
 import heroBg from "@/assets/hero-bg.webp";
+import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
 
 /* ─── Mock Data ─── */
 const MOCK_TOKEN = {
@@ -106,6 +106,14 @@ const Dashboard = () => {
   const [chain, setChain] = useState<"Base" | "Solana">("Base");
   const [analyzed, setAnalyzed] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
+  const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
+
+  const handleWalletConnected = (address: string, wallet: WalletType) => {
+    setConnectedAddress(address);
+    setConnectedWallet(wallet);
+  };
 
   const handleAnalyze = () => {
     if (!tokenAddress) return;
@@ -142,9 +150,20 @@ const Dashboard = () => {
             >
               ← Back to Home
             </Link>
-            <button className="bg-[hsl(0_0%_100%/0.06)] backdrop-blur-md border border-[hsl(0_0%_100%/0.1)] text-white px-5 py-2 rounded-full text-sm hover:bg-[hsl(0_0%_100%/0.1)] transition-all font-display">
-              Wallet Connect (Solana)
-            </button>
+            {connectedAddress ? (
+              <button className="bg-[hsl(0_0%_100%/0.06)] backdrop-blur-md border border-primary/20 text-white px-5 py-2 rounded-full text-sm transition-all font-display flex items-center gap-2 shadow-[0_0_15px_hsl(var(--primary)/0.1)]">
+                <Wallet size={14} className="text-primary" />
+                {truncateAddress(connectedAddress)}
+              </button>
+            ) : (
+              <button
+                onClick={() => setWalletModalOpen(true)}
+                className="bg-[hsl(0_0%_100%/0.06)] backdrop-blur-md border border-[hsl(0_0%_100%/0.1)] text-white px-5 py-2 rounded-full text-sm hover:bg-[hsl(0_0%_100%/0.1)] hover:border-primary/20 transition-all font-display flex items-center gap-2"
+              >
+                <Wallet size={14} />
+                Connect Wallet
+              </button>
+            )}
           </div>
         </div>
         <div className="h-px bg-gradient-to-r from-transparent via-[hsl(0_0%_100%/0.08)] to-transparent" />
@@ -438,6 +457,12 @@ const Dashboard = () => {
           )}
         </AnimatePresence>
       </div>
+
+      <WalletConnectModal
+        isOpen={walletModalOpen}
+        onClose={() => setWalletModalOpen(false)}
+        onConnected={handleWalletConnected}
+      />
     </div>
   );
 };
