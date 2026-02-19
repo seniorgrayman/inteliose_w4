@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
-import dashboardBgVideo from "@/assets/dashboard-bg-video.webm";
+import dashboardBgVideo from "@/assets/dashboard-bg-video.mp4";
 
 /* ─── Mock Data ─── */
 const MOCK_TOKEN = {
