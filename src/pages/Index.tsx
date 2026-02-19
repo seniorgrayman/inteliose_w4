@@ -1,5 +1,6 @@
 import HeroSection from "@/components/HeroSection";
 import ContextSection from "@/components/ContextSection";
+import TechnologySection from "@/components/TechnologySection";
 import ModulesSection from "@/components/ModulesSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import PricingSection from "@/components/PricingSection";
@@ -19,6 +20,7 @@ const Index = () => {
       <main className="relative z-10 p-4 md:p-6 lg:p-8 space-y-6">
         <HeroSection />
         <ContextSection />
+        <TechnologySection />
         <ModulesSection />
         <HowItWorksSection />
         <PricingSection />
