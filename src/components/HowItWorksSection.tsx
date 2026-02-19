@@ -94,8 +94,8 @@ const HowItWorksSection = () => {
           </div>
 
           {/* Card 4: CTA - Blue background with glassmorphic style */}
-          <div className="min-h-[520px] flex flex-col group overflow-hidden text-white relative justify-between rounded-3xl">
-            <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover">
+          <div className="min-h-[520px] flex flex-col group overflow-hidden text-white relative justify-between rounded-3xl bg-black">
+            <video autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover z-0">
               <source src={whyBaseVideo} type="video/mp4" />
             </video>
             <div className="flex justify-between items-start z-10 p-8">
