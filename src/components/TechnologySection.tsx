@@ -158,42 +158,25 @@ const StatPill = ({ label, value, icon: Icon, delay = 0 }: { label: string; valu
   );
 };
 
-/* ─── Animated Progress Bar (Premium) ─── */
-const AnimBar = ({ label, percent, delay = 0 }: { label: string; percent: number; delay?: number }) => {
+/* ─── Animated Progress Bar ─── */
+const AnimBar = ({ label, percent, delay = 0, color = "primary" }: { label: string; percent: number; delay?: number; color?: string }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
-  const risk = percent > 80 ? "LOW" : percent > 55 ? "MED" : "HIGH";
-  const riskColor = percent > 80 ? "text-green-500" : percent > 55 ? "text-primary" : "text-amber-500";
-
   return (
-    <motion.div
-      ref={ref}
-      whileHover={{ scale: 1.02, y: -2 }}
-      className="bg-gradient-to-b from-secondary/40 to-secondary/20 rounded-2xl border border-[hsl(var(--border)/0.4)] p-4 space-y-2.5 cursor-default group shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset] hover:border-primary/20 hover:shadow-[0_8px_30px_-10px_hsl(var(--primary)/0.1)] transition-all duration-500"
-    >
-      <div className="flex justify-between items-center">
-        <span className="text-xs text-muted-foreground/80 font-display font-medium">{label}</span>
-        <div className="flex items-center gap-2">
-          <span className={`text-[9px] font-display font-bold tracking-widest uppercase ${riskColor}`}>{risk}</span>
-          <span className="text-sm font-display font-bold text-foreground">{percent}%</span>
-        </div>
+    <div ref={ref} className="space-y-2">
+      <div className="flex justify-between text-xs">
+        <span className="text-muted-foreground/70 font-display">{label}</span>
+        <span className="text-foreground font-display font-semibold">{percent}%</span>
       </div>
-      <div className="h-2.5 bg-secondary/60 rounded-full overflow-hidden border border-[hsl(var(--border)/0.3)] relative">
+      <div className="h-2 bg-secondary/60 rounded-full overflow-hidden border border-[hsl(var(--border)/0.3)]">
         <motion.div
-          className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary/50 rounded-full relative"
+          className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full"
           initial={{ width: 0 }}
           animate={isInView ? { width: `${percent}%` } : {}}
           transition={{ duration: 1.5, delay: delay + 0.3, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <motion.div
-            className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-white border-2 border-primary shadow-[0_0_12px_hsl(var(--primary)/0.5)]"
-            initial={{ scale: 0 }}
-            animate={isInView ? { scale: 1 } : {}}
-            transition={{ duration: 0.3, delay: delay + 1.6 }}
-          />
-        </motion.div>
+        />
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -327,57 +310,20 @@ const TechnologySection = () => {
           transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
           className="mb-16"
         >
-          <GlassCard glow className="relative overflow-hidden">
-            <ScanLine />
-            <div className="absolute -top-32 -left-32 w-72 h-72 rounded-full bg-primary/[0.04] blur-[100px] pointer-events-none" />
-            <div className="absolute -bottom-20 -right-20 w-60 h-60 rounded-full bg-primary/[0.03] blur-[80px] pointer-events-none" />
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 relative z-10">
-              <div className="flex items-center gap-3">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-10 h-10 rounded-xl bg-primary/[0.08] border border-primary/15 flex items-center justify-center"
-                >
-                  <Shield size={16} className="text-primary" />
-                </motion.div>
-                <div>
-                  <span className="text-sm font-display font-semibold text-foreground tracking-tight block">Risk Vector Analysis</span>
-                  <span className="text-[10px] text-muted-foreground/50 font-display">Real-time threat surface mapping</span>
+          <GlassCard>
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-primary/[0.08] border border-primary/15 flex items-center justify-center">
+                  <Shield size={13} className="text-primary" />
                 </div>
+                <span className="text-xs font-display font-semibold text-muted-foreground tracking-widest uppercase">Risk Vector Analysis</span>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5 text-[10px] text-primary bg-primary/[0.06] px-3 py-1.5 rounded-full border border-primary/15 font-display font-semibold">
-                  <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  LIVE
-                </span>
-                <span className="text-[10px] text-muted-foreground/40 font-mono">6 vectors</span>
-              </div>
+              <span className="flex items-center gap-1.5 text-[10px] text-primary bg-primary/[0.06] px-3 py-1.5 rounded-full border border-primary/15 font-display font-semibold">
+                <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
+                LIVE
+              </span>
             </div>
-
-            {/* Overall score */}
-            <div className="flex items-center gap-4 mb-8 relative z-10">
-              <div className="relative w-16 h-16">
-                <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 60 60">
-                  <circle cx="30" cy="30" r="24" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
-                  <motion.circle
-                    cx="30" cy="30" r="24" fill="none" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round"
-                    strokeDasharray={150.8}
-                    initial={{ strokeDashoffset: 150.8 }}
-                    animate={isInView ? { strokeDashoffset: 150.8 * (1 - 0.77) } : {}}
-                    transition={{ duration: 2, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-display font-bold text-foreground"><AnimCounter target={77} suffix="%" /></span>
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-display font-semibold text-foreground">Overall Risk Score</p>
-                <p className="text-[10px] text-muted-foreground/60 font-display">Moderate confidence — deploy with caution</p>
-              </div>
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-3 relative z-10">
+            <div className="grid md:grid-cols-2 gap-x-12 gap-y-5">
               <AnimBar label="Liquidity Depth" percent={78} delay={0} />
               <AnimBar label="Holder Distribution" percent={62} delay={0.1} />
               <AnimBar label="Smart Contract Safety" percent={91} delay={0.2} />
