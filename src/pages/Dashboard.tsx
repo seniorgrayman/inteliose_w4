@@ -49,11 +49,11 @@ const GlassCard = ({ children, className = "", glow = false }: { children: React
       animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       className={`
-        relative rounded-[28px] 
+        relative rounded-[20px] md:rounded-[28px] 
         bg-gradient-to-b from-card/80 to-card/60 
         backdrop-blur-3xl 
         border border-[hsl(var(--border)/0.4)]
-        p-7 md:p-9
+        p-5 md:p-9
         shadow-[0_1px_0_0_hsl(0_0%_100%/0.6)_inset,0_-1px_0_0_hsl(0_0%_0%/0.04)_inset,0_20px_60px_-15px_hsl(0_0%_0%/0.08),0_2px_8px_-2px_hsl(0_0%_0%/0.06)]
         ${glow ? 'shadow-[0_1px_0_0_hsl(0_0%_100%/0.6)_inset,0_-1px_0_0_hsl(0_0%_0%/0.04)_inset,0_20px_60px_-15px_hsl(var(--primary)/0.1),0_2px_8px_-2px_hsl(0_0%_0%/0.06)]' : ''}
         ${className}
@@ -145,16 +145,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
-      {/* Ambient orbs */}
-      <FloatingOrb size={700} x="-10%" y="5%" delay={0} />
-      <FloatingOrb size={500} x="60%" y="40%" delay={3} />
-      <FloatingOrb size={350} x="30%" y="-8%" delay={6} color="accent" />
-      <FloatingOrb size={400} x="80%" y="70%" delay={9} color="accent" />
-
-      {/* Ultra-subtle grid */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.025]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, hsl(var(--foreground)) 0.5px, transparent 0)", backgroundSize: "40px 40px" }} />
-
+    <div className="min-h-screen bg-background text-foreground relative overflow-x-hidden">
       {/* Ambient orbs */}
       <FloatingOrb size={700} x="-10%" y="5%" delay={0} />
       <FloatingOrb size={500} x="60%" y="40%" delay={3} />
@@ -163,7 +154,7 @@ const Dashboard = () => {
 
       {/* Premium Navbar */}
       <nav className="relative z-50 bg-gradient-to-b from-card/70 to-card/50 backdrop-blur-2xl border-b border-[hsl(var(--border)/0.3)]">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
           <Link to="/" className="font-display font-bold text-xl tracking-tight text-foreground hover:text-foreground/70 transition-colors">
             inteliose™
           </Link>
@@ -196,46 +187,47 @@ const Dashboard = () => {
       </nav>
 
       {/* Tab Toggle */}
-      <div className="relative z-10 max-w-5xl mx-auto px-6 pt-10 pb-2">
-        <div className="inline-flex items-center bg-gradient-to-b from-card/70 to-card/50 backdrop-blur-2xl border border-[hsl(var(--border)/0.4)] rounded-2xl p-1 shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.06)]">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 pt-6 md:pt-10 pb-2">
+        <div className="inline-flex items-center bg-gradient-to-b from-card/70 to-card/50 backdrop-blur-2xl border border-[hsl(var(--border)/0.4)] rounded-2xl p-1 shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.06)] overflow-x-auto max-w-full hide-scrollbar">
           <button
             onClick={() => setActiveTab("analyze")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold transition-all ${
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
               activeTab === "analyze"
                 ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Search size={14} />
-            Analyze Token
+            <span className="hidden sm:inline">Analyze Token</span>
+            <span className="sm:hidden">Analyze</span>
           </button>
           <button
             onClick={() => setActiveTab("conlaunch")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold transition-all ${
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
               activeTab === "conlaunch"
                 ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Radio size={14} />
-            ConLaunch Live
+            ConLaunch
           </button>
           <button
             onClick={() => setActiveTab("clawnch")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold transition-all ${
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
               activeTab === "clawnch"
                 ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Radio size={14} />
-            Clawnch Live
+            Clawnch
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-8 space-y-8">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-8 space-y-6 md:space-y-8">
 
         {activeTab === "analyze" && (
         <>
@@ -246,7 +238,7 @@ const Dashboard = () => {
           <div className="absolute -bottom-24 -left-24 w-60 h-60 rounded-full bg-primary/[0.03] blur-[80px] pointer-events-none" />
 
           <div className="relative z-10">
-            <div className="flex items-start justify-between mb-8">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6 md:mb-8">
               <div>
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -260,7 +252,7 @@ const Dashboard = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="text-4xl md:text-5xl font-display font-medium tracking-tighter text-foreground leading-[1.05] mb-3"
+                  className="text-3xl md:text-5xl font-display font-medium tracking-tighter text-foreground leading-[1.05] mb-3"
                 >
                   One input →<br />instant intelligence.
                 </motion.h1>
@@ -320,13 +312,13 @@ const Dashboard = () => {
                   />
                 </div>
 
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap w-full md:w-auto">
                   <motion.button
                     whileHover={{ scale: 1.03, y: -2, boxShadow: "0 12px 40px hsl(240 100% 50% / 0.25)" }}
                     whileTap={{ scale: 0.97 }}
                     onClick={handleAnalyze}
                     disabled={isAnalyzing}
-                    className="bg-primary text-primary-foreground px-8 py-4 rounded-2xl text-sm font-display font-semibold flex items-center gap-2.5 transition-all disabled:opacity-50 whitespace-nowrap shadow-[0_6px_25px_hsl(var(--primary)/0.3),0_1px_0_0_hsl(0_0%_100%/0.15)_inset]"
+                    className="bg-primary text-primary-foreground px-6 md:px-8 py-3 md:py-4 rounded-2xl text-sm font-display font-semibold flex items-center gap-2.5 transition-all disabled:opacity-50 whitespace-nowrap shadow-[0_6px_25px_hsl(var(--primary)/0.3),0_1px_0_0_hsl(0_0%_100%/0.15)_inset] w-full md:w-auto justify-center"
                   >
                     {isAnalyzing ? (
                       <>
