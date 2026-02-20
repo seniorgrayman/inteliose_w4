@@ -8,6 +8,7 @@ import {
 import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
 import ConLaunchLiveSection from "@/components/ConLaunchLiveSection";
+import ClawnchLiveSection from "@/components/ClawnchLiveSection";
 
 
 /* ─── Mock Data ─── */
@@ -127,7 +128,7 @@ const Dashboard = () => {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
-  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch">("analyze");
+  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch" | "clawnch">("analyze");
 
   const handleWalletConnected = (address: string, wallet: WalletType) => {
     setConnectedAddress(address);
@@ -218,6 +219,17 @@ const Dashboard = () => {
           >
             <Radio size={14} />
             ConLaunch Live
+          </button>
+          <button
+            onClick={() => setActiveTab("clawnch")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold transition-all ${
+              activeTab === "clawnch"
+                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Radio size={14} />
+            Clawnch Live
           </button>
         </div>
       </div>
@@ -531,6 +543,10 @@ const Dashboard = () => {
 
         {activeTab === "conlaunch" && (
           <ConLaunchLiveSection />
+        )}
+
+        {activeTab === "clawnch" && (
+          <ClawnchLiveSection />
         )}
       </div>
 
