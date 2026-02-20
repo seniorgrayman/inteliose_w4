@@ -3,10 +3,11 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   ArrowRight, Clock, DollarSign, BarChart3, Droplets, TrendingUp,
   Percent, Activity, Globe, FileText, MessageCircle, ExternalLink,
-  ChevronDown, Search, Sparkles, Wallet, Shield, Zap
+  ChevronDown, Search, Sparkles, Wallet, Shield, Zap, Radio
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
+import ConLaunchLiveSection from "@/components/ConLaunchLiveSection";
 
 
 /* ─── Mock Data ─── */
@@ -126,6 +127,7 @@ const Dashboard = () => {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
+  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch">("analyze");
 
   const handleWalletConnected = (address: string, wallet: WalletType) => {
     setConnectedAddress(address);
@@ -192,9 +194,39 @@ const Dashboard = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-14 space-y-8">
+      {/* Tab Toggle */}
+      <div className="relative z-10 max-w-5xl mx-auto px-6 pt-10 pb-2">
+        <div className="inline-flex items-center bg-gradient-to-b from-card/70 to-card/50 backdrop-blur-2xl border border-[hsl(var(--border)/0.4)] rounded-2xl p-1 shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.06)]">
+          <button
+            onClick={() => setActiveTab("analyze")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold transition-all ${
+              activeTab === "analyze"
+                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Search size={14} />
+            Analyze Token
+          </button>
+          <button
+            onClick={() => setActiveTab("conlaunch")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold transition-all ${
+              activeTab === "conlaunch"
+                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Radio size={14} />
+            ConLaunch Live
+          </button>
+        </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="relative z-10 max-w-5xl mx-auto px-6 py-8 space-y-8">
+
+        {activeTab === "analyze" && (
+        <>
         {/* ─── Input Hero Card ─── */}
         <GlassCard glow className="relative overflow-hidden">
           {/* Ambient glow inside card */}
@@ -494,6 +526,12 @@ const Dashboard = () => {
             </motion.div>
           )}
         </AnimatePresence>
+        </>
+        )}
+
+        {activeTab === "conlaunch" && (
+          <ConLaunchLiveSection />
+        )}
       </div>
 
       <WalletConnectModal
