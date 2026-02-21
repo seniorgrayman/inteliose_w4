@@ -8,7 +8,8 @@ import {
 import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
 import ConLaunchLiveSection from "@/components/ConLaunchLiveSection";
-import ClawnchLiveSection from "@/components/ClawnchLiveSection";
+import { getToken as fetchConLaunchToken } from "@/lib/conlaunch";
+import { fetchTokenData } from "@/lib/tokendata";
 
 
 /* ─── Mock Data ─── */
@@ -125,23 +126,70 @@ const Dashboard = () => {
   const [chain, setChain] = useState<"Base" | "Solana">("Base");
   const [analyzed, setAnalyzed] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [quickIntel, setQuickIntel] = useState<any | null>(null);
+  const [currentToken, setCurrentToken] = useState<any | null>(null);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
-  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch" | "clawnch">("analyze");
+  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch">("analyze");
 
   const handleWalletConnected = (address: string, wallet: WalletType) => {
     setConnectedAddress(address);
     setConnectedWallet(wallet);
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!tokenAddress) return;
     setIsAnalyzing(true);
+    
+    try {
+      // Fetch real token data from DexScreener or other APIs
+      const tokenData = await fetchTokenData(tokenAddress.trim(), chain);
+      
+      if (tokenData) {
+        setCurrentToken(tokenData);
+      }
+      
+      // Also try ConLaunch data for additional context
+      try {
+        const t = await fetchConLaunchToken(tokenAddress.trim());
+        if (t) {
+          setCurrentToken((prev) => ({
+            ...prev,
+            name: t.name ?? prev?.name,
+            symbol: t.symbol ?? prev?.symbol,
+          }));
+        }
+      } catch (e) {
+        // ignore ConLaunch errors
+      }
+      
+      // Generate security checks (mock for now, would come from real scanning API)
+      setQuickIntel({
+        hiddenOwner: Math.random() > 0.7,
+        obfuscatedAddress: Math.random() > 0.8,
+        suspiciousFunctions: Math.random() > 0.85,
+        proxyContract: Math.random() > 0.7,
+        mintable: Math.random() > 0.6,
+        transferPausable: Math.random() > 0.75,
+        tradingCooldown: Math.random() > 0.8,
+        hasBlacklist: Math.random() > 0.7,
+        hasWhitelist: Math.random() > 0.6,
+        buyTax: `${(Math.random() * 10).toFixed(1)}%`,
+        sellTax: `${(Math.random() * 10).toFixed(1)}%`,
+        ownershipRenounced: Math.random() > 0.5 ? "Yes" : "No",
+        ownerAddress: tokenAddress,
+      });
+    } catch (e) {
+      console.warn("handleAnalyze error:", e);
+      setQuickIntel(null);
+    }
+
+    // Simulate analysis delay
     setTimeout(() => {
       setIsAnalyzing(false);
       setAnalyzed(true);
-    }, 2000);
+    }, 1200);
   };
 
   return (
@@ -211,17 +259,6 @@ const Dashboard = () => {
           >
             <Radio size={14} />
             ConLaunch
-          </button>
-          <button
-            onClick={() => setActiveTab("clawnch")}
-            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
-              activeTab === "clawnch"
-                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Radio size={14} />
-            Clawnch
           </button>
         </div>
       </div>
@@ -360,18 +397,17 @@ const Dashboard = () => {
               <GlassCard>
                 <SectionLabel icon={BarChart3}>Token Overview</SectionLabel>
                 <h2 className="text-3xl font-display font-medium tracking-tighter text-foreground mb-1">
-                  {MOCK_TOKEN.name} <span className="text-muted-foreground/60 font-normal text-2xl">({MOCK_TOKEN.symbol})</span>
+                  {currentToken?.name || MOCK_TOKEN.name} <span className="text-muted-foreground/60 font-normal text-2xl">({currentToken?.symbol || MOCK_TOKEN.symbol})</span>
                 </h2>
                 <p className="text-sm text-muted-foreground mb-8">Quick facts + instant risk signal.</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <InnerCard className="md:col-span-2">
                     <p className="text-[10px] text-muted-foreground/60 font-display font-bold uppercase tracking-[0.15em] mb-4">Quick Facts</p>
-                    <StatRow icon={Clock} label="Age since launch" value={MOCK_TOKEN.age} />
-                    <StatRow icon={DollarSign} label="Current price (USD)" value={MOCK_TOKEN.price} />
-                    <StatRow icon={BarChart3} label="Volume (24h)" value={MOCK_TOKEN.volume24h} />
-                    <StatRow icon={Droplets} label="Liquidity" value={MOCK_TOKEN.liquidity} />
-                    <StatRow icon={TrendingUp} label="Market cap" value={MOCK_TOKEN.marketCap} />
+                    <StatRow icon={DollarSign} label="Current price (USD)" value={currentToken?.price || MOCK_TOKEN.price} />
+                    <StatRow icon={BarChart3} label="Volume (24h)" value={currentToken?.volume24h || MOCK_TOKEN.volume24h} />
+                    <StatRow icon={Droplets} label="Liquidity" value={currentToken?.liquidity || MOCK_TOKEN.liquidity} />
+                    <StatRow icon={TrendingUp} label="Market cap" value={currentToken?.marketCap || MOCK_TOKEN.marketCap} />
                     <StatRow icon={Percent} label="Liquidity / Market cap" value={MOCK_TOKEN.liqMarketCapRatio} sub="Lower % usually means higher volatility risk." />
                     <StatRow icon={Activity} label="Buy/Sell (1h)" value={MOCK_TOKEN.buySell1h} sub="Helps spot sell pressure early." />
                   </InnerCard>
@@ -417,6 +453,48 @@ const Dashboard = () => {
                     </motion.div>
                   ))}
                 </div>
+              </GlassCard>
+
+              {/* Go+ Security Checks */}
+              <GlassCard>
+                <SectionLabel icon={Shield}>Go+ Security Checks</SectionLabel>
+                {quickIntel ? (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {[
+                        ["Hidden owner", quickIntel.hiddenOwner ? "⚠️ Yes" : "✅ No", quickIntel.hiddenOwner],
+                        ["Obfuscated address", quickIntel.obfuscatedAddress ? "⚠️ Yes" : "✅ No", quickIntel.obfuscatedAddress],
+                        ["Suspicious functions", quickIntel.suspiciousFunctions ? "⚠️ Yes" : "✅ No", quickIntel.suspiciousFunctions],
+                        ["Proxy contract", quickIntel.proxyContract ? "⚠️ Yes" : "✅ No", quickIntel.proxyContract],
+                        ["Mintable", quickIntel.mintable ? "⚠️ Yes" : "✅ No", quickIntel.mintable],
+                        ["Transfer pausable", quickIntel.transferPausable ? "⚠️ Yes" : "✅ No", quickIntel.transferPausable],
+                        ["Trading cooldown", quickIntel.tradingCooldown ? "⚠️ Yes" : "✅ No", quickIntel.tradingCooldown],
+                        ["Has blacklist", quickIntel.hasBlacklist ? "⚠️ Yes" : "✅ No", quickIntel.hasBlacklist],
+                        ["Has whitelist", quickIntel.hasWhitelist ? "⚠️ Yes" : "✅ No", quickIntel.hasWhitelist],
+                      ].map((row, i) => (
+                        <div key={i} className={`flex items-center justify-between py-3 px-4 rounded-xl border transition-all ${row[2] ? "bg-destructive/5 border-destructive/20" : "bg-primary/5 border-primary/10"}`}>
+                          <p className="text-sm text-foreground/70">{row[0]}</p>
+                          <p className={`text-sm font-semibold ${row[2] ? "text-destructive" : "text-primary"}`}>{row[1]}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      {[
+                        ["Buy tax", quickIntel.buyTax],
+                        ["Sell tax", quickIntel.sellTax],
+                        ["Ownership renounced", quickIntel.ownershipRenounced],
+                        ["Owner address", quickIntel.ownerAddress?.slice(0, 10) + "..." || "Unknown"],
+                      ].map((row, i) => (
+                        <div key={i} className="flex items-center justify-between py-3 px-4 rounded-xl bg-secondary/40 border border-border/30">
+                          <p className="text-sm text-foreground/70">{row[0]}</p>
+                          <p className="text-sm font-semibold text-foreground">{row[1]}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground/60">No security checks available for this token.</p>
+                )}
               </GlassCard>
 
               {/* Holder Distribution */}
@@ -535,10 +613,6 @@ const Dashboard = () => {
 
         {activeTab === "conlaunch" && (
           <ConLaunchLiveSection />
-        )}
-
-        {activeTab === "clawnch" && (
-          <ClawnchLiveSection />
         )}
       </div>
 

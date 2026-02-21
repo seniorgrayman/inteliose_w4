@@ -62,7 +62,9 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.9",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "@walletconnect/web3-provider": "^1.8.0",
+    "@web3modal/react": "^2.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -88,3 +90,4 @@
     "vitest": "^3.2.4"
   }
 }
+

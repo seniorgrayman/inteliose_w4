@@ -43,6 +43,9 @@ const generateToken = (): MockToken => {
 
 const initialTokens = (): MockToken[] => Array.from({ length: 6 }, generateToken);
 
+// --- ConLaunch integration (fetch real tokens; fallback to mock) ---
+import { listTokens as fetchConLaunchTokens } from "@/lib/conlaunch";
+
 // --- Reusable inner card (matches Dashboard style) ---
 const InnerCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div className={`bg-gradient-to-b from-secondary/50 to-secondary/30 rounded-[20px] border border-[hsl(var(--border)/0.4)] p-5 shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.05)] ${className}`}>
@@ -289,15 +292,41 @@ const ConLaunchLiveSection = () => {
   const [expandedToken, setExpandedToken] = useState<MockToken | null>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTokens((prev) => {
-        const newToken = generateToken();
-        const updated = [newToken, ...prev];
-        return updated.slice(0, 8);
-      });
-      setTodayCount((c) => c + 1);
-    }, 6000);
-    return () => clearInterval(interval);
+    // Try to load live ConLaunch tokens once, then fall back to the mock feed
+    let mounted = true;
+    (async () => {
+      try {
+        const live = await fetchConLaunchTokens(1, 8);
+        if (mounted && live && live.length) {
+          const mapped = live.map((t) => ({
+            id: t.id,
+            name: t.name,
+            symbol: t.symbol ?? t.name?.slice(0, 4).toUpperCase(),
+            description: t.description ?? "",
+            vault_percentage: t.vault_percentage ?? 0,
+            deployed_ago: t.deployed_ago ?? Math.floor(Math.random() * 55) + 1,
+          } as MockToken));
+          setTokens(mapped);
+          setTodayCount((c) => c + mapped.length);
+        }
+      } catch (e) {
+        // ignore - keep mock tokens
+      }
+
+      // keep the live-ish feed behavior (new token every 6s) even when using live data
+      const interval = setInterval(() => {
+        setTokens((prev) => {
+          const newToken = generateToken();
+          const updated = [newToken, ...prev];
+          return updated.slice(0, 8);
+        });
+        setTodayCount((c) => c + 1);
+      }, 6000);
+      return () => {
+        mounted = false;
+        clearInterval(interval);
+      };
+    })();
   }, []);
 
   const handleAnalyze = useCallback((token: MockToken) => {
