@@ -5,46 +5,9 @@ import {
   Clock, DollarSign, BarChart3, Percent, Activity, Globe, FileText,
   ExternalLink, MessageCircle, Sparkles, Zap
 } from "lucide-react";
-
-// --- Mock Data ---
-const TOKEN_NAMES = [
-  { name: "Aether Agent", symbol: "AETH", desc: "Autonomous portfolio rebalancer powered by on-chain sentiment signals.", vault: 40 },
-  { name: "BaseBot", symbol: "BBOT", desc: "AI-driven trading assistant for the Base L2 ecosystem.", vault: 0 },
-  { name: "NeuralSwap", symbol: "NSWP", desc: "Intelligent AMM with predictive liquidity routing on Base.", vault: 25 },
-  { name: "SentinelAI", symbol: "SNAI", desc: "Real-time smart contract vulnerability scanner and alerting agent.", vault: 60 },
-  { name: "Catalyst", symbol: "CTLY", desc: "Multi-strategy yield optimizer with autonomous compounding.", vault: 0 },
-  { name: "Axiom Protocol", symbol: "AXIO", desc: "Decentralized inference network for on-chain AI model execution.", vault: 35 },
-  { name: "Oraculum", symbol: "ORCL", desc: "Hybrid oracle aggregator with built-in anomaly detection.", vault: 15 },
-  { name: "Vanguard DAO", symbol: "VGRD", desc: "Community-governed security audit and insurance protocol.", vault: 50 },
-  { name: "FluxMind", symbol: "FLUX", desc: "Adaptive market-making agent for low-liquidity token pairs.", vault: 0 },
-  { name: "Helix AI", symbol: "HELX", desc: "Cross-chain bridge monitor with predictive fraud scoring.", vault: 70 },
-];
-
-type MockToken = {
-  id: string;
-  name: string;
-  symbol: string;
-  description: string;
-  vault_percentage: number;
-  deployed_ago: number;
-};
-
-const generateToken = (): MockToken => {
-  const pick = TOKEN_NAMES[Math.floor(Math.random() * TOKEN_NAMES.length)];
-  return {
-    id: crypto.randomUUID(),
-    name: pick.name,
-    symbol: pick.symbol,
-    description: pick.desc,
-    vault_percentage: pick.vault,
-    deployed_ago: Math.floor(Math.random() * 55) + 1,
-  };
-};
-
-const initialTokens = (): MockToken[] => Array.from({ length: 6 }, generateToken);
-
-// --- ConLaunch integration (fetch real tokens; fallback to mock) ---
-import { listTokens as fetchConLaunchTokens } from "@/lib/conlaunch";
+import { ConLaunchToken, listTokens as fetchConLaunchTokens } from "@/lib/conlaunch";
+import { TokenData, fetchTokenData } from "@/lib/tokendata";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // --- Reusable inner card (matches Dashboard style) ---
 const InnerCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
@@ -66,7 +29,7 @@ const SectionLabel = ({ children, icon: Icon }: { children: React.ReactNode; ico
   </div>
 );
 
-const StatRow = ({ icon: Icon, label, value, sub }: { icon: any; label: string; value: string; sub?: string }) => (
+const StatRow = ({ icon: Icon, label, value, sub, isLoading }: { icon: any; label: string; value: string; sub?: string, isLoading?: boolean }) => (
   <div className="flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 group">
     <div className="flex items-center gap-2.5">
       <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary/80 to-secondary/40 border border-[hsl(var(--border)/0.5)] flex items-center justify-center shadow-[0_1px_0_0_hsl(0_0%_100%/0.5)_inset]">
@@ -77,48 +40,41 @@ const StatRow = ({ icon: Icon, label, value, sub }: { icon: any; label: string; 
         {sub && <p className="text-[10px] text-muted-foreground/50 mt-0.5 max-w-[180px] leading-relaxed">{sub}</p>}
       </div>
     </div>
-    <p className="text-xs font-semibold text-foreground font-display tracking-tight">{value}</p>
+    {isLoading ? <Skeleton className="h-4 w-16" /> : <p className="text-xs font-semibold text-foreground font-display tracking-tight">{value}</p>}
   </div>
 );
 
-// --- Generate mock analysis data for a token ---
-const generateAnalysis = (token: MockToken) => {
-  const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min)) + min;
-  const price = (Math.random() * 0.001).toFixed(6);
-  const vol = rand(50, 900);
-  const liq = (Math.random() * 3).toFixed(2);
-  const mcap = (Math.random() * 5).toFixed(2);
-  const liqRatio = rand(15, 65);
-  const buys = rand(5, 40);
-  const sells = rand(5, 60);
-  const aiScore = rand(30, 85);
+// --- Full Analysis View (fetches its own data) ---
+const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: () => void }) => {
+  const [analysis, setAnalysis] = useState<TokenData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  return {
-    age: `${token.deployed_ago}m`,
-    price: `$${price}`,
-    volume24h: `$${vol},${rand(100, 999)}`,
-    liquidity: `$${liq}M`,
-    marketCap: `$${mcap}M`,
-    liqMarketCapRatio: `${liqRatio}%`,
-    buySell1h: `${buys} / ${sells}`,
-    mintAuthority: Math.random() > 0.5 ? "Renounced" : "Active",
-    liquidityPool: `${liqRatio}%`,
-    rugpullRisk: liqRatio > 40 ? "Low" : liqRatio > 25 ? "Medium" : "High",
-    aiScore,
-    aiSummary: `${token.name} operates on Base with a market cap of $${mcap}M and $${liq}M in liquidity. Trading activity shows ${sells > buys ? "sell-dominant" : "buy-dominant"} pressure with a ${buys}/${sells} buy/sell ratio in the last hour.`,
-    keySignals: `${sells > buys ? `Sell transactions outnumber buys by ${(sells / buys).toFixed(1)}:1 ratio.` : `Buy transactions lead with a ${(buys / sells).toFixed(1)}:1 ratio.`} Liquidity-to-market-cap ratio sits at ${liqRatio}%, ${liqRatio > 40 ? "indicating reasonable depth." : "suggesting elevated volatility risk."}`,
-    socials: [
-      { name: "Website", icon: Globe },
-      { name: "Docs", icon: FileText },
-      { name: "X (Twitter)", icon: ExternalLink },
-      { name: "Telegram", icon: MessageCircle },
-    ],
-  };
-};
+  useEffect(() => {
+    let isMounted = true;
+    const getAnalysis = async () => {
+      if (!token.address) {
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const data = await fetchTokenData(token.address, "Base"); // Assuming ConLaunch tokens are on Base
+        if (isMounted) {
+          setAnalysis(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch token analysis:", error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    getAnalysis();
+    return () => { isMounted = false; };
+  }, [token.id, token.address]);
 
-// --- Full Analysis View (mirrors Dashboard analysis) ---
-const FullAnalysisView = ({ token, onClose }: { token: MockToken; onClose: () => void }) => {
-  const data = useMemo(() => generateAnalysis(token), [token.id]);
+  const displayValue = (value: string | null | undefined, fallback = "N/A") => value ?? fallback;
 
   return (
     <motion.div
@@ -146,7 +102,7 @@ const FullAnalysisView = ({ token, onClose }: { token: MockToken; onClose: () =>
       </div>
 
       {/* Vault Badge */}
-      {token.vault_percentage > 0 && (
+      {token.vault_percentage && token.vault_percentage > 0 && (
         <div className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full font-medium">
           <Lock size={10} /> {token.vault_percentage}% Vaulted
         </div>
@@ -155,103 +111,26 @@ const FullAnalysisView = ({ token, onClose }: { token: MockToken; onClose: () =>
       {/* Token Overview - Quick Facts */}
       <InnerCard>
         <SectionLabel icon={BarChart3}>Token Overview</SectionLabel>
-        <StatRow icon={Clock} label="Age since launch" value={data.age} />
-        <StatRow icon={DollarSign} label="Current price (USD)" value={data.price} />
-        <StatRow icon={BarChart3} label="Volume (24h)" value={data.volume24h} />
-        <StatRow icon={Droplets} label="Liquidity" value={data.liquidity} />
-        <StatRow icon={TrendingUp} label="Market cap" value={data.marketCap} />
-        <StatRow icon={Percent} label="Liquidity / Market cap" value={data.liqMarketCapRatio} sub="Lower % = higher volatility risk." />
-        <StatRow icon={Activity} label="Buy/Sell (1h)" value={data.buySell1h} sub="Helps spot sell pressure early." />
+        <StatRow icon={Clock} label="Age since launch" value={`${token.deployed_ago}m`} isLoading={isLoading} />
+        <StatRow icon={DollarSign} label="Current price (USD)" value={displayValue(analysis?.price)} isLoading={isLoading} />
+        <StatRow icon={BarChart3} label="Volume (24h)" value={displayValue(analysis?.volume24h)} isLoading={isLoading} />
+        <StatRow icon={Droplets} label="Liquidity" value={displayValue(analysis?.liquidity)} isLoading={isLoading} />
+        <StatRow icon={TrendingUp} label="Market cap" value={displayValue(analysis?.marketCap)} isLoading={isLoading} />
       </InnerCard>
 
-      {/* Status Badges */}
-      <div className="flex gap-3 flex-wrap">
-        <div className="bg-gradient-to-b from-secondary/50 to-secondary/30 border border-[hsl(var(--border)/0.4)] rounded-xl px-4 py-3 shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset]">
-          <p className="text-[10px] text-muted-foreground/60 mb-1 font-display font-bold uppercase tracking-[0.15em]">Mint Authority</p>
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${data.mintAuthority === "Renounced" ? "bg-primary" : "bg-destructive"} shadow-[0_0_8px_hsl(var(--primary)/0.5)]`} />
-            <span className="text-xs font-display font-bold text-foreground">{data.mintAuthority}</span>
-          </div>
-        </div>
-        <div className="bg-gradient-to-b from-secondary/50 to-secondary/30 border border-[hsl(var(--border)/0.4)] rounded-xl px-4 py-3 shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset]">
-          <p className="text-[10px] text-muted-foreground/60 mb-1 font-display font-bold uppercase tracking-[0.15em]">Liquidity Supply</p>
-          <span className="text-xs font-display font-bold text-foreground">{data.liquidityPool}</span>
-        </div>
-      </div>
-
-      {/* Social Links */}
-      <InnerCard>
-        <SectionLabel icon={Globe}>Social Links</SectionLabel>
-        <div className="space-y-0.5">
-          {data.socials.map((s) => (
-            <div key={s.name} className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-primary/[0.03] transition-all group cursor-pointer">
-              <div className="flex items-center gap-2">
-                <s.icon size={12} className="text-muted-foreground/50 group-hover:text-primary transition-colors" />
-                <span className="text-xs text-foreground/60 group-hover:text-foreground transition-colors">{s.name}</span>
-              </div>
-              <ExternalLink size={10} className="text-muted-foreground/30 group-hover:text-primary transition-colors" />
-            </div>
-          ))}
-        </div>
-      </InnerCard>
-
-      {/* Liquidity & Risk */}
-      <InnerCard>
-        <SectionLabel icon={Shield}>Liquidity & Death-Spiral Risk</SectionLabel>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-gradient-to-b from-secondary/40 to-secondary/20 rounded-xl p-3 border border-[hsl(var(--border)/0.3)]">
-            <p className="text-[10px] text-muted-foreground/60 mb-1 font-display font-bold uppercase tracking-[0.15em]">Liquidity Pool</p>
-            <p className="text-xl font-display font-bold text-foreground tracking-tight">{data.liquidityPool}</p>
-          </div>
-          <div className="bg-gradient-to-b from-secondary/40 to-secondary/20 rounded-xl p-3 border border-[hsl(var(--border)/0.3)]">
-            <p className="text-[10px] text-muted-foreground/60 mb-1 font-display font-bold uppercase tracking-[0.15em]">Rugpull Risk</p>
-            <p className={`text-xl font-display font-bold tracking-tight ${data.rugpullRisk === "Low" ? "text-primary" : data.rugpullRisk === "Medium" ? "text-yellow-500" : "text-destructive"}`}>{data.rugpullRisk}</p>
-          </div>
-        </div>
-      </InnerCard>
-
-      {/* Behavioral Intelligence */}
-      <InnerCard>
-        <SectionLabel icon={Zap}>Behavioral Intelligence</SectionLabel>
-        <div className="bg-gradient-to-b from-secondary/40 to-secondary/20 rounded-xl p-3 border border-[hsl(var(--border)/0.3)] inline-block">
-          <p className="text-[10px] text-muted-foreground/60 mb-1 font-display font-bold uppercase tracking-[0.15em]">Buy/Sell (1h)</p>
-          <p className="text-xl font-display font-bold text-foreground tracking-tight">{data.buySell1h}</p>
-        </div>
-      </InnerCard>
-
-      {/* AI Verdict */}
-      <InnerCard className="relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-primary/[0.03] to-transparent pointer-events-none rounded-[20px]" />
-        <div className="relative z-10">
-          <div className="flex items-start justify-between mb-4">
-            <SectionLabel icon={Sparkles}>AI Verdict & Recommendation</SectionLabel>
-            <div className="border border-primary/20 bg-gradient-to-br from-primary/8 to-primary/3 rounded-xl px-4 py-2 shadow-[0_0_15px_hsl(var(--primary)/0.08)]">
-              <span className="text-xs font-display font-bold text-primary">Score: {data.aiScore}/100</span>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <p className="text-[10px] text-muted-foreground/60 font-display font-bold mb-1.5 uppercase tracking-[0.15em]">Summary</p>
-              <p className="text-xs text-foreground/55 leading-relaxed">{data.aiSummary}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground/60 font-display font-bold mb-1.5 uppercase tracking-[0.15em]">Key Signals</p>
-              <p className="text-xs text-foreground/55 leading-relaxed">{data.keySignals}</p>
-            </div>
-            <div className="bg-gradient-to-b from-secondary/40 to-secondary/20 border border-[hsl(var(--border)/0.3)] rounded-lg px-3 py-2">
-              <p className="text-[10px] text-muted-foreground/40 italic leading-relaxed">
-                Disclaimer: This verdict is based on telemetry + technical signals (best-effort). It is not trading advice.
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* More analysis sections can be added here, using `analysis` state */}
+       <InnerCard>
+        <SectionLabel icon={Sparkles}>AI Verdict & Recommendation</SectionLabel>
+         <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">AI analysis not available for this token.</p>
+         </div>
       </InnerCard>
     </motion.div>
   );
 };
 
 // --- Token Card ---
-const TokenCard = ({ token, isActive, onAnalyze }: { token: MockToken; isActive: boolean; onAnalyze: () => void }) => (
+const TokenCard = ({ token, isActive, onAnalyze }: { token: ConLaunchToken; isActive: boolean; onAnalyze: () => void }) => (
   <motion.div
     layout
     initial={{ opacity: 0, y: -20 }}
@@ -264,12 +143,12 @@ const TokenCard = ({ token, isActive, onAnalyze }: { token: MockToken; isActive:
       <h4 className="text-sm font-display font-semibold text-foreground">
         {token.name} <span className="text-muted-foreground font-normal">({token.symbol})</span>
       </h4>
-      <span className="text-xs text-muted-foreground">{token.deployed_ago}m ago</span>
+      {token.deployed_ago && <span className="text-xs text-muted-foreground">{token.deployed_ago}m ago</span>}
     </div>
     <p className="text-xs text-muted-foreground leading-relaxed mb-4 line-clamp-1">{token.description}</p>
     <div className="flex items-center justify-between">
       <div>
-        {token.vault_percentage > 0 && (
+        {token.vault_percentage && token.vault_percentage > 0 && (
           <span className="inline-flex items-center gap-1.5 text-xs bg-primary/10 text-primary px-2.5 py-1 rounded-full font-medium">
             <Lock size={10} /> {token.vault_percentage}% Vaulted
           </span>
@@ -287,51 +166,49 @@ const TokenCard = ({ token, isActive, onAnalyze }: { token: MockToken; isActive:
 
 // --- Main Section ---
 const ConLaunchLiveSection = () => {
-  const [tokens, setTokens] = useState<MockToken[]>(initialTokens);
-  const [todayCount, setTodayCount] = useState(127);
-  const [expandedToken, setExpandedToken] = useState<MockToken | null>(null);
+  const [tokens, setTokens] = useState<ConLaunchToken[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [expandedToken, setExpandedToken] = useState<ConLaunchToken | null>(null);
 
   useEffect(() => {
-    // Try to load live ConLaunch tokens once, then fall back to the mock feed
     let mounted = true;
     (async () => {
+      setIsLoading(true);
       try {
         const live = await fetchConLaunchTokens(1, 8);
         if (mounted && live && live.length) {
-          const mapped = live.map((t) => ({
-            id: t.id,
-            name: t.name,
-            symbol: t.symbol ?? t.name?.slice(0, 4).toUpperCase(),
-            description: t.description ?? "",
-            vault_percentage: t.vault_percentage ?? 0,
-            deployed_ago: t.deployed_ago ?? Math.floor(Math.random() * 55) + 1,
-          } as MockToken));
-          setTokens(mapped);
-          setTodayCount((c) => c + mapped.length);
+          setTokens(live);
         }
       } catch (e) {
-        // ignore - keep mock tokens
+        console.error("Failed to load ConLaunch tokens:", e);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
-
-      // keep the live-ish feed behavior (new token every 6s) even when using live data
-      const interval = setInterval(() => {
-        setTokens((prev) => {
-          const newToken = generateToken();
-          const updated = [newToken, ...prev];
-          return updated.slice(0, 8);
-        });
-        setTodayCount((c) => c + 1);
-      }, 6000);
-      return () => {
-        mounted = false;
-        clearInterval(interval);
-      };
     })();
+    return () => { mounted = false; };
   }, []);
 
-  const handleAnalyze = useCallback((token: MockToken) => {
+  const handleAnalyze = useCallback((token: ConLaunchToken) => {
     setExpandedToken(token);
   }, []);
+
+  const renderSkeletons = () => (
+    Array.from({ length: 6 }).map((_, i) => (
+      <div key={i} className="bg-card/60 backdrop-blur-md border rounded-2xl p-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <Skeleton className="h-4 w-full" />
+        <div className="flex items-center justify-between pt-2">
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-7 w-28" />
+        </div>
+      </div>
+    ))
+  );
 
   return (
     <section id="conlaunch-live" className="pt-4">
@@ -349,7 +226,7 @@ const ConLaunchLiveSection = () => {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
           </span>
           <span className="text-xs text-muted-foreground">
-            <span className="text-foreground font-semibold">{todayCount}</span> tokens today
+            <span className="text-foreground font-semibold">{tokens.length}</span> tokens live
           </span>
         </div>
       </div>
@@ -360,7 +237,7 @@ const ConLaunchLiveSection = () => {
           {/* Token Feed Column */}
           <div className="lg:col-span-2 space-y-3">
             <AnimatePresence mode="popLayout">
-              {tokens.map((token) => (
+              {isLoading ? renderSkeletons() : tokens.map((token) => (
                 <TokenCard
                   key={token.id}
                   token={token}
