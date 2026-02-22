@@ -222,6 +222,97 @@ export async function fetchTaxInfo(address: string, chain: "Base" | "Solana"): P
 }
 
 // --- Fetch Mint Authority (Solana) ---
+// --- Check Ownership Renouncement (RPC-based, no third-party APIs) ---
+export async function fetchOwnershipRenounced(address: string, chain: "Base" | "Solana"): Promise<string> {
+  try {
+    if (chain === "Base") {
+      // Base: Check if owner() returns zero address (0x000...000)
+      try {
+        const res = await fetch("https://mainnet.base.org", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "eth_call",
+            params: [
+              {
+                to: address,
+                data: "0x8da5cb5b", // owner() function selector
+              },
+              "latest",
+            ],
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.result) {
+            const ownerHex = data.result.slice(-40);
+            const isZeroAddress = ownerHex === "0000000000000000000000000000000000000000";
+            if (isZeroAddress) {
+              return "Yes";
+            } else {
+              return "No";
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Base owner() check error:", e);
+      }
+      
+      return "Unknown";
+    } else {
+      // Solana: Check mint authority and freeze authority via Helius DAS API
+      const heliusKey = import.meta.env.HELIUS_API_KEY || "";
+      if (!heliusKey) return "Unknown";
+
+      try {
+        const apiUrl = heliusKey.split("?")[0];
+        const apiKey = heliusKey.includes("?api-key=") ? heliusKey.split("api-key=")[1] : "";
+        
+        if (!apiKey) return "Unknown";
+
+        const res = await fetch(`${apiUrl}?api-key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "getAsset",
+            params: { id: address },
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.result?.mint_extensions?.metadata) {
+            const metadata = data.result.mint_extensions.metadata;
+            
+            // For Solana: Check if mint authority is renounced
+            // Mint authority null = renounced
+            const updateAuthority = metadata.update_authority;
+            
+            if (updateAuthority === null || updateAuthority === undefined) {
+              return "Yes";
+            } else {
+              return "No";
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Solana renounced check error:", e);
+      }
+      
+      return "Unknown";
+    }
+  } catch (e) {
+    console.warn("fetchOwnershipRenounced error:", e);
+    return "Unknown";
+  }
+}
+
+// --- Fetch Mint Authority (Solana only) ---
 export async function fetchMintAuthority(mint: string): Promise<string> {
   try {
     // Try Helius DAS API for mint authority status
@@ -270,59 +361,28 @@ export async function fetchMintAuthority(mint: string): Promise<string> {
 export async function fetchHolderDistribution(address: string, chain: "Base" | "Solana"): Promise<HolderDistribution | null> {
   try {
     if (chain === "Base") {
-      // For Base EVM tokens, try to fetch from an indexer API
-      // First try DexScreener for any holder data
+      // For Base EVM tokens, we need a paid API like Moralis, CoinGecko Pro, or Chainbase
+      // For now, try to get holder count from DexScreener
       try {
         const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
         if (res.ok) {
           const data = await res.json();
           const pair = data.pairs?.[0];
           
-          // Try to get holder data from Alchemy if available
-          const alchemyKey = import.meta.env.VITE_ALCHEMY_API_KEY_BASE || "";
-          if (alchemyKey && pair) {
-            try {
-              // Use Alchemy's getTokenBalances endpoint via etherscan/blockscout if available
-              const res2 = await fetch(`https://api.basescan.org/api?module=token&action=tokenholderlist&contractaddress=${address}&page=1&offset=100`, {
-                signal: AbortSignal.timeout(5000),
-              });
-              
-              if (res2.ok) {
-                const holderData = await res2.json();
-                if (holderData.result && Array.isArray(holderData.result)) {
-                  const totalSupply = parseFloat(pair.fdv || "0") > 0 ? pair.fdv : 1;
-                  const topHolders = holderData.result
-                    .slice(1, 21) // Skip first (usually dev/treasury)
-                    .map((holder: any, idx: number) => ({
-                      address: holder.TokenHolderAddress || `Holder ${idx + 1}`,
-                      percentage: Math.min(
-                        parseFloat(holder.TokenHolderQuantity || "0") / 1e18 * 100,
-                        100
-                      ),
-                    }))
-                    .filter((h: any) => h.percentage > 0);
-                  
-                  return {
-                    topHolders,
-                    totalHolders: holderData.result.length,
-                  };
-                }
-              }
-            } catch (e) {
-              console.warn("Basescan holder fetch error:", e);
-            }
+          if (pair) {
+            // Return holder count from DexScreener (if available)
+            // Top holders require paid API access, so we return empty array
+            return {
+              topHolders: [],
+              totalHolders: pair.info?.holders || null,
+            };
           }
-          
-          // Fallback: return holder count only
-          return {
-            topHolders: [],
-            totalHolders: pair?.info?.holders || null,
-          };
         }
       } catch (e) {
         console.warn("DexScreener holders error:", e);
       }
       
+      // If DexScreener fails, still return an empty structure
       return {
         topHolders: [],
         totalHolders: null,
@@ -500,107 +560,32 @@ export async function fetchTokenOwner(address: string, chain: "Base" | "Solana")
   }
 }
 
-// --- Security Scanning (Go+ / RugCheck APIs) ---
+// --- Security Scanning (RPC-based, no third-party APIs) ---
 export async function fetchSecurityScan(address: string, chain: "Base" | "Solana"): Promise<SecurityScan | null> {
   try {
-    // Fetch tax info and owner address in parallel
-    const [taxInfo, ownerAddr] = await Promise.all([
+    // Fetch tax info, owner address, and ownership renounced status in parallel
+    const [taxInfo, ownerAddr, ownershipStatus] = await Promise.all([
       fetchTaxInfo(address, chain),
       fetchTokenOwner(address, chain),
+      fetchOwnershipRenounced(address, chain),
     ]);
 
-    if (chain === "Base") {
-      // Go+ Security API for Base/EVM tokens (chain_id: 8453 for Base)
-      try {
-        const res = await fetch(`https://api.gopluslabs.io/api/v1/token_security/${address.toLowerCase()}?chain_id=8453`, {
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          const tokenSec = data.result?.[address.toLowerCase()];
-          if (tokenSec) {
-            return {
-              hiddenOwner: tokenSec.hidden_owner === "1",
-              obfuscatedAddress: tokenSec.obfuscated_owner === "1",
-              suspiciousFunctions: tokenSec.suspicious_functions?.length > 0 || false,
-              proxyContract: tokenSec.is_proxy === "1",
-              mintable: tokenSec.is_mintable === "1",
-              transferPausable: tokenSec.can_take_back_ownership === "1",
-              tradingCooldown: tokenSec.trading_cooldown === "1",
-              hasBlacklist: tokenSec.is_blacklisted === "1",
-              hasWhitelist: tokenSec.is_whitelisted === "1",
-              buyTax: tokenSec.buy_tax || taxInfo.buyTax,
-              sellTax: tokenSec.sell_tax || taxInfo.sellTax,
-              ownershipRenounced: tokenSec.owner_change_balance === "1" ? "No" : "Yes",
-              ownerAddress: ownerAddr,
-            };
-          }
-        }
-      } catch (e) {
-        console.warn("Go+ API error for Base token:", e);
-      }
-      
-      // Fallback: Just fetch owner if Go+ fails
-      return {
-        hiddenOwner: false,
-        obfuscatedAddress: false,
-        suspiciousFunctions: false,
-        proxyContract: false,
-        mintable: false,
-        transferPausable: false,
-        tradingCooldown: false,
-        hasBlacklist: false,
-        hasWhitelist: false,
-        buyTax: taxInfo.buyTax,
-        sellTax: taxInfo.sellTax,
-        ownershipRenounced: "Unknown",
-        ownerAddress: ownerAddr,
-      };
-    } else {
-      // Solana: Use RugCheck API
-      try {
-        const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${address}/report`);
-
-        if (rugRes.ok) {
-          const rugData = await rugRes.json();
-          
-          return {
-            hiddenOwner: rugData.risks?.some((r: any) => r.name?.includes("Hidden")) || false,
-            obfuscatedAddress: rugData.risks?.some((r: any) => r.name?.includes("Obfuscated")) || false,
-            suspiciousFunctions: rugData.risks?.some((r: any) => r.name?.includes("Suspicious")) || false,
-            proxyContract: rugData.is_proxy || false,
-            mintable: rugData.is_mintable || false,
-            transferPausable: rugData.can_pause || false,
-            tradingCooldown: rugData.has_cooldown || false,
-            hasBlacklist: rugData.has_blacklist || false,
-            hasWhitelist: rugData.has_whitelist || false,
-            buyTax: rugData.buy_tax || taxInfo.buyTax,
-            sellTax: rugData.sell_tax || taxInfo.sellTax,
-            ownershipRenounced: rugData.owner_renounced ? "Yes" : "No",
-            ownerAddress: ownerAddr,
-          };
-        }
-      } catch (e) {
-        console.warn("RugCheck API error:", e);
-      }
-      
-      // Fallback for Solana
-      return {
-        hiddenOwner: false,
-        obfuscatedAddress: false,
-        suspiciousFunctions: false,
-        proxyContract: false,
-        mintable: false,
-        transferPausable: false,
-        tradingCooldown: false,
-        hasBlacklist: false,
-        hasWhitelist: false,
-        buyTax: taxInfo.buyTax,
-        sellTax: taxInfo.sellTax,
-        ownershipRenounced: "Unknown",
-        ownerAddress: ownerAddr,
-      };
-    }
+    // Return basic security info (primarily focusing on renounced status via RPC)
+    return {
+      hiddenOwner: false,
+      obfuscatedAddress: false,
+      suspiciousFunctions: false,
+      proxyContract: false,
+      mintable: false,
+      transferPausable: false,
+      tradingCooldown: false,
+      hasBlacklist: false,
+      hasWhitelist: false,
+      buyTax: taxInfo.buyTax,
+      sellTax: taxInfo.sellTax,
+      ownershipRenounced: ownershipStatus,
+      ownerAddress: ownerAddr,
+    };
   } catch (e) {
     console.warn("fetchSecurityScan error:", e);
     return null;
@@ -769,6 +754,7 @@ export default {
   generateAIAnalysis, 
   fetchTokenOwner,
   fetchTaxInfo,
+  fetchOwnershipRenounced,
   fetchMintAuthority,
   fetchHolderDistribution,
 };

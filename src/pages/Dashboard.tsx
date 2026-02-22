@@ -517,7 +517,7 @@ const Dashboard = () => {
                       {[
                         ["Buy tax", quickIntel.buyTax],
                         ["Sell tax", quickIntel.sellTax],
-                        ["Ownership renounced", (mintAuthority === "RENOUNCED" || quickIntel.ownershipRenounced === "YES") ? "✅ YES" : "❌ NO"],
+                        ["Ownership renounced", (mintAuthority === "RENOUNCED" || quickIntel.ownershipRenounced === "Yes") ? "✅ YES" : (quickIntel.ownershipRenounced === "Unknown" ? "❓ Unknown" : "❌ NO")],
                       ].map((row, i) => (
                         <div key={i} className="flex items-center justify-between py-3 px-4 rounded-xl bg-secondary/40 border border-border/30">
                           <p className="text-sm text-foreground/70">{row[0]}</p>
@@ -552,7 +552,8 @@ const Dashboard = () => {
                 )}
               </GlassCard>
 
-              {/* Holder Distribution */}
+              {/* Holder Distribution - Only for Solana */}
+              {chain === "Solana" && (
               <GlassCard>
                 <SectionLabel icon={Activity}>Holder Distribution ({chain})</SectionLabel>
                 {holders && holders.topHolders && holders.topHolders.length > 0 ? (
@@ -577,30 +578,16 @@ const Dashboard = () => {
                               <Copy size={12} className="text-muted-foreground/40 hover:text-primary" />
                             )}
                           </motion.button>
-                          {chain === "Solana" && (
-                            <motion.a
-                              href={`https://solscan.io/address/${holder.address}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              whileHover={{ scale: 1.1 }}
-                              className="p-1 hover:bg-primary/10 rounded-lg transition-colors"
-                              title="View on Solscan"
-                            >
-                              <ExternalLink size={12} className="text-muted-foreground/40 hover:text-primary" />
-                            </motion.a>
-                          )}
-                          {chain === "Base" && (
-                            <motion.a
-                              href={`https://basescan.org/address/${holder.address}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              whileHover={{ scale: 1.1 }}
-                              className="p-1 hover:bg-primary/10 rounded-lg transition-colors"
-                              title="View on Basescan"
-                            >
-                              <ExternalLink size={12} className="text-muted-foreground/40 hover:text-primary" />
-                            </motion.a>
-                          )}
+                          <motion.a
+                            href={`https://solscan.io/address/${holder.address}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            whileHover={{ scale: 1.1 }}
+                            className="p-1 hover:bg-primary/10 rounded-lg transition-colors"
+                            title="View on Solscan"
+                          >
+                            <ExternalLink size={12} className="text-muted-foreground/40 hover:text-primary" />
+                          </motion.a>
                         </div>
                         <div className="flex items-center gap-2 flex-1">
                           <div className="h-1.5 bg-primary/20 rounded-full flex-1">
@@ -623,10 +610,11 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground/70 leading-relaxed">
-                    Run analysis to fetch holder distribution data for this {chain} token.
+                    Run analysis to fetch holder distribution data for this Solana token.
                   </p>
                 )}
               </GlassCard>
+              )}
 
               {/* Liquidity & Risk */}
               <GlassCard>
