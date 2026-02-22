@@ -691,7 +691,18 @@ const Dashboard = () => {
                     <InnerCard>
                       <div className="flex items-center justify-between mb-5">
                         <p className="text-[10px] text-muted-foreground/60 font-display font-bold uppercase tracking-[0.15em]">Bubble Map</p>
-                        <div className="flex items-center gap-1.5 text-xs text-primary font-display cursor-pointer hover:text-primary/80 transition-colors">
+                        <div 
+                          className="flex items-center gap-1.5 text-xs text-primary font-display cursor-pointer hover:text-primary/80 transition-colors"
+                          onClick={() => {
+                            const tokenAddr = currentToken?.address || tokenAddress;
+                            if (tokenAddr) {
+                              const bubbleMapsUrl = chain === "Base" 
+                                ? `https://www.bubblemaps.io/token/base/${tokenAddr}`
+                                : `https://www.bubblemaps.io/token/solana/${tokenAddr}`;
+                              window.open(bubbleMapsUrl, '_blank');
+                            }
+                          }}
+                        >
                           Open <ExternalLink size={10} />
                         </div>
                       </div>
@@ -710,6 +721,15 @@ const Dashboard = () => {
                             <motion.button
                               whileHover={{ scale: 1.03, y: -1 }}
                               whileTap={{ scale: 0.97 }}
+                              onClick={() => {
+                                const tokenAddr = currentToken?.address || tokenAddress;
+                                if (tokenAddr) {
+                                  const bubbleMapsUrl = chain === "Base" 
+                                    ? `https://www.bubblemaps.io/token/base/${tokenAddr}`
+                                    : `https://www.bubblemaps.io/token/solana/${tokenAddr}`;
+                                  window.open(bubbleMapsUrl, '_blank');
+                                }
+                              }}
                               className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-display font-semibold transition-colors shadow-[0_4px_15px_hsl(var(--primary)/0.25),0_1px_0_0_hsl(0_0%_100%/0.15)_inset]"
                             >
                               Proceed →

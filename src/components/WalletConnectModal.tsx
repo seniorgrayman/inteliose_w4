@@ -24,6 +24,17 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
     setError(null);
     setConnecting("phantom");
     try {
+      // Check if on mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // Mobile: Use deeplink
+        const deeplinkUrl = `https://phantom.app/ul/browse/${window.location.href}`;
+        window.location.href = deeplinkUrl;
+        return;
+      }
+      
+      // Desktop: Use extension
       const provider = (window as any)?.phantom?.solana;
       if (!provider?.isPhantom) {
         setError("Phantom wallet not detected. Please install the extension.");
@@ -45,6 +56,17 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
     setError(null);
     setConnecting("metamask");
     try {
+      // Check if on mobile
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // Mobile: Use deeplink
+        const deeplinkUrl = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+        window.location.href = deeplinkUrl;
+        return;
+      }
+      
+      // Desktop: Use extension
       const provider = (window as any)?.ethereum;
       if (!provider?.isMetaMask) {
         setError("MetaMask not detected. Please install the extension.");
