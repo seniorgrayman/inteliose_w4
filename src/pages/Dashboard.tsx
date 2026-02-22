@@ -11,34 +11,6 @@ import ConLaunchLiveSection from "@/components/ConLaunchLiveSection";
 import { getToken as fetchConLaunchToken } from "@/lib/conlaunch";
 import { fetchTokenData, fetchSecurityScan, generateAIAnalysis, fetchMintAuthority, fetchHolderDistribution, type AIAnalysis, type HolderDistribution } from "@/lib/tokendata";
 
-
-/* ─── Mock Data ─── */
-const MOCK_TOKEN = {
-  name: "Moltbook",
-  symbol: "MOLT",
-  age: "21d",
-  price: "$0.000030",
-  volume24h: "$462,162",
-  liquidity: "$1.50M",
-  marketCap: "$3.03M",
-  liqMarketCapRatio: "49.44%",
-  buySell1h: "19 / 53",
-  mintAuthority: "Renounced",
-  liquiditySupply: "49.44%",
-  socials: [
-    { name: "Website", icon: Globe },
-    { name: "Docs", icon: FileText },
-    { name: "X (Twitter)", icon: ExternalLink },
-    { name: "Telegram", icon: MessageCircle },
-    { name: "Discord", icon: MessageCircle },
-  ],
-  liquidityPool: "49.44%",
-  rugpullRisk: "Low",
-  aiScore: 60,
-  aiSummary: "The token operates on the Base chain with a market capitalization of $3.03M and $1.50M in liquidity. Recent trading activity indicates a prevalence of sell transactions over buys across multiple timeframes, contributing to a slightly negative price change over 24 hours.",
-  keySignals: "The strongest signals include a significant imbalance where sell transactions outnumber buy transactions by a ratio of approximately 2.3:1 over the last 24 hours. This sustained selling pressure has resulted in a 1.27% price decrease over the same period, despite a positive price movement observed in the 6-hour window.",
-};
-
 /* ─── Ultra Premium Glass Card with beveled edges ─── */
 const GlassCard = ({ children, className = "", glow = false }: { children: React.ReactNode; className?: string; glow?: boolean }) => {
   const ref = useRef(null);
@@ -150,11 +122,38 @@ const Dashboard = () => {
 
   const handleAnalyze = async () => {
     if (!tokenAddress) return;
+    
+    // Validate token address format
+    const trimmedAddress = tokenAddress.trim();
+    const isValidBase = /^0x[a-fA-F0-9]{40}$/.test(trimmedAddress);
+    const isValidSolana = /^[1-9A-HJ-NP-Z]{43,44}$/.test(trimmedAddress);
+    
+    if (chain === "Base" && !isValidBase) {
+      setQuickIntel(null);
+      setAIAnalysis(null);
+      alert("Invalid Base token address. Must be 0x + 40 hex characters.");
+      return;
+    }
+    
+    if (chain === "Solana" && !isValidSolana) {
+      setQuickIntel(null);
+      setAIAnalysis(null);
+      alert("Invalid Solana token address. Must be 43-44 base58 characters.");
+      return;
+    }
+    
     setIsAnalyzing(true);
+    
+    // Clear previous data to avoid caching
+    setCurrentToken(null);
+    setQuickIntel(null);
+    setAIAnalysis(null);
+    setHolders(null);
+    setMintAuthority(null);
     
     try {
       // Fetch real token data from APIs (Coinbase → Zerion → DexScreener for Base)
-      const tokenData = await fetchTokenData(tokenAddress.trim(), chain);
+      const tokenData = await fetchTokenData(trimmedAddress, chain);
       
       if (tokenData) {
         setCurrentToken(tokenData);
@@ -162,7 +161,7 @@ const Dashboard = () => {
       
       // Also try ConLaunch data for additional context
       try {
-        const t = await fetchConLaunchToken(tokenAddress.trim());
+        const t = await fetchConLaunchToken(trimmedAddress);
         if (t) {
           setCurrentToken((prev) => ({
             ...prev,
@@ -174,8 +173,8 @@ const Dashboard = () => {
         // ignore ConLaunch errors
       }
       
-      // Fetch REAL security checks from Go+ (Base) or RugCheck (Solana) APIs
-      const securityData = await fetchSecurityScan(tokenAddress.trim(), chain);
+      // Fetch REAL security checks with real-time RPC data
+      const securityData = await fetchSecurityScan(trimmedAddress, chain);
       if (securityData) {
         setQuickIntel(securityData);
       } else {
@@ -184,8 +183,8 @@ const Dashboard = () => {
 
       // Fetch holder distribution and mint authority in parallel
       const [holderData, mintAuth] = await Promise.all([
-        fetchHolderDistribution(tokenAddress.trim(), chain),
-        chain === "Solana" ? fetchMintAuthority(tokenAddress.trim()) : Promise.resolve(null),
+        chain === "Solana" ? fetchHolderDistribution(trimmedAddress, chain) : Promise.resolve(null),
+        chain === "Solana" ? fetchMintAuthority(trimmedAddress) : Promise.resolve(null),
       ]);
       
       if (holderData) {
@@ -196,7 +195,7 @@ const Dashboard = () => {
         setMintAuthority(mintAuth);
       }
 
-      // Generate REAL AI analysis using Gemini API
+      // Generate REAL AI analysis using Gemini API with fresh data
       if (tokenData && securityData) {
         const analysis = await generateAIAnalysis(
           tokenData.name,
@@ -356,13 +355,22 @@ const Dashboard = () => {
                 <label className="text-xs text-muted-foreground mb-2 block font-display tracking-wide">
                   Paste {chain} Token Address (0x...)
                 </label>
-                <input
-                  type="text"
-                  value={tokenAddress}
-                  onChange={(e) => setTokenAddress(e.target.value)}
-                  placeholder="0x..."
-                  className="w-full bg-gradient-to-b from-secondary/50 to-secondary/30 border border-[hsl(var(--border)/0.4)] rounded-2xl px-5 py-4 text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-primary/30 focus:shadow-[0_0_30px_hsl(var(--primary)/0.06),0_1px_0_0_hsl(0_0%_100%/0.4)_inset] focus:bg-card/80 transition-all text-sm font-display shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset,0_2px_4px_-1px_hsl(0_0%_0%/0.04)]"
-                />
+                <div className="flex items-center gap-3 w-full bg-gradient-to-b from-secondary/50 to-secondary/30 border border-[hsl(var(--border)/0.4)] rounded-2xl px-5 py-4 focus-within:border-primary/30 focus-within:shadow-[0_0_30px_hsl(var(--primary)/0.06),0_1px_0_0_hsl(0_0%_100%/0.4)_inset] focus-within:bg-card/80 transition-all shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset,0_2px_4px_-1px_hsl(0_0%_0%/0.04)]">
+                  <div className="flex-shrink-0">
+                    {chain === "Base" ? (
+                      <div className="text-lg font-bold text-blue-500">⛓️</div>
+                    ) : (
+                      <div className="text-lg font-bold text-purple-500">◎</div>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={tokenAddress}
+                    onChange={(e) => setTokenAddress(e.target.value)}
+                    placeholder={chain === "Base" ? "0x + 40 hex chars" : "43-44 base58 chars"}
+                    className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground/30 focus:outline-none text-sm font-display"
+                  />
+                </div>
               </div>
 
               <div className="flex flex-col md:flex-row gap-4 items-end">
@@ -427,37 +435,23 @@ const Dashboard = () => {
               <GlassCard>
                 <SectionLabel icon={BarChart3}>Token Overview</SectionLabel>
                 <h2 className="text-3xl font-display font-medium tracking-tighter text-foreground mb-1">
-                  {currentToken?.name || MOCK_TOKEN.name} <span className="text-muted-foreground/60 font-normal text-2xl">({currentToken?.symbol || MOCK_TOKEN.symbol})</span>
+                  {currentToken?.name || "Unknown"} <span className="text-muted-foreground/60 font-normal text-2xl">({currentToken?.symbol || "??"})</span>
                 </h2>
                 <p className="text-sm text-muted-foreground mb-8">Quick facts + instant risk signal.</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <InnerCard className="md:col-span-2">
                     <p className="text-[10px] text-muted-foreground/60 font-display font-bold uppercase tracking-[0.15em] mb-4">Quick Facts</p>
-                    <StatRow icon={DollarSign} label="Current price (USD)" value={currentToken?.price || MOCK_TOKEN.price} />
-                    <StatRow icon={BarChart3} label="Volume (24h)" value={currentToken?.volume24h || MOCK_TOKEN.volume24h} />
-                    <StatRow icon={Droplets} label="Liquidity" value={currentToken?.liquidity || MOCK_TOKEN.liquidity} />
-                    <StatRow icon={TrendingUp} label="Market cap" value={currentToken?.marketCap || MOCK_TOKEN.marketCap} />
-                    <StatRow icon={Percent} label="Liquidity / Market cap" value={MOCK_TOKEN.liqMarketCapRatio} sub="Lower % usually means higher volatility risk." />
-                    <StatRow icon={Activity} label="Buy/Sell (1h)" value={MOCK_TOKEN.buySell1h} sub="Helps spot sell pressure early." />
+                    <StatRow icon={DollarSign} label="Current price (USD)" value={currentToken?.price || "N/A"} />
+                    <StatRow icon={BarChart3} label="Volume (24h)" value={currentToken?.volume24h || "N/A"} />
+                    <StatRow icon={Droplets} label="Liquidity" value={currentToken?.liquidity || "N/A"} />
+                    <StatRow icon={TrendingUp} label="Market cap" value={currentToken?.marketCap || "N/A"} />
                   </InnerCard>
 
                   <InnerCard>
-                    <p className="text-[10px] text-muted-foreground/60 font-display font-bold uppercase tracking-[0.15em] mb-4">Social Links</p>
-                    <div className="space-y-0.5">
-                      {MOCK_TOKEN.socials.map((s) => (
-                        <motion.div
-                          key={s.name}
-                          whileHover={{ x: 3 }}
-                          className="flex items-center justify-between py-3 px-3 rounded-xl hover:bg-primary/[0.03] transition-all group cursor-pointer"
-                        >
-                          <div className="flex items-center gap-3">
-                            <s.icon size={14} className="text-muted-foreground/50 group-hover:text-primary transition-colors" />
-                            <span className="text-sm text-foreground/60 group-hover:text-foreground transition-colors">{s.name}</span>
-                          </div>
-                          <ExternalLink size={11} className="text-muted-foreground/30 group-hover:text-primary transition-colors" />
-                        </motion.div>
-                      ))}
+                    <p className="text-[10px] text-muted-foreground/60 font-display font-bold uppercase tracking-[0.15em] mb-4">Status</p>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <p>Analyzing {chain} token...</p>
                     </div>
                   </InnerCard>
                 </div>
@@ -478,15 +472,6 @@ const Dashboard = () => {
                       </div>
                     </motion.div>
                   )}
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                    className="bg-gradient-to-b from-secondary/50 to-secondary/30 border border-[hsl(var(--border)/0.4)] rounded-2xl px-5 py-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.04)]"
-                  >
-                    <p className="text-[10px] text-muted-foreground/60 mb-1.5 font-display font-bold uppercase tracking-[0.15em]">Liquidity supply</p>
-                    <span className="text-sm font-display font-bold text-foreground">{MOCK_TOKEN.liquiditySupply}</span>
-                  </motion.div>
                 </div>
               </GlassCard>
 
@@ -619,28 +604,29 @@ const Dashboard = () => {
               {/* Liquidity & Risk */}
               <GlassCard>
                 <SectionLabel icon={Shield}>Liquidity & Death-Spiral Risk</SectionLabel>
-                <p className="text-sm text-muted-foreground/70 mb-6">Liquidity intelligence + stress simulation.</p>
+                <p className="text-sm text-muted-foreground/70 mb-6">Token liquidity and security status.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <InnerCard>
-                    <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase tracking-[0.15em]">Liquidity Pool</p>
-                    <p className="text-3xl font-display font-bold text-foreground tracking-tight">{MOCK_TOKEN.liquidityPool}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase tracking-[0.15em]">Chain</p>
+                    <p className="text-3xl font-display font-bold text-foreground tracking-tight">{chain}</p>
                   </InnerCard>
                   <InnerCard>
-                    <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase tracking-[0.15em]">Sudden Rugpull Risk</p>
-                    <p className="text-3xl font-display font-bold text-primary tracking-tight">{MOCK_TOKEN.rugpullRisk}</p>
-                    <p className="text-[11px] text-muted-foreground/50 mt-2 leading-relaxed">Heuristic from liquidity ratio (will improve with LP data).</p>
+                    <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase tracking-[0.15em]">Analysis Status</p>
+                    <p className="text-3xl font-display font-bold text-primary tracking-tight">{analyzed ? "✅ Done" : "⏳ Ready"}</p>
                   </InnerCard>
                 </div>
               </GlassCard>
 
-              {/* Behavioral Intelligence */}
+              {/* AI Analysis Summary */}
+              {aiAnalysis && (
               <GlassCard>
-                <SectionLabel icon={Zap}>Behavioral Intelligence (The Alpha)</SectionLabel>
-                <InnerCard className="inline-block">
-                  <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase tracking-[0.15em]">Buy/Sell imbalance (1h)</p>
-                  <p className="text-3xl font-display font-bold text-foreground tracking-tight">{MOCK_TOKEN.buySell1h}</p>
+                <SectionLabel icon={Sparkles}>AI Verdict Summary</SectionLabel>
+                <InnerCard className="mb-4">
+                  <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase tracking-[0.15em]">Risk Assessment</p>
+                  <p className="text-3xl font-display font-bold text-foreground tracking-tight">{aiAnalysis.riskLevel}</p>
                 </InnerCard>
               </GlassCard>
+              )}
 
               {/* AI Verdict */}
               <GlassCard glow className="relative overflow-hidden">
