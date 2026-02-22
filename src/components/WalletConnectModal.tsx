@@ -1,8 +1,13 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Wallet, Loader2, Zap, Shield, ArrowRight } from "lucide-react";
 import phantomLogo from "@/assets/phantom-logo.jpg";
 import metamaskLogo from "@/assets/metamask-logo.png";
+
+// Polyfill for global object
+if (typeof globalThis !== "undefined" && typeof (globalThis as any).global === "undefined") {
+  (globalThis as any).global = globalThis;
+}
 
 type WalletType = "phantom" | "metamask";
 
@@ -15,6 +20,16 @@ interface WalletConnectModalProps {
 const truncateAddress = (addr: string) =>
   addr.length > 10 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
 
+// Lazy load WalletConnectProvider to avoid global issues
+let WalletConnectProvider: any = null;
+
+const initWalletConnect = async () => {
+  if (!WalletConnectProvider) {
+    const module = await import("@walletconnect/web3-provider");
+    WalletConnectProvider = module.default;
+  }
+  return WalletConnectProvider;
+};
 
 const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModalProps) => {
   const [connecting, setConnecting] = useState<WalletType | null>(null);
@@ -24,30 +39,53 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
     setError(null);
     setConnecting("phantom");
     try {
-      // Check if on mobile
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
+
       if (isMobile) {
-        // Mobile: Use deeplink
-        // Format: phantom://browse/<encoded_url>
-        const currentUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}${window.location.search}`;
-        const encodedUrl = encodeURIComponent(currentUrl);
-        const deeplinkUrl = `phantom://browse/${encodedUrl}`;
-        window.location.href = deeplinkUrl;
+        // Mobile: Try WalletConnect with Phantom
+        try {
+          const Provider = await initWalletConnect();
+          const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+          
+          const provider = new Provider({
+            projectId: projectId || "5261912a5c184ed019675c830f491d1a",
+            chains: [1, 8453, 137],
+            rpcMap: {
+              1: "https://eth-mainnet.g.alchemy.com/v2/demo",
+              8453: "https://mainnet.base.org",
+              137: "https://polygon-rpc.com",
+            },
+            methods: ["eth_sendTransaction", "eth_signTransaction", "personal_sign", "eth_sign"],
+          });
+
+          await provider.enable();
+          const accounts = provider.accounts;
+          
+          if (accounts?.[0]) {
+            onConnected(accounts[0], "phantom");
+            onClose();
+            return;
+          }
+        } catch (wcError: any) {
+          console.log("WalletConnect failed, trying Phantom deeplink...");
+          // Fallback to Phantom deeplink
+          const deeplink = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
+          window.location.href = deeplink;
+          return;
+        }
+      }
+
+      // Desktop: Use Phantom extension
+      const solanaProvider = (window as any)?.phantom?.solana;
+      if (solanaProvider?.isPhantom) {
+        const resp = await solanaProvider.connect();
+        const address = resp.publicKey.toString();
+        onConnected(address, "phantom");
+        onClose();
         return;
       }
-      
-      // Desktop: Use extension
-      const provider = (window as any)?.phantom?.solana;
-      if (!provider?.isPhantom) {
-        setError("Phantom wallet not detected. Please install the extension.");
-        setConnecting(null);
-        return;
-      }
-      const resp = await provider.connect();
-      const address = resp.publicKey.toString();
-      onConnected(address, "phantom");
-      onClose();
+
+      setError("Phantom wallet not detected. Please install the extension or app.");
     } catch (e: any) {
       setError(e?.message || "Connection rejected.");
     } finally {
@@ -59,31 +97,54 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
     setError(null);
     setConnecting("metamask");
     try {
-      // Check if on mobile
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
+
       if (isMobile) {
-        // Mobile: Use deeplink
-        // Format: metamask://dapp?url=<encoded_url>
-        const currentUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}${window.location.search}`;
-        const encodedUrl = encodeURIComponent(currentUrl);
-        const deeplinkUrl = `metamask://dapp?url=${encodedUrl}`;
-        window.location.href = deeplinkUrl;
-        return;
+        // Mobile: Try WalletConnect with MetaMask
+        try {
+          const Provider = await initWalletConnect();
+          const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+          
+          const provider = new Provider({
+            projectId: projectId || "5261912a5c184ed019675c830f491d1a",
+            chains: [1, 8453, 137],
+            rpcMap: {
+              1: "https://eth-mainnet.g.alchemy.com/v2/demo",
+              8453: "https://mainnet.base.org",
+              137: "https://polygon-rpc.com",
+            },
+            methods: ["eth_sendTransaction", "eth_signTransaction", "personal_sign", "eth_sign"],
+          });
+
+          await provider.enable();
+          const accounts = provider.accounts;
+          
+          if (accounts?.[0]) {
+            onConnected(accounts[0], "metamask");
+            onClose();
+            return;
+          }
+        } catch (wcError: any) {
+          console.log("WalletConnect failed, trying MetaMask deeplink...");
+          // Fallback to MetaMask deeplink
+          const deeplink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+          window.location.href = deeplink;
+          return;
+        }
       }
-      
-      // Desktop: Use extension
-      const provider = (window as any)?.ethereum;
-      if (!provider?.isMetaMask) {
-        setError("MetaMask not detected. Please install the extension.");
-        setConnecting(null);
-        return;
+
+      // Desktop: Use MetaMask extension
+      const evmProvider = (window as any)?.ethereum;
+      if (evmProvider?.isMetaMask) {
+        const accounts = await evmProvider.request({ method: "eth_requestAccounts" });
+        if (accounts?.[0]) {
+          onConnected(accounts[0], "metamask");
+          onClose();
+          return;
+        }
       }
-      const accounts = await provider.request({ method: "eth_requestAccounts" });
-      if (accounts?.[0]) {
-        onConnected(accounts[0], "metamask");
-        onClose();
-      }
+
+      setError("MetaMask not detected. Please install the extension or app.");
     } catch (e: any) {
       setError(e?.message || "Connection rejected.");
     } finally {
