@@ -29,7 +29,10 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
       
       if (isMobile) {
         // Mobile: Use deeplink
-        const deeplinkUrl = `https://phantom.app/ul/browse/${window.location.href}`;
+        // Format: phantom://browse/<encoded_url>
+        const currentUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}${window.location.search}`;
+        const encodedUrl = encodeURIComponent(currentUrl);
+        const deeplinkUrl = `phantom://browse/${encodedUrl}`;
         window.location.href = deeplinkUrl;
         return;
       }
@@ -61,7 +64,10 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
       
       if (isMobile) {
         // Mobile: Use deeplink
-        const deeplinkUrl = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
+        // Format: metamask://dapp?url=<encoded_url>
+        const currentUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}${window.location.search}`;
+        const encodedUrl = encodeURIComponent(currentUrl);
+        const deeplinkUrl = `metamask://dapp?url=${encodedUrl}`;
         window.location.href = deeplinkUrl;
         return;
       }
