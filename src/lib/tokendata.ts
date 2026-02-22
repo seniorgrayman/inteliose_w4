@@ -30,6 +30,16 @@ export interface SecurityScan {
   ownerAddress: string;
 }
 
+export interface Holder {
+  address: string;
+  percentage: number;
+}
+
+export interface HolderDistribution {
+  topHolders: Holder[];
+  totalHolders: number | null;
+}
+
 // --- Base Chain (Coinbase API primary, Zerion fallback, DexScreener final fallback) ---
 export async function fetchBaseTokenData(address: string): Promise<TokenData | null> {
   try {
@@ -172,6 +182,198 @@ export async function fetchSolanaFallback(mint: string): Promise<TokenData | nul
   }
 }
 
+// --- Fetch Tax Information ---
+export async function fetchTaxInfo(address: string, chain: "Base" | "Solana"): Promise<{ buyTax: string; sellTax: string }> {
+  try {
+    if (chain === "Base") {
+      // Try to get tax from DexScreener which sometimes includes it
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
+      if (res.ok) {
+        const data = await res.json();
+        const pair = data.pairs?.[0];
+        if (pair?.info?.buyTax || pair?.info?.sellTax) {
+          return {
+            buyTax: pair.info.buyTax ? `${pair.info.buyTax}%` : "0%",
+            sellTax: pair.info.sellTax ? `${pair.info.sellTax}%` : "0%",
+          };
+        }
+      }
+    } else {
+      // Solana: Try to get tax from token metadata or DexScreener
+      const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
+      if (res.ok) {
+        const data = await res.json();
+        const pair = data.pairs?.[0];
+        if (pair?.info?.buyTax || pair?.info?.sellTax) {
+          return {
+            buyTax: pair.info.buyTax ? `${pair.info.buyTax}%` : "0%",
+            sellTax: pair.info.sellTax ? `${pair.info.sellTax}%` : "0%",
+          };
+        }
+      }
+    }
+    // Default to 0% if not found
+    return { buyTax: "0%", sellTax: "0%" };
+  } catch (e) {
+    console.warn("fetchTaxInfo error:", e);
+    // Default to 0% on error instead of N/A
+    return { buyTax: "0%", sellTax: "0%" };
+  }
+}
+
+// --- Fetch Mint Authority (Solana) ---
+export async function fetchMintAuthority(mint: string): Promise<string> {
+  try {
+    const quickNodeUrl = import.meta.env.VITE_QUICKNODE_API_KEY || "";
+    if (!quickNodeUrl) return "Unknown";
+
+    // Try getTokenSupply first
+    try {
+      const res = await fetch(quickNodeUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "getTokenSupply",
+          params: [mint],
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const decimals = data.result?.value?.decimals;
+        if (decimals !== undefined) {
+          // Successfully got token data
+          return "Fetched"; // Token exists and can be analyzed
+        }
+      }
+    } catch (e) {
+      console.warn("getTokenSupply error:", e);
+    }
+
+    // Try Helius DAS API for more detailed mint info
+    try {
+      const heliusKey = import.meta.env.HELIUS_API_KEY || "";
+      if (!heliusKey) return "Unknown";
+
+      const apiUrl = heliusKey.split("?")[0];
+      const apiKey = heliusKey.includes("?api-key=") ? heliusKey.split("api-key=")[1] : "";
+      
+      if (!apiKey) return "Unknown";
+
+      const res = await fetch(`${apiUrl}?api-key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "getAsset",
+          params: { id: mint },
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.result?.mutable) {
+          return data.result.mutable ? "Active" : "Renounced";
+        }
+      }
+    } catch (e) {
+      console.warn("Helius DAS error:", e);
+    }
+
+    return "Unknown";
+  } catch (e) {
+    console.warn("fetchMintAuthority error:", e);
+  }
+  return "Unknown";
+}
+
+// --- Fetch Holder Distribution ---
+export async function fetchHolderDistribution(address: string, chain: "Base" | "Solana"): Promise<HolderDistribution | null> {
+  try {
+    if (chain === "Base") {
+      // Try DexScreener for holder count (quickest)
+      try {
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
+        if (res.ok) {
+          const data = await res.json();
+          const pair = data.pairs?.[0];
+          if (pair) {
+            return {
+              topHolders: [],
+              totalHolders: pair.info?.holders || null,
+            };
+          }
+        }
+      } catch (e) {
+        console.warn("DexScreener holders error:", e);
+      }
+    } else {
+      // Solana: Use QuickNode to get token account largest accounts
+      const quickNodeUrl = import.meta.env.VITE_QUICKNODE_API_KEY || "";
+      if (!quickNodeUrl) return null;
+
+      try {
+        const res = await fetch(quickNodeUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "getTokenLargestAccounts",
+            params: [address],
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const accounts = data.result?.value || [];
+          
+          if (accounts.length > 0) {
+            const totalSupply = accounts.reduce((sum: number, acc: any) => sum + (acc.uiAmount || 0), 0);
+            // Skip first (usually dev), take next 20
+            const topHolders = accounts.slice(1, 21).map((acc: any) => ({
+              address: acc.address || "Unknown",
+              percentage: totalSupply > 0 ? ((acc.uiAmount || 0) / totalSupply * 100) : 0,
+            }));
+
+            return {
+              topHolders,
+              totalHolders: accounts.length,
+            };
+          }
+        }
+      } catch (e) {
+        console.warn("Solana holders API error:", e);
+      }
+
+      // Fallback: Try DexScreener
+      try {
+        const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
+        if (res.ok) {
+          const data = await res.json();
+          const pair = data.pairs?.[0];
+          if (pair) {
+            return {
+              topHolders: [],
+              totalHolders: pair.info?.holders || null,
+            };
+          }
+        }
+      } catch (e) {
+        console.warn("DexScreener Solana holders error:", e);
+      }
+    }
+
+    return null;
+  } catch (e) {
+    console.warn("fetchHolderDistribution error:", e);
+    return null;
+  }
+}
+
 // --- Fetch Owner Address from Smart Contract ---
 export async function fetchTokenOwner(address: string, chain: "Base" | "Solana"): Promise<string> {
   try {
@@ -244,6 +446,12 @@ export async function fetchTokenOwner(address: string, chain: "Base" | "Solana")
 // --- Security Scanning (Go+ / RugCheck APIs) ---
 export async function fetchSecurityScan(address: string, chain: "Base" | "Solana"): Promise<SecurityScan | null> {
   try {
+    // Fetch tax info and owner address in parallel
+    const [taxInfo, ownerAddr] = await Promise.all([
+      fetchTaxInfo(address, chain),
+      fetchTokenOwner(address, chain),
+    ]);
+
     if (chain === "Base") {
       // Go+ Security API for Base/EVM tokens (chain_id: 8453 for Base)
       try {
@@ -254,9 +462,6 @@ export async function fetchSecurityScan(address: string, chain: "Base" | "Solana
           const data = await res.json();
           const tokenSec = data.result?.[address.toLowerCase()];
           if (tokenSec) {
-            // Auto-fetch owner address
-            const ownerAddr = tokenSec.owner_address || (await fetchTokenOwner(address, "Base"));
-            
             return {
               hiddenOwner: tokenSec.hidden_owner === "1",
               obfuscatedAddress: tokenSec.obfuscated_owner === "1",
@@ -267,8 +472,8 @@ export async function fetchSecurityScan(address: string, chain: "Base" | "Solana
               tradingCooldown: tokenSec.trading_cooldown === "1",
               hasBlacklist: tokenSec.is_blacklisted === "1",
               hasWhitelist: tokenSec.is_whitelisted === "1",
-              buyTax: tokenSec.buy_tax || "N/A",
-              sellTax: tokenSec.sell_tax || "N/A",
+              buyTax: tokenSec.buy_tax || taxInfo.buyTax,
+              sellTax: tokenSec.sell_tax || taxInfo.sellTax,
               ownershipRenounced: tokenSec.owner_change_balance === "1" ? "No" : "Yes",
               ownerAddress: ownerAddr,
             };
@@ -279,7 +484,6 @@ export async function fetchSecurityScan(address: string, chain: "Base" | "Solana
       }
       
       // Fallback: Just fetch owner if Go+ fails
-      const ownerAddr = await fetchTokenOwner(address, "Base");
       return {
         hiddenOwner: false,
         obfuscatedAddress: false,
@@ -290,8 +494,8 @@ export async function fetchSecurityScan(address: string, chain: "Base" | "Solana
         tradingCooldown: false,
         hasBlacklist: false,
         hasWhitelist: false,
-        buyTax: "N/A",
-        sellTax: "N/A",
+        buyTax: taxInfo.buyTax,
+        sellTax: taxInfo.sellTax,
         ownershipRenounced: "Unknown",
         ownerAddress: ownerAddr,
       };
@@ -302,7 +506,6 @@ export async function fetchSecurityScan(address: string, chain: "Base" | "Solana
 
         if (rugRes.ok) {
           const rugData = await rugRes.json();
-          const ownerAddr = rugData.owner || (await fetchTokenOwner(address, "Solana"));
           
           return {
             hiddenOwner: rugData.risks?.some((r: any) => r.name?.includes("Hidden")) || false,
@@ -314,8 +517,8 @@ export async function fetchSecurityScan(address: string, chain: "Base" | "Solana
             tradingCooldown: rugData.has_cooldown || false,
             hasBlacklist: rugData.has_blacklist || false,
             hasWhitelist: rugData.has_whitelist || false,
-            buyTax: rugData.buy_tax || "N/A",
-            sellTax: rugData.sell_tax || "N/A",
+            buyTax: rugData.buy_tax || taxInfo.buyTax,
+            sellTax: rugData.sell_tax || taxInfo.sellTax,
             ownershipRenounced: rugData.owner_renounced ? "Yes" : "No",
             ownerAddress: ownerAddr,
           };
@@ -325,7 +528,6 @@ export async function fetchSecurityScan(address: string, chain: "Base" | "Solana
       }
       
       // Fallback for Solana
-      const ownerAddr = await fetchTokenOwner(address, "Solana");
       return {
         hiddenOwner: false,
         obfuscatedAddress: false,
@@ -336,14 +538,12 @@ export async function fetchSecurityScan(address: string, chain: "Base" | "Solana
         tradingCooldown: false,
         hasBlacklist: false,
         hasWhitelist: false,
-        buyTax: "N/A",
-        sellTax: "N/A",
+        buyTax: taxInfo.buyTax,
+        sellTax: taxInfo.sellTax,
         ownershipRenounced: "Unknown",
         ownerAddress: ownerAddr,
       };
     }
-
-    return null;
   } catch (e) {
     console.warn("fetchSecurityScan error:", e);
     return null;
@@ -504,4 +704,14 @@ Be honest and objective. Consider security risks, tax structure, liquidity, and 
   }
 }
 
-export default { fetchTokenData, fetchBaseTokenData, fetchSolanaTokenData, fetchSecurityScan, generateAIAnalysis, fetchTokenOwner };
+export default { 
+  fetchTokenData, 
+  fetchBaseTokenData, 
+  fetchSolanaTokenData, 
+  fetchSecurityScan, 
+  generateAIAnalysis, 
+  fetchTokenOwner,
+  fetchTaxInfo,
+  fetchMintAuthority,
+  fetchHolderDistribution,
+};

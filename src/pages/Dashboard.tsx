@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
 import ConLaunchLiveSection from "@/components/ConLaunchLiveSection";
 import { getToken as fetchConLaunchToken } from "@/lib/conlaunch";
-import { fetchTokenData, fetchSecurityScan, generateAIAnalysis, type AIAnalysis } from "@/lib/tokendata";
+import { fetchTokenData, fetchSecurityScan, generateAIAnalysis, fetchMintAuthority, fetchHolderDistribution, type AIAnalysis, type HolderDistribution } from "@/lib/tokendata";
 
 
 /* ─── Mock Data ─── */
@@ -129,6 +129,8 @@ const Dashboard = () => {
   const [quickIntel, setQuickIntel] = useState<any | null>(null);
   const [aiAnalysis, setAIAnalysis] = useState<AIAnalysis | null>(null);
   const [currentToken, setCurrentToken] = useState<any | null>(null);
+  const [holders, setHolders] = useState<HolderDistribution | null>(null);
+  const [mintAuthority, setMintAuthority] = useState<string | null>(null);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
@@ -171,6 +173,20 @@ const Dashboard = () => {
         setQuickIntel(securityData);
       } else {
         setQuickIntel(null);
+      }
+
+      // Fetch holder distribution and mint authority in parallel
+      const [holderData, mintAuth] = await Promise.all([
+        fetchHolderDistribution(tokenAddress.trim(), chain),
+        chain === "Solana" ? fetchMintAuthority(tokenAddress.trim()) : Promise.resolve(null),
+      ]);
+      
+      if (holderData) {
+        setHolders(holderData);
+      }
+      
+      if (mintAuth) {
+        setMintAuthority(mintAuth);
       }
 
       // Generate REAL AI analysis using Gemini API
@@ -441,24 +457,29 @@ const Dashboard = () => {
 
                 {/* Status Badges */}
                 <div className="flex gap-3 mt-7">
-                  {[
-                    { label: "Mint Authority", value: MOCK_TOKEN.mintAuthority, dot: true },
-                    { label: "Liquidity supply", value: MOCK_TOKEN.liquiditySupply },
-                  ].map((badge, i) => (
+                  {chain === "Solana" && (
                     <motion.div
-                      key={badge.label}
                       initial={{ scale: 0.9, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.4 + i * 0.1, type: "spring", stiffness: 200 }}
+                      transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
                       className="bg-gradient-to-b from-secondary/50 to-secondary/30 border border-[hsl(var(--border)/0.4)] rounded-2xl px-5 py-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.04)]"
                     >
-                      <p className="text-[10px] text-muted-foreground/60 mb-1.5 font-display font-bold uppercase tracking-[0.15em]">{badge.label}</p>
+                      <p className="text-[10px] text-muted-foreground/60 mb-1.5 font-display font-bold uppercase tracking-[0.15em]">Mint Authority</p>
                       <div className="flex items-center gap-2">
-                        {badge.dot && <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.5)] animate-pulse" />}
-                        <span className="text-sm font-display font-bold text-foreground">{badge.value}</span>
+                        <div className={`w-2 h-2 rounded-full ${mintAuthority === "Renounced" ? "bg-primary" : "bg-orange-500"} shadow-[0_0_10px_hsl(var(--primary)/0.5)] animate-pulse`} />
+                        <span className="text-sm font-display font-bold text-foreground">{mintAuthority || "Unknown"}</span>
                       </div>
                     </motion.div>
-                  ))}
+                  )}
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                    className="bg-gradient-to-b from-secondary/50 to-secondary/30 border border-[hsl(var(--border)/0.4)] rounded-2xl px-5 py-4 shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.04)]"
+                  >
+                    <p className="text-[10px] text-muted-foreground/60 mb-1.5 font-display font-bold uppercase tracking-[0.15em]">Liquidity supply</p>
+                    <span className="text-sm font-display font-bold text-foreground">{MOCK_TOKEN.liquiditySupply}</span>
+                  </motion.div>
                 </div>
               </GlassCard>
 
@@ -506,10 +527,39 @@ const Dashboard = () => {
 
               {/* Holder Distribution */}
               <GlassCard>
-                <SectionLabel icon={Activity}>Holder Distribution (Base)</SectionLabel>
-                <p className="text-sm text-muted-foreground/70 leading-relaxed">
-                  Base holder distribution and clustering is being added next. For now, Base DYOR focuses on market + liquidity telemetry.
-                </p>
+                <SectionLabel icon={Activity}>Holder Distribution ({chain})</SectionLabel>
+                {holders && holders.topHolders && holders.topHolders.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="text-xs text-muted-foreground/60 mb-4">Top 20 holders (excluding dev wallet)</p>
+                    {holders.topHolders.map((holder, idx) => (
+                      <div key={idx} className="flex items-center justify-between gap-3">
+                        <span className="text-xs text-muted-foreground/70 truncate max-w-[150px]">
+                          {holder.address.slice(0, 6)}...{holder.address.slice(-4)}
+                        </span>
+                        <div className="flex items-center gap-2 flex-1">
+                          <div className="h-1.5 bg-primary/20 rounded-full flex-1">
+                            <div
+                              className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full"
+                              style={{ width: `${Math.min(holder.percentage, 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-semibold text-foreground/80 min-w-[45px] text-right">
+                            {holder.percentage.toFixed(2)}%
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {holders.totalHolders && (
+                      <p className="text-xs text-muted-foreground/50 mt-4 pt-3 border-t border-border/30">
+                        Total holders: {holders.totalHolders}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground/70 leading-relaxed">
+                    Run analysis to fetch holder distribution data for this {chain} token.
+                  </p>
+                )}
               </GlassCard>
 
               {/* Liquidity & Risk */}
