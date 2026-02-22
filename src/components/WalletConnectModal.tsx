@@ -31,6 +31,89 @@ const initWalletConnect = async () => {
   return WalletConnectProvider;
 };
 
+// Mobile detection utility
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+// Deep link utilities for mobile wallets
+const deepLinkUtils = {
+  phantom: {
+    scheme: "phantom://",
+    deeplink: (url: string) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}`,
+    appLink: "https://phantom.app",
+  },
+  metamask: {
+    scheme: "metamask://",
+    deeplink: (url: string) => `https://metamask.app.link/dapp/${url}`,
+    appLink: "https://metamask.io",
+  },
+};
+
+// Check if wallet app is installed on mobile
+const isWalletAppInstalled = async (walletType: WalletType): Promise<boolean> => {
+  if (!isMobileDevice()) return false;
+
+  const timeout = new Promise((resolve) => setTimeout(() => resolve(false), 1500));
+  
+  if (walletType === "phantom") {
+    // Try to detect Phantom app
+    const phantomCheck = new Promise((resolve) => {
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = "phantom://";
+      iframe.onload = () => {
+        document.body.removeChild(iframe);
+        resolve(true);
+      };
+      iframe.onerror = () => {
+        document.body.removeChild(iframe);
+        resolve(false);
+      };
+      document.body.appendChild(iframe);
+    });
+    
+    return Promise.race([phantomCheck, timeout]) as Promise<boolean>;
+  }
+
+  if (walletType === "metamask") {
+    // Try to detect MetaMask app
+    const metamaskCheck = new Promise((resolve) => {
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = "metamask://";
+      iframe.onload = () => {
+        document.body.removeChild(iframe);
+        resolve(true);
+      };
+      iframe.onerror = () => {
+        document.body.removeChild(iframe);
+        resolve(false);
+      };
+      document.body.appendChild(iframe);
+    });
+    
+    return Promise.race([metamaskCheck, timeout]) as Promise<boolean>;
+  }
+
+  return false;
+};
+
+// Initiate deep link to wallet app
+const initiateDeepLink = (walletType: WalletType) => {
+  const currentUrl = window.location.href;
+  const utils = deepLinkUtils[walletType];
+
+  if (walletType === "phantom") {
+    // Phantom deeplink format
+    const deeplink = utils.deeplink(currentUrl);
+    window.location.href = deeplink;
+  } else if (walletType === "metamask") {
+    // MetaMask deeplink format
+    window.location.href = `metamask://dapp/${window.location.hostname}${window.location.pathname}`;
+  }
+};
+
 const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModalProps) => {
   const [connecting, setConnecting] = useState<WalletType | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,10 +122,10 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
     setError(null);
     setConnecting("phantom");
     try {
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isMobile = isMobileDevice();
 
       if (isMobile) {
-        // Mobile: Try WalletConnect with Phantom
+        // Mobile: Try WalletConnect first, then fallback to deeplink
         try {
           const Provider = await initWalletConnect();
           const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
@@ -67,11 +150,18 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
             return;
           }
         } catch (wcError: any) {
-          console.log("WalletConnect failed, trying Phantom deeplink...");
-          // Fallback to Phantom deeplink
-          const deeplink = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
-          window.location.href = deeplink;
-          return;
+          console.log("WalletConnect failed, attempting Phantom deeplink...");
+          // Fallback to Phantom deeplink - this will open the app and keep user there
+          try {
+            initiateDeepLink("phantom");
+            // If deeplink succeeds, the connection will be established within the app
+            // Note: Connection handling may need to be managed via window events or callback
+            return;
+          } catch (e) {
+            setError("Phantom not found. Install from: https://phantom.app");
+            setConnecting(null);
+            return;
+          }
         }
       }
 
@@ -97,10 +187,10 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
     setError(null);
     setConnecting("metamask");
     try {
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isMobile = isMobileDevice();
 
       if (isMobile) {
-        // Mobile: Try WalletConnect with MetaMask
+        // Mobile: Try WalletConnect first, then fallback to deeplink
         try {
           const Provider = await initWalletConnect();
           const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
@@ -125,11 +215,18 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
             return;
           }
         } catch (wcError: any) {
-          console.log("WalletConnect failed, trying MetaMask deeplink...");
-          // Fallback to MetaMask deeplink
-          const deeplink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`;
-          window.location.href = deeplink;
-          return;
+          console.log("WalletConnect failed, attempting MetaMask deeplink...");
+          // Fallback to MetaMask deeplink - this will open the app and keep user there
+          try {
+            initiateDeepLink("metamask");
+            // If deeplink succeeds, the connection will be established within the app
+            // Note: Connection handling may need to be managed via window events or callback
+            return;
+          } catch (e) {
+            setError("MetaMask not found. Install from: https://metamask.io");
+            setConnecting(null);
+            return;
+          }
         }
       }
 
