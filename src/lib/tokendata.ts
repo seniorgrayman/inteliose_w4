@@ -224,92 +224,109 @@ export async function fetchTaxInfo(address: string, chain: "Base" | "Solana"): P
 // --- Fetch Mint Authority (Solana) ---
 export async function fetchMintAuthority(mint: string): Promise<string> {
   try {
-    const quickNodeUrl = import.meta.env.VITE_QUICKNODE_API_KEY || "";
-    if (!quickNodeUrl) return "Unknown";
+    // Try Helius DAS API for mint authority status
+    const heliusKey = import.meta.env.HELIUS_API_KEY || "";
+    if (heliusKey) {
+      try {
+        const apiUrl = heliusKey.split("?")[0];
+        const apiKey = heliusKey.includes("?api-key=") ? heliusKey.split("api-key=")[1] : "";
+        
+        if (apiKey) {
+          const res = await fetch(`${apiUrl}?api-key=${apiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              id: 1,
+              method: "getAsset",
+              params: { id: mint },
+            }),
+          });
 
-    // Try getTokenSupply first
-    try {
-      const res = await fetch(quickNodeUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: 1,
-          method: "getTokenSupply",
-          params: [mint],
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const decimals = data.result?.value?.decimals;
-        if (decimals !== undefined) {
-          // Successfully got token data
-          return "Fetched"; // Token exists and can be analyzed
+          if (res.ok) {
+            const data = await res.json();
+            // Check if mint has an update authority set
+            const updateAuthority = data.result?.mint_extensions?.metadata?.update_authority;
+            if (updateAuthority === null || updateAuthority === undefined) {
+              return "RENOUNCED";
+            } else {
+              return "ACTIVE";
+            }
+          }
         }
+      } catch (e) {
+        console.warn("Helius DAS error:", e);
       }
-    } catch (e) {
-      console.warn("getTokenSupply error:", e);
-    }
-
-    // Try Helius DAS API for more detailed mint info
-    try {
-      const heliusKey = import.meta.env.HELIUS_API_KEY || "";
-      if (!heliusKey) return "Unknown";
-
-      const apiUrl = heliusKey.split("?")[0];
-      const apiKey = heliusKey.includes("?api-key=") ? heliusKey.split("api-key=")[1] : "";
-      
-      if (!apiKey) return "Unknown";
-
-      const res = await fetch(`${apiUrl}?api-key=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: 1,
-          method: "getAsset",
-          params: { id: mint },
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.result?.mutable) {
-          return data.result.mutable ? "Active" : "Renounced";
-        }
-      }
-    } catch (e) {
-      console.warn("Helius DAS error:", e);
     }
 
     return "Unknown";
   } catch (e) {
     console.warn("fetchMintAuthority error:", e);
+    return "Unknown";
   }
-  return "Unknown";
 }
 
 // --- Fetch Holder Distribution ---
 export async function fetchHolderDistribution(address: string, chain: "Base" | "Solana"): Promise<HolderDistribution | null> {
   try {
     if (chain === "Base") {
-      // Try DexScreener for holder count (quickest)
+      // For Base EVM tokens, try to fetch from an indexer API
+      // First try DexScreener for any holder data
       try {
         const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`);
         if (res.ok) {
           const data = await res.json();
           const pair = data.pairs?.[0];
-          if (pair) {
-            return {
-              topHolders: [],
-              totalHolders: pair.info?.holders || null,
-            };
+          
+          // Try to get holder data from Alchemy if available
+          const alchemyKey = import.meta.env.VITE_ALCHEMY_API_KEY_BASE || "";
+          if (alchemyKey && pair) {
+            try {
+              // Use Alchemy's getTokenBalances endpoint via etherscan/blockscout if available
+              const res2 = await fetch(`https://api.basescan.org/api?module=token&action=tokenholderlist&contractaddress=${address}&page=1&offset=100`, {
+                signal: AbortSignal.timeout(5000),
+              });
+              
+              if (res2.ok) {
+                const holderData = await res2.json();
+                if (holderData.result && Array.isArray(holderData.result)) {
+                  const totalSupply = parseFloat(pair.fdv || "0") > 0 ? pair.fdv : 1;
+                  const topHolders = holderData.result
+                    .slice(1, 21) // Skip first (usually dev/treasury)
+                    .map((holder: any, idx: number) => ({
+                      address: holder.TokenHolderAddress || `Holder ${idx + 1}`,
+                      percentage: Math.min(
+                        parseFloat(holder.TokenHolderQuantity || "0") / 1e18 * 100,
+                        100
+                      ),
+                    }))
+                    .filter((h: any) => h.percentage > 0);
+                  
+                  return {
+                    topHolders,
+                    totalHolders: holderData.result.length,
+                  };
+                }
+              }
+            } catch (e) {
+              console.warn("Basescan holder fetch error:", e);
+            }
           }
+          
+          // Fallback: return holder count only
+          return {
+            topHolders: [],
+            totalHolders: pair?.info?.holders || null,
+          };
         }
       } catch (e) {
         console.warn("DexScreener holders error:", e);
       }
+      
+      return {
+        topHolders: [],
+        totalHolders: null,
+      };
     } else {
       // Solana: Use QuickNode to get token account largest accounts
       const quickNodeUrl = import.meta.env.VITE_QUICKNODE_API_KEY || "";
@@ -409,7 +426,47 @@ export async function fetchTokenOwner(address: string, chain: "Base" | "Solana")
         }
       }
     } else {
-      // Solana: Use QuickNode to get token mint authority or creator
+      // Solana: Use Helius DAS API to get token creator/deployer
+      const heliusKey = import.meta.env.HELIUS_API_KEY || "";
+      if (!heliusKey) return "Unknown";
+
+      try {
+        const apiUrl = heliusKey.split("?")[0];
+        const apiKey = heliusKey.includes("?api-key=") ? heliusKey.split("api-key=")[1] : "";
+        
+        if (!apiKey) return "Unknown";
+
+        const res = await fetch(`${apiUrl}?api-key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: 1,
+            method: "getAsset",
+            params: { id: address },
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          // Get creators from the asset
+          const creators = data.result?.creators || [];
+          if (creators.length > 0) {
+            // Return the first creator (usually the deployer)
+            return creators[0].address || "Unknown";
+          }
+          
+          // Fallback: try to get from update_authority
+          const updateAuthority = data.result?.mint_extensions?.metadata?.update_authority;
+          if (updateAuthority) {
+            return updateAuthority;
+          }
+        }
+      } catch (e) {
+        console.warn("Helius DAS error for Solana owner:", e);
+      }
+
+      // Fallback to QuickNode for token owner
       const quickNodeUrl = import.meta.env.VITE_QUICKNODE_API_KEY || "";
       if (!quickNodeUrl) return "Unknown";
 

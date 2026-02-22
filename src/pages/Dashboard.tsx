@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   ArrowRight, Clock, DollarSign, BarChart3, Droplets, TrendingUp,
   Percent, Activity, Globe, FileText, MessageCircle, ExternalLink,
-  ChevronDown, Search, Sparkles, Wallet, Shield, Zap, Radio
+  ChevronDown, Search, Sparkles, Wallet, Shield, Zap, Radio, Copy, Check, BarChart2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
@@ -135,6 +135,13 @@ const Dashboard = () => {
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
   const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch">("analyze");
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+
+  const handleCopyAddress = (address: string) => {
+    navigator.clipboard.writeText(address);
+    setCopiedAddress(address);
+    setTimeout(() => setCopiedAddress(null), 2000);
+  };
 
   const handleWalletConnected = (address: string, wallet: WalletType) => {
     setConnectedAddress(address);
@@ -466,7 +473,7 @@ const Dashboard = () => {
                     >
                       <p className="text-[10px] text-muted-foreground/60 mb-1.5 font-display font-bold uppercase tracking-[0.15em]">Mint Authority</p>
                       <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${mintAuthority === "Renounced" ? "bg-primary" : "bg-orange-500"} shadow-[0_0_10px_hsl(var(--primary)/0.5)] animate-pulse`} />
+                        <div className={`w-2 h-2 rounded-full ${mintAuthority === "RENOUNCED" ? "bg-primary" : mintAuthority === "ACTIVE" ? "bg-orange-500" : "bg-gray-500"} shadow-[0_0_10px_hsl(var(--primary)/0.5)] animate-pulse`} />
                         <span className="text-sm font-display font-bold text-foreground">{mintAuthority || "Unknown"}</span>
                       </div>
                     </motion.div>
@@ -510,14 +517,34 @@ const Dashboard = () => {
                       {[
                         ["Buy tax", quickIntel.buyTax],
                         ["Sell tax", quickIntel.sellTax],
-                        ["Ownership renounced", quickIntel.ownershipRenounced],
-                        ["Owner address", quickIntel.ownerAddress?.slice(0, 10) + "..." || "Unknown"],
+                        ["Ownership renounced", (mintAuthority === "RENOUNCED" || quickIntel.ownershipRenounced === "YES") ? "✅ YES" : "❌ NO"],
                       ].map((row, i) => (
                         <div key={i} className="flex items-center justify-between py-3 px-4 rounded-xl bg-secondary/40 border border-border/30">
                           <p className="text-sm text-foreground/70">{row[0]}</p>
                           <p className="text-sm font-semibold text-foreground">{row[1]}</p>
                         </div>
                       ))}
+                      {quickIntel.ownerAddress && quickIntel.ownerAddress !== "Unknown" && (
+                        <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-secondary/40 border border-border/30 md:col-span-2">
+                          <p className="text-sm text-foreground/70">Owner address</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-foreground">{quickIntel.ownerAddress.slice(0, 10)}...{quickIntel.ownerAddress.slice(-4)}</p>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleCopyAddress(quickIntel.ownerAddress)}
+                              className="p-1.5 hover:bg-primary/10 rounded-lg transition-colors"
+                              title="Copy address"
+                            >
+                              {copiedAddress === quickIntel.ownerAddress ? (
+                                <Check size={16} className="text-primary" />
+                              ) : (
+                                <Copy size={16} className="text-muted-foreground/60 hover:text-primary" />
+                              )}
+                            </motion.button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -532,10 +559,49 @@ const Dashboard = () => {
                   <div className="space-y-3">
                     <p className="text-xs text-muted-foreground/60 mb-4">Top 20 holders (excluding dev wallet)</p>
                     {holders.topHolders.map((holder, idx) => (
-                      <div key={idx} className="flex items-center justify-between gap-3">
-                        <span className="text-xs text-muted-foreground/70 truncate max-w-[150px]">
-                          {holder.address.slice(0, 6)}...{holder.address.slice(-4)}
-                        </span>
+                      <div key={idx} className="flex items-center justify-between gap-3 p-2 hover:bg-secondary/20 rounded-lg transition-colors">
+                        <div className="flex items-center gap-2 min-w-[150px]">
+                          <span className="text-xs text-muted-foreground/70 truncate">
+                            {holder.address.slice(0, 6)}...{holder.address.slice(-4)}
+                          </span>
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleCopyAddress(holder.address)}
+                            className="p-1 hover:bg-primary/10 rounded-lg transition-colors"
+                            title="Copy address"
+                          >
+                            {copiedAddress === holder.address ? (
+                              <Check size={12} className="text-primary" />
+                            ) : (
+                              <Copy size={12} className="text-muted-foreground/40 hover:text-primary" />
+                            )}
+                          </motion.button>
+                          {chain === "Solana" && (
+                            <motion.a
+                              href={`https://solscan.io/address/${holder.address}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              whileHover={{ scale: 1.1 }}
+                              className="p-1 hover:bg-primary/10 rounded-lg transition-colors"
+                              title="View on Solscan"
+                            >
+                              <ExternalLink size={12} className="text-muted-foreground/40 hover:text-primary" />
+                            </motion.a>
+                          )}
+                          {chain === "Base" && (
+                            <motion.a
+                              href={`https://basescan.org/address/${holder.address}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              whileHover={{ scale: 1.1 }}
+                              className="p-1 hover:bg-primary/10 rounded-lg transition-colors"
+                              title="View on Basescan"
+                            >
+                              <ExternalLink size={12} className="text-muted-foreground/40 hover:text-primary" />
+                            </motion.a>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 flex-1">
                           <div className="h-1.5 bg-primary/20 rounded-full flex-1">
                             <div
