@@ -108,6 +108,7 @@ const Dashboard = () => {
   const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
   const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch">("analyze");
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const handleCopyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
@@ -121,27 +122,33 @@ const Dashboard = () => {
   };
 
   const handleAnalyze = async () => {
-    if (!tokenAddress) return;
+    if (!tokenAddress) {
+      setValidationError(null);
+      return;
+    }
     
     // Validate token address format
     const trimmedAddress = tokenAddress.trim();
     const isValidBase = /^0x[a-fA-F0-9]{40}$/.test(trimmedAddress);
-    const isValidSolana = /^[1-9A-HJ-NP-Z]{43,44}$/.test(trimmedAddress);
+    // Solana addresses are typically 43-44 characters but can vary - just check length
+    const isValidSolana = trimmedAddress.length >= 32 && trimmedAddress.length <= 50;
     
     if (chain === "Base" && !isValidBase) {
+      setValidationError("Invalid token address");
       setQuickIntel(null);
       setAIAnalysis(null);
-      alert("Invalid Base token address. Must be 0x + 40 hex characters.");
       return;
     }
     
     if (chain === "Solana" && !isValidSolana) {
+      setValidationError("Invalid token address");
       setQuickIntel(null);
       setAIAnalysis(null);
-      alert("Invalid Solana token address. Must be 43-44 base58 characters.");
       return;
     }
-    
+
+    // Clear validation error when valid
+    setValidationError(null);
     setIsAnalyzing(true);
     
     // Clear previous data to avoid caching
@@ -355,7 +362,11 @@ const Dashboard = () => {
                 <label className="text-xs text-muted-foreground mb-2 block font-display tracking-wide">
                   Paste {chain} Token Address (0x...)
                 </label>
-                <div className="flex items-center gap-3 w-full bg-gradient-to-b from-secondary/50 to-secondary/30 border border-[hsl(var(--border)/0.4)] rounded-2xl px-5 py-4 focus-within:border-primary/30 focus-within:shadow-[0_0_30px_hsl(var(--primary)/0.06),0_1px_0_0_hsl(0_0%_100%/0.4)_inset] focus-within:bg-card/80 transition-all shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset,0_2px_4px_-1px_hsl(0_0%_0%/0.04)]">
+                <div className={`flex items-center gap-3 w-full bg-gradient-to-b from-secondary/50 to-secondary/30 border rounded-2xl px-5 py-4 focus-within:shadow-[0_0_30px_hsl(var(--primary)/0.06),0_1px_0_0_hsl(0_0%_100%/0.4)_inset] focus-within:bg-card/80 transition-all shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset,0_2px_4px_-1px_hsl(0_0%_0%/0.04)] ${
+                  validationError 
+                    ? "border-destructive/50 focus-within:border-destructive/70" 
+                    : "border-[hsl(var(--border)/0.4)] focus-within:border-primary/30"
+                }`}>
                   <div className="flex-shrink-0">
                     {chain === "Base" ? (
                       <div className="text-lg font-bold text-blue-500">⛓️</div>
@@ -366,11 +377,18 @@ const Dashboard = () => {
                   <input
                     type="text"
                     value={tokenAddress}
-                    onChange={(e) => setTokenAddress(e.target.value)}
-                    placeholder={chain === "Base" ? "0x + 40 hex chars" : "43-44 base58 chars"}
+                    onChange={(e) => {
+                      setTokenAddress(e.target.value);
+                      // Clear error when user starts typing
+                      if (validationError) setValidationError(null);
+                    }}
+                    placeholder={chain === "Base" ? "0x + 40 hex chars" : "43-50 characters"}
                     className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground/30 focus:outline-none text-sm font-display"
                   />
                 </div>
+                {validationError && (
+                  <p className="text-xs text-destructive mt-2 font-display">{validationError}</p>
+                )}
               </div>
 
               <div className="flex flex-col md:flex-row gap-4 items-end">
@@ -439,20 +457,13 @@ const Dashboard = () => {
                 </h2>
                 <p className="text-sm text-muted-foreground mb-8">Quick facts + instant risk signal.</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  <InnerCard className="md:col-span-2">
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-5">
+                  <InnerCard>
                     <p className="text-[10px] text-muted-foreground/60 font-display font-bold uppercase tracking-[0.15em] mb-4">Quick Facts</p>
                     <StatRow icon={DollarSign} label="Current price (USD)" value={currentToken?.price || "N/A"} />
                     <StatRow icon={BarChart3} label="Volume (24h)" value={currentToken?.volume24h || "N/A"} />
                     <StatRow icon={Droplets} label="Liquidity" value={currentToken?.liquidity || "N/A"} />
                     <StatRow icon={TrendingUp} label="Market cap" value={currentToken?.marketCap || "N/A"} />
-                  </InnerCard>
-
-                  <InnerCard>
-                    <p className="text-[10px] text-muted-foreground/60 font-display font-bold uppercase tracking-[0.15em] mb-4">Status</p>
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <p>Analyzing {chain} token...</p>
-                    </div>
                   </InnerCard>
                 </div>
 
@@ -696,9 +707,8 @@ const Dashboard = () => {
                           onClick={() => {
                             const tokenAddr = currentToken?.address || tokenAddress;
                             if (tokenAddr) {
-                              const bubbleMapsUrl = chain === "Base" 
-                                ? `https://www.bubblemaps.io/token/base/${tokenAddr}`
-                                : `https://www.bubblemaps.io/token/solana/${tokenAddr}`;
+                              const chainParam = chain === "Base" ? "base" : "solana";
+                              const bubbleMapsUrl = `https://v2.bubblemaps.io/map?address=${tokenAddr}&chain=${chainParam}`;
                               window.open(bubbleMapsUrl, '_blank');
                             }
                           }}
@@ -724,9 +734,8 @@ const Dashboard = () => {
                               onClick={() => {
                                 const tokenAddr = currentToken?.address || tokenAddress;
                                 if (tokenAddr) {
-                                  const bubbleMapsUrl = chain === "Base" 
-                                    ? `https://www.bubblemaps.io/token/base/${tokenAddr}`
-                                    : `https://www.bubblemaps.io/token/solana/${tokenAddr}`;
+                                  const chainParam = chain === "Base" ? "base" : "solana";
+                                  const bubbleMapsUrl = `https://v2.bubblemaps.io/map?address=${tokenAddr}&chain=${chainParam}`;
                                   window.open(bubbleMapsUrl, '_blank');
                                 }
                               }}
