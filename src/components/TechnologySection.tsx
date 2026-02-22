@@ -1,6 +1,7 @@
 import { ArrowRight, BarChart3, Users, Bot, ExternalLink, Shield, Zap, Activity } from "lucide-react";
 import { motion, useInView, animate } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 /* ─── ASCII Intelligence Matrix ─── */
 const ASCII_LINES = [
@@ -341,22 +342,20 @@ const TechnologySection = () => {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <motion.a
-            href="/dashboard"
-            whileHover={{ scale: 1.03, y: -2, boxShadow: "0 12px 40px hsl(240 100% 50% / 0.25)" }}
-            whileTap={{ scale: 0.97 }}
-            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3.5 rounded-2xl text-sm font-display font-semibold transition-all shadow-[0_6px_25px_hsl(var(--primary)/0.3),0_1px_0_0_hsl(0_0%_100%/0.15)_inset]"
+          <Link
+            to="/dashboard"
+            className="group inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-3.5 rounded-2xl text-sm font-display font-semibold transition-all shadow-[0_6px_25px_hsl(var(--primary)/0.3),0_1px_0_0_hsl(0_0%_100%/0.15)_inset] hover:scale-103 hover:shadow-[0_12px_40px_hsl(240_100%_50%_/_0.25)]"
           >
             Launch DYOR Engine
             <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-          </motion.a>
-          <a
-            href="/dashboard"
+          </Link>
+          <Link
+            to="/dashboard"
             className="inline-flex items-center gap-2 bg-gradient-to-b from-secondary/70 to-secondary/40 border border-[hsl(var(--border)/0.5)] text-foreground px-8 py-3.5 rounded-2xl text-sm font-display font-medium hover:border-primary/30 transition-all shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.06)]"
           >
             Manage Project
             <ExternalLink size={13} />
-          </a>
+          </Link>
         </motion.div>
 
         {/* ─── Feature Cards (3 col) ─── */}

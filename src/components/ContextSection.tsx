@@ -1,4 +1,5 @@
 import { ArrowDown, AlertCircle, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import darkTexture from "@/assets/dark-texture.jpg";
 import whyBaseVideo from "@/assets/why-base-bg.mp4";
 
@@ -90,9 +91,9 @@ const ContextSection = () => {
               <p className="text-sm text-primary/70 line-clamp-3 mb-4">
                 Inteliose runs on Base for a reason. Low-cost transactions, Ethereum-grade security, and seamless Coinbase ecosystem access.
               </p>
-              <a href="/dashboard" className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full text-sm hover:opacity-90 transition">
+              <Link to="/dashboard" className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full text-sm hover:opacity-90 transition">
                 Explore Ecosystem <ArrowRight size={14} />
-              </a>
+              </Link>
             </div>
           </div>
         </div>

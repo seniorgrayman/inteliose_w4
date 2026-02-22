@@ -1,4 +1,5 @@
 import { ArrowUpRight, ShieldCheck, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import dashboardBg from "@/assets/dashboard-bg.jpg";
 import founderVideo from "@/assets/dashboard-bg-video.mp4";
 
@@ -11,10 +12,10 @@ const HowItWorksSection = () => {
           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-foreground max-w-4xl leading-[1.05] font-display font-medium tracking-tighter">
             From Contract Address <span className="text-primary">to Clear Action.</span>
           </h2>
-          <a href="#" className="group inline-flex items-center text-sm text-foreground hover:text-primary transition-colors border-b border-foreground hover:border-primary pb-0.5 whitespace-nowrap">
+          <Link to="/dashboard" className="group inline-flex items-center text-sm text-foreground hover:text-primary transition-colors border-b border-foreground hover:border-primary pb-0.5 whitespace-nowrap">
             Founder Dashboard
             <ArrowUpRight size={16} className="ml-1 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </a>
+          </Link>
         </div>
 
         {/* Grid */}
@@ -96,9 +97,9 @@ const HowItWorksSection = () => {
               <p className="text-blue-200 leading-relaxed mb-12 text-[15px]">
                 Analyze your token. Understand your risk. Act before narratives form.
               </p>
-              <a href="/dashboard" className="w-full py-3 bg-white text-primary rounded-full font-medium hover:bg-blue-50 transition-colors block text-center">
+              <Link to="/dashboard" className="w-full py-3 bg-white text-primary rounded-full font-medium hover:bg-blue-50 transition-colors block text-center">
                 Analyze Token
-              </a>
+              </Link>
             </div>
 
             {/* Glow */}
