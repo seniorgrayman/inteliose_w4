@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
 import ConLaunchLiveSection from "@/components/ConLaunchLiveSection";
 import { getToken as fetchConLaunchToken } from "@/lib/conlaunch";
-import { fetchTokenData, fetchSecurityScan } from "@/lib/tokendata";
+import { fetchTokenData, fetchSecurityScan, generateAIAnalysis, type AIAnalysis } from "@/lib/tokendata";
 
 
 /* ─── Mock Data ─── */
@@ -127,6 +127,7 @@ const Dashboard = () => {
   const [analyzed, setAnalyzed] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [quickIntel, setQuickIntel] = useState<any | null>(null);
+  const [aiAnalysis, setAIAnalysis] = useState<AIAnalysis | null>(null);
   const [currentToken, setCurrentToken] = useState<any | null>(null);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
@@ -143,7 +144,7 @@ const Dashboard = () => {
     setIsAnalyzing(true);
     
     try {
-      // Fetch real token data from DexScreener or other APIs
+      // Fetch real token data from APIs (Coinbase → Zerion → DexScreener for Base)
       const tokenData = await fetchTokenData(tokenAddress.trim(), chain);
       
       if (tokenData) {
@@ -164,16 +165,31 @@ const Dashboard = () => {
         // ignore ConLaunch errors
       }
       
-      // Fetch REAL security checks from Go+ or RugCheck APIs
+      // Fetch REAL security checks from Go+ (Base) or RugCheck (Solana) APIs
       const securityData = await fetchSecurityScan(tokenAddress.trim(), chain);
       if (securityData) {
         setQuickIntel(securityData);
       } else {
         setQuickIntel(null);
       }
+
+      // Generate REAL AI analysis using Gemini API
+      if (tokenData && securityData) {
+        const analysis = await generateAIAnalysis(
+          tokenData.name,
+          tokenData.symbol,
+          tokenData,
+          securityData,
+          chain
+        );
+        if (analysis) {
+          setAIAnalysis(analysis);
+        }
+      }
     } catch (e) {
       console.warn("handleAnalyze error:", e);
       setQuickIntel(null);
+      setAIAnalysis(null);
     }
 
     // Simulate analysis delay
@@ -536,29 +552,48 @@ const Dashboard = () => {
                       </h3>
                       <p className="text-sm text-muted-foreground/60 mt-1">AI verdict based on token telemetry.</p>
                     </div>
-                    <motion.div
-                      initial={{ scale: 0, rotate: -10 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                      className="border border-primary/20 bg-gradient-to-br from-primary/8 to-primary/3 rounded-2xl px-6 py-3 shadow-[0_0_25px_hsl(var(--primary)/0.08),0_1px_0_0_hsl(0_0%_100%/0.3)_inset]"
-                    >
-                      <span className="text-sm font-display font-bold text-primary">Score: {MOCK_TOKEN.aiScore}/100</span>
-                    </motion.div>
+                    {aiAnalysis && (
+                      <motion.div
+                        initial={{ scale: 0, rotate: -10 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                        className="border border-primary/20 bg-gradient-to-br from-primary/8 to-primary/3 rounded-2xl px-6 py-3 shadow-[0_0_25px_hsl(var(--primary)/0.08),0_1px_0_0_hsl(0_0%_100%/0.3)_inset]"
+                      >
+                        <span className="text-sm font-display font-bold text-primary">Risk: {aiAnalysis.riskLevel}</span>
+                      </motion.div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <InnerCard className="space-y-5">
                       <div>
-                        <p className="text-[10px] text-muted-foreground/60 font-display font-bold mb-2.5 uppercase tracking-[0.15em]">Final Intelligence Summary</p>
-                        <p className="text-sm text-foreground/55 leading-relaxed">{MOCK_TOKEN.aiSummary}</p>
+                        <p className="text-[10px] text-muted-foreground/60 font-display font-bold mb-2.5 uppercase tracking-[0.15em]">AI Analysis Summary</p>
+                        <p className="text-sm text-foreground/55 leading-relaxed">
+                          {aiAnalysis?.summary || "Run analysis to generate AI insights..."}
+                        </p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-muted-foreground/60 font-display font-bold mb-2.5 uppercase tracking-[0.15em]">Key signals (Plain English)</p>
-                        <p className="text-sm text-foreground/55 leading-relaxed">{MOCK_TOKEN.keySignals}</p>
+                        <p className="text-[10px] text-muted-foreground/60 font-display font-bold mb-2.5 uppercase tracking-[0.15em]">Recommendation</p>
+                        <p className="text-sm text-foreground/55 font-semibold leading-relaxed">
+                          {aiAnalysis?.recommendation || "N/A"}
+                        </p>
                       </div>
+                      {aiAnalysis?.keyPoints && aiAnalysis.keyPoints.length > 0 && (
+                        <div>
+                          <p className="text-[10px] text-muted-foreground/60 font-display font-bold mb-2.5 uppercase tracking-[0.15em]">Key Points</p>
+                          <ul className="text-sm text-foreground/55 leading-relaxed space-y-1.5">
+                            {aiAnalysis.keyPoints.map((point, idx) => (
+                              <li key={idx} className="flex gap-2">
+                                <span className="text-primary/60">•</span>
+                                <span>{point}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                       <div className="bg-gradient-to-b from-secondary/40 to-secondary/20 border border-[hsl(var(--border)/0.3)] rounded-xl px-4 py-3">
                         <p className="text-[11px] text-muted-foreground/40 italic leading-relaxed">
-                          Disclaimer: This verdict is based on telemetry + technical signals (best-effort). It is not trading advice.
+                          Disclaimer: This verdict is generated using AI + telemetry + technical signals. It is not trading advice.
                         </p>
                       </div>
                     </InnerCard>
