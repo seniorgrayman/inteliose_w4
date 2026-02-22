@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
 import ConLaunchLiveSection from "@/components/ConLaunchLiveSection";
 import { getToken as fetchConLaunchToken } from "@/lib/conlaunch";
-import { fetchTokenData } from "@/lib/tokendata";
+import { fetchTokenData, fetchSecurityScan } from "@/lib/tokendata";
 
 
 /* ─── Mock Data ─── */
@@ -164,22 +164,13 @@ const Dashboard = () => {
         // ignore ConLaunch errors
       }
       
-      // Generate security checks (mock for now, would come from real scanning API)
-      setQuickIntel({
-        hiddenOwner: Math.random() > 0.7,
-        obfuscatedAddress: Math.random() > 0.8,
-        suspiciousFunctions: Math.random() > 0.85,
-        proxyContract: Math.random() > 0.7,
-        mintable: Math.random() > 0.6,
-        transferPausable: Math.random() > 0.75,
-        tradingCooldown: Math.random() > 0.8,
-        hasBlacklist: Math.random() > 0.7,
-        hasWhitelist: Math.random() > 0.6,
-        buyTax: `${(Math.random() * 10).toFixed(1)}%`,
-        sellTax: `${(Math.random() * 10).toFixed(1)}%`,
-        ownershipRenounced: Math.random() > 0.5 ? "Yes" : "No",
-        ownerAddress: tokenAddress,
-      });
+      // Fetch REAL security checks from Go+ or RugCheck APIs
+      const securityData = await fetchSecurityScan(tokenAddress.trim(), chain);
+      if (securityData) {
+        setQuickIntel(securityData);
+      } else {
+        setQuickIntel(null);
+      }
     } catch (e) {
       console.warn("handleAnalyze error:", e);
       setQuickIntel(null);

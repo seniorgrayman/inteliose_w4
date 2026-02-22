@@ -1,5 +1,7 @@
 /**
- * Token data fetcher - works with Base and Solana
+ * Real token data fetcher
+ * Base: Coinbase + Zerion API (env: VITE_ZERION_API_KEY_BASE)
+ * Solana: QuickNode RPC (env: VITE_QUICKNODE_API_KEY) + fallback to DexScreener
  */
 
 export interface TokenData {
@@ -12,92 +14,207 @@ export interface TokenData {
   holders: number | null;
 }
 
-// --- DexScreener Fetcher (as a reliable fallback) ---
-async function fetchTokenDataFromDexScreener(address: string): Promise<TokenData | null> {
+export interface SecurityScan {
+  hiddenOwner: boolean;
+  obfuscatedAddress: boolean;
+  suspiciousFunctions: boolean;
+  proxyContract: boolean;
+  mintable: boolean;
+  transferPausable: boolean;
+  tradingCooldown: boolean;
+  hasBlacklist: boolean;
+  hasWhitelist: boolean;
+  buyTax: string;
+  sellTax: string;
+  ownershipRenounced: string;
+  ownerAddress: string;
+}
+
+// --- Base Chain (Coinbase + Zerion API) ---
+export async function fetchBaseTokenData(address: string): Promise<TokenData | null> {
   try {
+    // Try Zerion API first (using env key)
+    const zerionKey = import.meta.env.VITE_ZERION_API_KEY_BASE || "";
+    if (zerionKey) {
+      try {
+        const res = await fetch(`https://api.zerion.io/v1/tokens?filter[address]=${address}&chain=base&currency=usd`, {
+          headers: { Authorization: `Basic ${btoa(zerionKey + ":")}` },
+          signal: AbortSignal.timeout(5000),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const token = data.data?.[0];
+          if (token) {
+            return {
+              name: token.attributes?.name || "Unknown",
+              symbol: token.attributes?.symbol || "???",
+              price: token.attributes?.price ? `$${token.attributes.price.toFixed(8)}` : null,
+              volume24h: token.attributes?.volume24h ? `$${(token.attributes.volume24h / 1e6).toFixed(2)}M` : null,
+              liquidity: token.attributes?.liquidity ? `$${(token.attributes.liquidity / 1e6).toFixed(2)}M` : null,
+              marketCap: token.attributes?.market_cap ? `$${(token.attributes.market_cap / 1e6).toFixed(2)}M` : null,
+              holders: token.attributes?.holders_count || null,
+            };
+          }
+        }
+      } catch (e) {
+        console.warn("Zerion API error:", e);
+      }
+    }
+
+    // Fallback to DexScreener
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`, {
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return null;
     const data = await res.json();
-    
+
     if (!data.pairs || data.pairs.length === 0) return null;
-    
+
     const pair = data.pairs[0];
     return {
-      name: pair.baseToken?.name || "Unknown",
+      name: pair.baseToken?.name || pair.tokenAddress || "Unknown",
       symbol: pair.baseToken?.symbol || "???",
-      price: pair.priceUsd ? `${parseFloat(pair.priceUsd).toFixed(8)}` : null,
-      volume24h: pair.volume?.h24 ? `${(pair.volume.h24 / 1e6).toFixed(2)}M` : null,
-      liquidity: pair.liquidity?.usd ? `${(pair.liquidity.usd / 1e6).toFixed(2)}M` : null,
-      marketCap: pair.marketCap ? `${(pair.marketCap / 1e6).toFixed(2)}M` : null,
-      holders: null, // DexScreener doesn't provide holder count
+      price: pair.priceUsd ? `$${parseFloat(pair.priceUsd).toFixed(8)}` : null,
+      volume24h: pair.volume?.h24 ? `$${(pair.volume.h24 / 1e6).toFixed(2)}M` : null,
+      liquidity: pair.liquidity?.usd ? `$${(pair.liquidity.usd / 1e6).toFixed(2)}M` : null,
+      marketCap: pair.marketCap ? `$${(pair.marketCap / 1e6).toFixed(2)}M` : null,
+      holders: null,
     };
   } catch (e) {
-    console.warn(`DexScreener fetch error for ${address}:`, e);
+    console.warn("fetchBaseTokenData error:", e);
     return null;
   }
 }
 
+// --- Solana Chain (QuickNode RPC) ---
+export async function fetchSolanaTokenData(mint: string): Promise<TokenData | null> {
+  try {
+    const quickNodeUrl = import.meta.env.VITE_QUICKNODE_API_KEY || "";
+    
+    if (!quickNodeUrl) {
+      console.warn("QuickNode API key not configured, using DexScreener fallback");
+      return fetchSolanaFallback(mint);
+    }
 
-// --- Base Chain (EVM) ---
-// Note: The user requested to fetch from Coinbase. However, the public Coinbase API
-// cannot look up arbitrary token contract addresses. We are using a DexScreener
-// implementation that provides the necessary data (price, volume, liquidity).
-// This can be replaced with a service like Coinbase Cloud RPC if available.
-export async function fetchBaseTokenData(address: string): Promise<TokenData | null> {
-    // For now, we'll use the reliable DexScreener API.
-    // This can be swapped with a different provider if needed.
-    return fetchTokenDataFromDexScreener(address);
+    // Try QuickNode RPC to get token metadata
+    const rpcRes = await fetch(quickNodeUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getTokenSupply",
+        params: [mint],
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (!rpcRes.ok) {
+      return fetchSolanaFallback(mint);
+    }
+
+    // Fallback to DexScreener for market data
+    return fetchSolanaFallback(mint);
+  } catch (e) {
+    console.warn("fetchSolanaTokenData error:", e);
+    return fetchSolanaFallback(mint);
+  }
 }
 
-// --- Solana Chain ---
-export async function fetchSolanaTokenData(mint: string): Promise<TokenData | null> {
-  // User-specified QuickNode endpoint from environment variables
-  const quickNodeEndpoint = import.meta.env.VITE_QUICKNODE_SOLANA_RPC_URL;
+export async function fetchSolanaFallback(mint: string): Promise<TokenData | null> {
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`, {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
 
-  if (quickNodeEndpoint) {
-    try {
-      // This is a HYPOTHETICAL example of a QuickNode API call.
-      // The actual implementation depends on the specific API provided by QuickNode.
-      // You will need to replace this with your actual API call.
-      const res = await fetch(quickNodeEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          // Example: Using a hypothetical custom method for token data
-          method: 'qn_getTokenDataWithPrice', 
-          params: { mintAddress: mint }
-        }),
+    if (!data.pairs || data.pairs.length === 0) return null;
+
+    const pair = data.pairs[0];
+    return {
+      name: pair.baseToken?.name || pair.tokenAddress || "Unknown",
+      symbol: pair.baseToken?.symbol || "???",
+      price: pair.priceUsd ? `$${parseFloat(pair.priceUsd).toFixed(8)}` : null,
+      volume24h: pair.volume?.h24 ? `$${(pair.volume.h24 / 1e6).toFixed(2)}M` : null,
+      liquidity: pair.liquidity?.usd ? `$${(pair.liquidity.usd / 1e6).toFixed(2)}M` : null,
+      marketCap: pair.marketCap ? `$${(pair.marketCap / 1e6).toFixed(2)}M` : null,
+      holders: null,
+    };
+  } catch (e) {
+    console.warn("fetchSolanaFallback error:", e);
+    return null;
+  }
+}
+
+// --- Security Scanning (Go+ / RugCheck APIs) ---
+export async function fetchSecurityScan(address: string, chain: "Base" | "Solana"): Promise<SecurityScan | null> {
+  try {
+    if (chain === "Base") {
+      // Go+ Security API for Base/EVM tokens
+      const res = await fetch(`https://api.gopluslabs.io/api/v1/token_security/${address}?chain_id=base`, {
         signal: AbortSignal.timeout(5000),
       });
 
       if (res.ok) {
-        const response = await res.json();
-        // Assuming the API returns data in a format that can be mapped to TokenData
-        const tokenInfo = response.result; 
-        if (tokenInfo && tokenInfo.price) {
+        const data = await res.json();
+        const tokenSec = data.result?.[address.toLowerCase()];
+        if (tokenSec) {
           return {
-            name: tokenInfo.name || "Unknown",
-            symbol: tokenInfo.symbol || "???",
-            price: tokenInfo.price ? `${parseFloat(tokenInfo.price).toFixed(8)}` : null,
-            volume24h: tokenInfo.volume24h ? `${(tokenInfo.volume24h / 1e6).toFixed(2)}M` : null,
-            liquidity: tokenInfo.liquidity ? `${(tokenInfo.liquidity / 1e6).toFixed(2)}M` : null,
-            marketCap: tokenInfo.marketCap ? `${(tokenInfo.marketCap / 1e6).toFixed(2)}M` : null,
-            holders: tokenInfo.holders || null,
+            hiddenOwner: tokenSec.hidden_owner === "1",
+            obfuscatedAddress: tokenSec.obfuscated_owner === "1",
+            suspiciousFunctions: tokenSec.suspicious_functions?.length > 0 || false,
+            proxyContract: tokenSec.is_proxy === "1",
+            mintable: tokenSec.is_mintable === "1",
+            transferPausable: tokenSec.can_take_back_ownership === "1",
+            tradingCooldown: tokenSec.trading_cooldown === "1",
+            hasBlacklist: tokenSec.is_blacklisted === "1",
+            hasWhitelist: tokenSec.is_whitelisted === "1",
+            buyTax: tokenSec.buy_tax || "N/A",
+            sellTax: tokenSec.sell_tax || "N/A",
+            ownershipRenounced: tokenSec.owner_change_balance === "1" ? "No" : "Yes",
+            ownerAddress: tokenSec.owner_address || "Unknown",
           };
         }
       }
-    } catch (e) {
-      console.warn("QuickNode fetch failed, falling back to DexScreener:", e);
-    }
-  }
+    } else {
+      // Solana: Use RugCheck API
+      try {
+        const rugRes = await fetch(`https://api.rugcheck.xyz/v1/tokens/${address}/report`, {
+          signal: AbortSignal.timeout(5000),
+        });
 
-  // Fallback to DexScreener if QuickNode is not configured or fails
-  return fetchTokenDataFromDexScreener(mint);
+        if (rugRes.ok) {
+          const rugData = await rugRes.json();
+          return {
+            hiddenOwner: rugData.risks?.some((r: any) => r.name?.includes("Hidden")) || false,
+            obfuscatedAddress: rugData.risks?.some((r: any) => r.name?.includes("Obfuscated")) || false,
+            suspiciousFunctions: rugData.risks?.some((r: any) => r.name?.includes("Suspicious")) || false,
+            proxyContract: rugData.is_proxy || false,
+            mintable: rugData.is_mintable || false,
+            transferPausable: rugData.can_pause || false,
+            tradingCooldown: rugData.has_cooldown || false,
+            hasBlacklist: rugData.has_blacklist || false,
+            hasWhitelist: rugData.has_whitelist || false,
+            buyTax: rugData.buy_tax || "N/A",
+            sellTax: rugData.sell_tax || "N/A",
+            ownershipRenounced: rugData.owner_renounced ? "Yes" : "No",
+            ownerAddress: rugData.owner || "Unknown",
+          };
+        }
+      } catch (e) {
+        console.warn("RugCheck API error:", e);
+      }
+    }
+
+    return null;
+  } catch (e) {
+    console.warn("fetchSecurityScan error:", e);
+    return null;
+  }
 }
 
-// --- Generic fetch (auto-detect or try both) ---
+// --- Generic fetch ---
 export async function fetchTokenData(
   address: string,
   chain?: "Base" | "Solana"
@@ -107,15 +224,13 @@ export async function fetchTokenData(
   } else if (chain === "Solana") {
     return fetchSolanaTokenData(address);
   }
-  
-  // Try auto-detect (Base addresses are 42 chars, Solana are ~43-44 chars)
-  if (address.length === 42) {
-    // Likely Base (0x + 40 hex chars)
+
+  // Auto-detect chain
+  if (address.toLowerCase().startsWith("0x") && address.length === 42) {
     return fetchBaseTokenData(address);
   } else {
-    // Likely Solana
     return fetchSolanaTokenData(address);
   }
 }
 
-export default { fetchTokenData, fetchBaseTokenAta: fetchBaseTokenData, fetchSolanaTokenData };
+export default { fetchTokenData, fetchBaseTokenData, fetchSolanaTokenData, fetchSecurityScan };
