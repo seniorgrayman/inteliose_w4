@@ -80,12 +80,12 @@ const ProjectDashboard = () => {
     <div className="mx-auto w-full max-w-6xl px-3 pb-16 pt-10 sm:px-6 lg:pt-14">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/70 mb-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs mb-3">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
             Project Management
           </div>
-          <h1 className="text-3xl font-bold text-white sm:text-4xl">My Projects</h1>
-          <p className="mt-2 text-white/60">Create and manage your token analysis projects</p>
+          <h1 className="text-3xl font-bold sm:text-4xl">My Projects</h1>
+          <p className="mt-2 text-black/80 ">Create and manage your token analysis projects</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -142,9 +142,14 @@ const ProjectDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             className="rounded-3xl border border-white/10 bg-white/5 p-12 text-center backdrop-blur-xl"
           >
-            <AlertCircle size={48} className="mx-auto mb-4 text-white/40" />
-            <h3 className="text-lg font-semibold text-white">No projects yet</h3>
-            <p className="mt-2 text-white/60">Create your first token analysis project to get started</p>
+            <AlertCircle size={48} className="mx-auto mb-4 text-red-500" />
+           <div className="flex justify-center items-center my-4">
+            <div className="border p-5 border-black/10 rounded-2xl md:max-w-[60%]">
+                <h3 className="text-lg font-semibold">No projects yet</h3>
+            <p className="mt-2">Create your first token analysis project to get started</p>
+           </div>
+           </div>
+            
             <button
               onClick={() => setShowOnboarding(true)}
               className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 px-6 text-sm font-semibold text-white"
