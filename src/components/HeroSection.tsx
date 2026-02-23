@@ -1,9 +1,11 @@
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import heroBgNew from "@/assets/hero-bg-new.jpg";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [showComingSoon, setShowComingSoon] = useState(false);
 
   return (
@@ -29,7 +31,7 @@ const HeroSection = () => {
 
       {/* Founders Dashboard Info Box */}
       <button
-        onClick={() => setShowComingSoon(true)}
+        onClick={() => navigate("/manage-project")}
         className="absolute bottom-12 right-12 z-20 hidden md:flex items-center gap-3 bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-primary/20 p-4 rounded-2xl max-w-xs text-left cursor-pointer hover:border-primary/40 transition-all"
       >
         <div>
@@ -42,25 +44,6 @@ const HeroSection = () => {
           </span>
         </div>
       </button>
-
-      {/* Coming Soon Modal */}
-      {showComingSoon && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowComingSoon(false)}>
-          <div className="bg-card border border-border rounded-2xl p-8 max-w-sm text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <p className="text-xs text-primary uppercase tracking-widest mb-2 font-medium">Manage Project</p>
-            <h3 className="text-xl font-display font-semibold text-card-foreground mb-3">Founder dashboard coming soon</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              We're finalizing the project workspace: pinned token + monitoring + action checklist.
-            </p>
-            <button
-              onClick={() => setShowComingSoon(false)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </section>
   );
 };
