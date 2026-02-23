@@ -3,18 +3,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "env": {
-    "VITE_GEMINI_API_KEY": "@gemini_api_key",
-    "VITE_GEMINI_MODEL": "@gemini_model",
-    "NEXT_PUBLIC_BUBBLEMAP_PARTNER_ID": "@bubblemap_partner_id",
-    "BUBBLEMAPS_API_KEY": "@bubblemaps_api_key",
-    "VITE_BUBBLEMAPS_API_BASE": "@bubblemaps_api_base",
-    "HELIUS_API_KEY": "@helius_api_key",
-    "ALCHEMY_API": "@alchemy_api",
-    "VITE_QUICKNODE_API_KEY": "@quicknode_api_key",
-    "VITE_ZERION_API_KEY_BASE": "@zerion_api_key_base",
-    "VITE_WALLETCONNECT_PROJECT_ID": "@walletconnect_project_id"
-  },
   "rewrites": [
     {
       "source": "/(.*)",
