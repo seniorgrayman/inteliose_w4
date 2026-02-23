@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Edit, Trash2, Download, AlertCircle, CheckCircle, Menu, X, Loader, Sparkles } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Download, AlertCircle, CheckCircle, Menu, X, Loader, Sparkles, Copy, Check } from "lucide-react";
 import { getProject, updateProject, deleteProject } from "@/lib/firebase/projects";
 import { fetchSolanaTokenData, fetchBaseTokenData, fetchTokenData, fetchSecurityScan, generateAIAnalysis, type AIAnalysis } from "@/lib/tokendata";
 import type { Project, TokenMetrics, ChecklistItem } from "@/types/profile";
@@ -44,6 +44,8 @@ const ProjectDetail = () => {
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [aiAnalysis, setAIAnalysis] = useState<AIAnalysis | null>(null);
   const [aiLoading, setAILoading] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [copiedCA, setCopiedCA] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -280,12 +282,20 @@ Be specific about founder actions they can take NOW to improve the token.`;
   };
 
   const handleDelete = async () => {
-    if (!id || !confirm("Are you sure you want to delete this project?")) return;
+    if (!id) return;
     try {
       await deleteProject(id);
       navigate("/manage-project");
     } catch (err) {
       console.error("Failed to delete project:", err);
+    }
+  };
+
+  const handleCopyCA = () => {
+    if (project?.profile.tokenAddress) {
+      navigator.clipboard.writeText(project.profile.tokenAddress);
+      setCopiedCA(true);
+      setTimeout(() => setCopiedCA(false), 2000);
     }
   };
 
@@ -467,7 +477,7 @@ Be specific about founder actions they can take NOW to improve the token.`;
         initial={{ x: -300 }}
         animate={{ x: sidebarOpen ? 0 : -300 }}
         transition={{ duration: 0.3 }}
-        className={`fixed left-0 top-0 z-40 h-full w-80 bg-white border-r border-slate-200 shadow-lg md:relative md:translate-x-0 md:w-80 ${
+        className={`fixed left-0 top-0 z-40 h-full w-80 bg-white border-r border-slate-200 shadow-lg md:static md:translate-x-0 md:z-10 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -580,7 +590,7 @@ Be specific about founder actions they can take NOW to improve the token.`;
                 <Edit size={16} />
               </button> */}
               <button
-                onClick={handleDelete}
+                onClick={() => setDeleteConfirmOpen(true)}
                 className="inline-flex h-10 items-center justify-center rounded-lg border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 transition px-3"
               >
                 <Trash2 size={16} />
@@ -605,7 +615,18 @@ Be specific about founder actions they can take NOW to improve the token.`;
                   <h1 className="text-4xl font-bold text-slate-900">
                     {project.profile.isPrelaunch ? "Pre-launch Project" : "Token Analysis"}
                   </h1>
-                  <p className="mt-3 font-mono text-slate-600 text-sm">{truncateAddress(project.profile.tokenAddress || "Pre-launch", 12)}</p>
+                  {project.profile.tokenAddress && !project.profile.isPrelaunch && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <p className="font-mono text-slate-600 text-sm">{truncateAddress(project.profile.tokenAddress, 12)}</p>
+                      <button
+                        onClick={handleCopyCA}
+                        className="inline-flex items-center justify-center w-6 h-6 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+                        title="Copy contract address"
+                      >
+                        {copiedCA ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Risk & Status */}
@@ -868,6 +889,50 @@ Be specific about founder actions they can take NOW to improve the token.`;
           </motion.div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-2xl shadow-xl p-8 max-w-sm mx-4"
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertCircle size={24} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Delete Project?</h3>
+                <p className="text-sm text-slate-600">This action cannot be undone</p>
+              </div>
+            </div>
+            
+            <p className="text-slate-700 mb-6">
+              Are you sure you want to delete this project? All associated data will be permanently removed.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-900 font-semibold hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  handleDelete();
+                }}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition"
+              >
+                Delete
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

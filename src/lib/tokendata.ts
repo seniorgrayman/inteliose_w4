@@ -40,63 +40,12 @@ export interface HolderDistribution {
   totalHolders: number | null;
 }
 
-// --- Base Chain (Coinbase API primary, Zerion fallback, DexScreener final fallback) ---
+// --- Base Chain (DexScreener primary fallback) ---
 export async function fetchBaseTokenData(address: string): Promise<TokenData | null> {
   try {
-    // Try Coinbase API first
-    try {
-      const res = await fetch(`https://api.coinbase.com/v1/tokens/${address}?networks=base`, {
-        headers: { "Accept": "application/json" },
-        signal: AbortSignal.timeout(5000),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.data) {
-          const token = data.data;
-          return {
-            name: token.name || "Unknown",
-            symbol: token.symbol || "???",
-            price: token.price?.value ? `$${parseFloat(token.price.value).toFixed(8)}` : null,
-            volume24h: token.volume_24h ? `$${(token.volume_24h / 1e6).toFixed(2)}M` : null,
-            liquidity: token.market_cap ? `$${(token.market_cap / 2 / 1e6).toFixed(2)}M` : null,
-            marketCap: token.market_cap ? `$${(token.market_cap / 1e6).toFixed(2)}M` : null,
-            holders: null,
-          };
-        }
-      }
-    } catch (e) {
-      console.warn("Coinbase API error:", e);
-    }
-
-    // Fallback to Zerion API
-    const zerionKey = import.meta.env.VITE_ZERION_API_KEY_BASE || "";
-    if (zerionKey) {
-      try {
-        const res = await fetch(`https://api.zerion.io/v1/tokens?filter[address]=${address}&chain=base&currency=usd`, {
-          headers: { Authorization: `Basic ${btoa(zerionKey + ":")}` },
-          signal: AbortSignal.timeout(5000),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const token = data.data?.[0];
-          if (token) {
-            return {
-              name: token.attributes?.name || "Unknown",
-              symbol: token.attributes?.symbol || "???",
-              price: token.attributes?.price ? `$${token.attributes.price.toFixed(8)}` : null,
-              volume24h: token.attributes?.volume24h ? `$${(token.attributes.volume24h / 1e6).toFixed(2)}M` : null,
-              liquidity: token.attributes?.liquidity ? `$${(token.attributes.liquidity / 1e6).toFixed(2)}M` : null,
-              marketCap: token.attributes?.market_cap ? `$${(token.attributes.market_cap / 1e6).toFixed(2)}M` : null,
-              holders: token.attributes?.holders_count || null,
-            };
-          }
-        }
-      } catch (e) {
-        console.warn("Zerion API error:", e);
-      }
-    }
-
-    // Final fallback to DexScreener
+    // Skip Coinbase and Zerion APIs as they don't work reliably
+    // Go directly to DexScreener which works well for Base tokens
+    
     const res = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${address}`, {
       signal: AbortSignal.timeout(5000),
     });
