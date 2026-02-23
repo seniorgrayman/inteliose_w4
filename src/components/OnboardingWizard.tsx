@@ -148,14 +148,86 @@ function Select({
   onChange,
   options,
   placeholder = "Select…",
+  modalMode = false,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: Array<{ value: string; label: string; hint?: string }>;
   placeholder?: string;
+  modalMode?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  
+  if (modalMode) {
+    return (
+      <div className="block">
+        <div className="mb-2 text-xs font-semibold tracking-wider text-white/55 uppercase">{label}</div>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="w-full rounded-2xl border border-black/10 bg-white/5 px-4 py-3 text-left text-sm text-white transition hover:bg-white/8 flex items-center justify-between"
+          >
+            <span>{value ? options.find((o) => o.value === value)?.label || placeholder : placeholder}</span>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </button>
+          
+          {/* Full-screen Modal Mode */}
+          {open && (
+            <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:justify-center p-4">
+              {/* Backdrop */}
+              <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={() => setOpen(false)}
+              />
+              
+              {/* Modal */}
+              <div className="relative w-full max-w-2xl rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_30px_100px_rgba(0,0,0,0.65)] max-h-[80vh] overflow-hidden flex flex-col">
+                {/* Header with Close Button */}
+                <div className="flex items-center justify-between p-6 md:p-8 border-b border-white/10">
+                  <h3 className="text-xl font-bold text-white">{label}</h3>
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="text-white/50 hover:text-white/70 transition"
+                  >
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                {/* Options List */}
+                <div className="overflow-y-auto flex-1">
+                  {options.map((opt, idx) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        onChange(opt.value);
+                        setOpen(false);
+                      }}
+                      className={cx(
+                        "w-full px-6 md:px-8 py-4 md:py-5 text-left text-sm transition hover:bg-white/10 border-b border-white/5 last:border-b-0",
+                        opt.value === value && "bg-cyan-400/20"
+                      )}
+                    >
+                      <p className={opt.value === value ? "font-bold text-cyan-300" : "font-medium text-white"}>{opt.label}</p>
+                      {opt.hint && <p className="mt-1 text-xs text-white/50">{opt.hint}</p>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  
+  // Regular dropdown mode
   return (
     <div className="block">
       <div className="mb-2 text-xs font-semibold tracking-wider text-white/55 uppercase">{label}</div>
@@ -394,6 +466,7 @@ export default function OnboardingWizard({ onComplete, initialModel }: Onboardin
                 { value: "launchmytoken", label: PlatformLabel("launchmytoken"), hint: "LaunchMyToken" },
               ]}
               placeholder="Choose launch platform"
+              modalMode={true}
             />
 
             <Select
@@ -406,6 +479,7 @@ export default function OnboardingWizard({ onComplete, initialModel }: Onboardin
                 { value: "ido", label: LaunchTypeLabel("ido"), hint: "IDO or presale-backed launch" },
               ]}
               placeholder="Choose launch type"
+              modalMode={true}
             />
 
             <Select
@@ -423,6 +497,7 @@ export default function OnboardingWizard({ onComplete, initialModel }: Onboardin
                 { value: "utility", label: CategoryLabel("utility"), hint: "Utility / Other" },
               ]}
               placeholder="Choose category"
+              modalMode={true}
             />
           </div>
         </GlassCard>
