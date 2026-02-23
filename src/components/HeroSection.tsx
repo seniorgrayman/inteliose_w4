@@ -23,7 +23,7 @@ const HeroSection = () => {
           Failure.
         </h1>
         <p className="text-base md:text-lg text-white/70 max-w-2xl mb-6 md:mb-8">
-          Inteliose is a founder-centric intelligence platform on Base. We analyze your token, classify risk baselines, and surface failure modes before they burn your project.
+          Inteliose is a founder-centric intelligence platform on Base chain. We analyze your token, classify risk baselines, and surface failure modes before they burn your project.
         </p>
       </div>
 
