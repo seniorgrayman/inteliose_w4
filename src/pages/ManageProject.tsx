@@ -154,13 +154,13 @@ const ProjectDashboard = () => {
            </div>
            </div>
             
-            <button
+            {/* <button
               onClick={() => setShowOnboarding(true)}
               className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 px-6 text-sm font-semibold text-white"
             >
               <Plus size={16} />
               Create Project
-            </button>
+            </button> */}
           </motion.div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -34,11 +34,24 @@ export async function createProject(
     updatedAt: now,
   };
 
-  await setDoc(doc(db, PROJECTS_COLLECTION, projectId), {
-    ...project,
+  // Build the document data, excluding undefined fields
+  const docData: any = {
+    id: projectId,
+    userId,
+    profile,
     createdAt: Timestamp.fromDate(new Date(now)),
     updatedAt: Timestamp.fromDate(new Date(now)),
-  });
+  };
+
+  // Only add optional fields if they're defined
+  if (snapshot !== undefined) {
+    docData.snapshot = snapshot;
+  }
+  if (aiDiagnosis !== undefined) {
+    docData.aiDiagnosis = aiDiagnosis;
+  }
+
+  await setDoc(doc(db, PROJECTS_COLLECTION, projectId), docData);
 
   return project;
 }

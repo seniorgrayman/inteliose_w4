@@ -172,7 +172,7 @@ function Select({
         </button>
         {open && (
           <div className="absolute top-full z-10 mt-2 w-full rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl max-h-64 overflow-y-auto">
-            {options.map((opt) => (
+            {options.map((opt, idx) => (
               <button
                 key={opt.value}
                 type="button"
@@ -180,7 +180,11 @@ function Select({
                   onChange(opt.value);
                   setOpen(false);
                 }}
-                className={cx("w-full px-4 py-3 text-left text-sm transition hover:bg-white/10", opt.value === value && "bg-cyan-400/20 text-cyan-300")}
+                className={cx(
+                  "w-full px-4 py-3 text-left text-sm transition hover:bg-white/10",
+                  opt.value === value && "bg-cyan-400/20 text-cyan-300",
+                  idx === options.length - 1 && "pb-4"
+                )}
               >
                 <p className="font-medium">{opt.label}</p>
                 {opt.hint && <p className="mt-0.5 text-xs text-white/50">{opt.hint}</p>}
@@ -509,7 +513,7 @@ export default function OnboardingWizard({ onComplete, initialModel }: Onboardin
           </PrimaryButton>
         ) : (
           <PrimaryButton onClick={handleComplete} disabled={!canContinue}>
-            Create Project <Sparkles size={16} />
+            scrola <Sparkles size={16} />
           </PrimaryButton>
         )}
       </div>
