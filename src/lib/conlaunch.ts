@@ -7,70 +7,129 @@ export type ConLaunchToken = {
   vault_percentage?: number;
   deployed_ago?: number;
   address?: string;
+  agent?: string;
+  launchedAt?: string;
+  source?: string;
 };
 
-// ConLaunch API - note: may have CORS restrictions or API structure changes
-// For now, return empty to gracefully fall back to mock data in components
-const BASE = "https://conlaunch.com/api";
+// Clawnch API - Memecoin launches on Base via Clanker
+const BASE = "https://clawn.ch/api";
 
 async function getJson(path: string) {
   try {
     const url = `${BASE}${path}`;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
-    if (!res.ok) throw new Error(`ConLaunch fetch failed: ${res.status}`);
+    if (!res.ok) throw new Error(`Clawnch API error: ${res.status}`);
     return res.json();
   } catch (e: any) {
-    console.warn("ConLaunch API error:", e.message);
+    console.warn("Clawnch API error:", e.message);
     throw e;
   }
 }
 
-export async function listTokens(page = 1, limit = 8): Promise<ConLaunchToken[]> {
+/**
+ * Calculate approximate minutes since launch
+ * @param launchedAt ISO timestamp string
+ * @returns Minutes since launch
+ */
+function getMinutesSinceLaunch(launchedAt?: string): number | undefined {
+  if (!launchedAt) return undefined;
   try {
-    // Try /tokens endpoint first
-    const data = await getJson(`/tokens?page=${page}&limit=${limit}`);
-    const items = Array.isArray(data) ? data : data?.data ?? [];
-    
-    if (!items.length) return [];
-    
-    return items.map((it: any) => ({
-      id: it.id ?? it.slug ?? String(it.address ?? it.name ?? Math.random()),
-      name: it.name ?? it.title ?? it.slug ?? "Unknown",
-      symbol: it.symbol ?? it.ticker ?? undefined,
-      description: it.description ?? it.short_description ?? undefined,
-      image: it.image ?? it.logo ?? null,
-      vault_percentage: it.vault_pct ?? it.vault_percentage ?? 0,
-      deployed_ago: it.deployed_ago ?? it.age_minutes ?? undefined,
-      address: it.address ?? it.token_address ?? undefined,
-    }));
-  } catch (e) {
-    console.warn("ConLaunch listTokens unavailable, using fallback");
-    return []; // Return empty; component will use mock data
+    const launchTime = new Date(launchedAt).getTime();
+    const now = Date.now();
+    const minutes = Math.floor((now - launchTime) / (1000 * 60));
+    return minutes < 0 ? undefined : minutes;
+  } catch {
+    return undefined;
   }
 }
 
-export async function getToken(addressOrSlug: string): Promise<ConLaunchToken | null> {
+/**
+ * Fetch latest launched tokens from Clawnch
+ * @param limit Number of tokens to fetch (1-100)
+ * @param offset Pagination offset
+ * @returns Array of ConLaunchToken
+ */
+export async function listTokens(limit = 8, offset = 0): Promise<ConLaunchToken[]> {
   try {
-    const data = await getJson(`/tokens/${addressOrSlug}`);
-    const it = data?.data ?? data;
-    if (!it) return null;
-    return {
-      id: it.id ?? it.slug ?? String(it.address ?? it.name ?? Math.random()),
-      name: it.name ?? it.title ?? it.slug ?? "Unknown",
-      symbol: it.symbol ?? it.ticker ?? undefined,
-      description: it.description ?? it.short_description ?? undefined,
-      image: it.image ?? it.logo ?? null,
-      vault_percentage: it.vault_pct ?? it.vault_percentage ?? 0,
-      deployed_ago: it.deployed_ago ?? it.age_minutes ?? undefined,
-      address: it.address ?? it.token_address ?? undefined,
-    };
+    const data = await getJson(`/launches?limit=${Math.min(limit, 100)}&offset=${offset}`);
+    const launches = data?.launches ?? [];
+    
+    if (!Array.isArray(launches) || launches.length === 0) {
+      console.warn("No launches found in Clawnch API response");
+      return [];
+    }
+    
+    return launches.map((launch: any) => ({
+      id: launch.id ?? launch.contractAddress ?? String(Math.random()),
+      name: launch.name ?? "Unknown Token",
+      symbol: launch.symbol ?? "???",
+      description: launch.description ?? undefined,
+      image: launch.image ?? null,
+      vault_percentage: undefined, // Clawnch doesn't have vault data
+      deployed_ago: getMinutesSinceLaunch(launch.launchedAt),
+      address: launch.contractAddress ?? undefined,
+      agent: launch.agentName ?? undefined,
+      launchedAt: launch.launchedAt ?? undefined,
+      source: launch.source ?? undefined, // 'moltbook', 'moltx', or '4claw'
+    }));
   } catch (e) {
-    console.warn("ConLaunch getToken unavailable for", addressOrSlug);
+    console.warn("Clawnch listTokens failed, returning empty array");
+    return [];
+  }
+}
+
+/**
+ * Fetch detailed analytics for a specific token
+ * @param address Token contract address on Base
+ * @returns Token analytics including price, volume, market cap
+ */
+export async function getTokenAnalytics(address: string): Promise<any | null> {
+  try {
+    const data = await getJson(`/analytics/token/${address}`);
+    return data ?? null;
+  } catch (e) {
+    console.warn("Clawnch getTokenAnalytics failed for", address);
     return null;
   }
 }
 
-export default { listTokens, getToken };
+/**
+ * Fetch a single token from Clawnch by contract address
+ * @param address Token contract address on Base
+ * @returns ConLaunchToken or null
+ */
+export async function getToken(address: string): Promise<ConLaunchToken | null> {
+  try {
+    // Use launches endpoint with address filter
+    const data = await getJson(`/launches?address=${address}`);
+    const launches = data?.launches ?? [];
+    
+    if (!Array.isArray(launches) || launches.length === 0) {
+      return null;
+    }
+    
+    const launch = launches[0];
+    return {
+      id: launch.id ?? launch.contractAddress ?? address,
+      name: launch.name ?? "Unknown Token",
+      symbol: launch.symbol ?? "???",
+      description: launch.description ?? undefined,
+      image: launch.image ?? null,
+      vault_percentage: undefined,
+      deployed_ago: getMinutesSinceLaunch(launch.launchedAt),
+      address: launch.contractAddress ?? address,
+      agent: launch.agentName ?? undefined,
+      launchedAt: launch.launchedAt ?? undefined,
+      source: launch.source ?? undefined,
+    };
+  } catch (e) {
+    console.warn("Clawnch getToken failed for", address);
+    return null;
+  }
+}
+
+export default { listTokens, getToken, getTokenAnalytics };

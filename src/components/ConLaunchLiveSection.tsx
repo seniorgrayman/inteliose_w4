@@ -5,8 +5,8 @@ import {
   Clock, DollarSign, BarChart3, Percent, Activity, Globe, FileText,
   ExternalLink, MessageCircle, Sparkles, Zap
 } from "lucide-react";
-import { ConLaunchToken, listTokens as fetchConLaunchTokens } from "@/lib/conlaunch";
-import { TokenData, fetchTokenData } from "@/lib/tokendata";
+import { ConLaunchToken, listTokens as fetchClawnchTokens, getTokenAnalytics } from "@/lib/conlaunch";
+import { TokenData, fetchTokenData, generateFounderAIAnalysis } from "@/lib/tokendata";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // --- Reusable inner card (matches Dashboard style) ---
@@ -47,7 +47,10 @@ const StatRow = ({ icon: Icon, label, value, sub, isLoading }: { icon: any; labe
 // --- Full Analysis View (fetches its own data) ---
 const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: () => void }) => {
   const [analysis, setAnalysis] = useState<TokenData | null>(null);
+  const [clawnchData, setClawnchData] = useState<any>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -58,15 +61,38 @@ const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: 
       }
       setIsLoading(true);
       try {
-        const data = await fetchTokenData(token.address, "Base"); // Assuming ConLaunch tokens are on Base
+        // Fetch token data from DexScreener via our tokendata module
+        const tokenData = await fetchTokenData(token.address, "Base");
         if (isMounted) {
-          setAnalysis(data);
+          setAnalysis(tokenData);
+        }
+
+        // Fetch Clawnch-specific analytics
+        const clawnchAnalytics = await getTokenAnalytics(token.address);
+        if (isMounted) {
+          setClawnchData(clawnchAnalytics);
+        }
+
+        // Generate AI analysis using the same prompt as Dashboard
+        setAiLoading(true);
+        const aiResult = await generateFounderAIAnalysis(
+          token.name || "Token",
+          token.symbol || "???",
+          tokenData?.price || "N/A",
+          tokenData?.volume24h || "N/A",
+          tokenData?.marketCap || "N/A",
+          String(tokenData?.holders || "N/A"),
+          clawnchAnalytics?.fees?.totalEarned || "N/A"
+        );
+        if (isMounted) {
+          setAiAnalysis(aiResult);
         }
       } catch (error) {
         console.error("Failed to fetch token analysis:", error);
       } finally {
         if (isMounted) {
           setIsLoading(false);
+          setAiLoading(false);
         }
       }
     };
@@ -87,11 +113,17 @@ const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-primary uppercase tracking-widest mb-1 font-medium">Inteliose Analysis</p>
+          <p className="text-xs text-primary uppercase tracking-widest mb-1 font-medium">Clawnch Analysis</p>
           <h4 className="text-lg font-display font-semibold text-foreground">
             {token.name} <span className="text-muted-foreground font-normal">({token.symbol})</span>
           </h4>
           <p className="text-xs text-muted-foreground mt-0.5">{token.description}</p>
+          {token.agent && (
+            <p className="text-xs text-primary/70 mt-2">🤖 Agent: <span className="font-medium">{token.agent}</span></p>
+          )}
+          {token.source && (
+            <p className="text-xs text-muted-foreground/70 mt-1">Launched on: <span className="capitalize font-medium">{token.source}</span></p>
+          )}
         </div>
         <button
           onClick={onClose}
@@ -100,6 +132,23 @@ const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: 
           <X size={14} className="text-muted-foreground" />
         </button>
       </div>
+
+      {/* Contract Address */}
+      {token.address && (
+        <div className="inline-flex items-center gap-2 text-xs bg-secondary/50 px-3 py-2 rounded-lg font-mono">
+          <span className="text-muted-foreground/70">CA:</span>
+          <span className="text-foreground/80 truncate max-w-[150px]">{token.address.slice(0, 6)}...{token.address.slice(-4)}</span>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(token.address!);
+              alert("Contract address copied!");
+            }}
+            className="text-primary/70 hover:text-primary transition ml-1"
+          >
+            📋
+          </button>
+        </div>
+      )}
 
       {/* Vault Badge */}
       {token.vault_percentage && token.vault_percentage > 0 && (
@@ -121,9 +170,21 @@ const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: 
       {/* More analysis sections can be added here, using `analysis` state */}
        <InnerCard>
         <SectionLabel icon={Sparkles}>AI Verdict & Recommendation</SectionLabel>
-         <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground">AI analysis not available for this token.</p>
-         </div>
+        {aiLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-4/6" />
+          </div>
+        ) : aiAnalysis ? (
+          <div className="text-sm text-foreground/80 whitespace-pre-wrap leading-relaxed">
+            {aiAnalysis}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">Unable to generate AI analysis at this time.</p>
+          </div>
+        )}
       </InnerCard>
     </motion.div>
   );
@@ -175,12 +236,12 @@ const ConLaunchLiveSection = () => {
     (async () => {
       setIsLoading(true);
       try {
-        const live = await fetchConLaunchTokens(1, 8);
+        const live = await fetchClawnchTokens(8, 0);
         if (mounted && live && live.length) {
           setTokens(live);
         }
       } catch (e) {
-        console.error("Failed to load ConLaunch tokens:", e);
+        console.error("Failed to load Clawnch tokens:", e);
       } finally {
         if (mounted) {
           setIsLoading(false);

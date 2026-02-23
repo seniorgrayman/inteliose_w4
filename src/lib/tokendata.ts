@@ -695,12 +695,115 @@ Be honest and objective. Consider security risks, tax structure, liquidity, and 
   }
 }
 
+/**
+ * Generate founder-centric AI analysis for token improvement recommendations
+ * @param tokenName Token name
+ * @param tokenSymbol Token symbol
+ * @param price Current price
+ * @param volume24h 24h volume
+ * @param marketCap Market cap
+ * @param holders Number of holders
+ * @param feesEarned Fees earned (if applicable)
+ * @returns Founder-focused analysis as formatted text
+ */
+export async function generateFounderAIAnalysis(
+  tokenName: string,
+  tokenSymbol: string,
+  price: string,
+  volume24h: string,
+  marketCap: string,
+  holders: string,
+  feesEarned: string
+): Promise<string> {
+  try {
+    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+    if (!geminiKey) {
+      return "AI analysis not available - missing API configuration";
+    }
+
+    const founderPrompt = `You are a professional cryptocurrency advisor providing strategic recommendations for a token founder. Analyze this token and provide actionable advice to improve the token based on current market conditions.
+
+Token: ${tokenName} (${tokenSymbol})
+
+Current Market Data:
+- Price: ${price}
+- Market Cap: ${marketCap}
+- 24h Volume: ${volume24h}
+- Holders: ${holders}
+- Fees Generated: ${feesEarned}
+
+Provide founder-centric strategic advice in the following JSON format ONLY:
+{
+  "summary": "2-3 sentence assessment of the token's current state and what the founder should focus on",
+  "recommendation": "Specific, actionable advice for the founder (e.g., 'Focus on liquidity depth', 'Increase marketing efforts', etc.)",
+  "keyActions": ["action 1 for founder", "action 2 for founder", "action 3 for founder", "action 4 for founder"]
+}
+
+Be specific about founder actions they can take NOW to improve the token's performance and market position.`;
+
+    const response = await Promise.race([
+      fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": geminiKey,
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: founderPrompt,
+                },
+              ],
+            },
+          ],
+        }),
+      }),
+      new Promise<Response>((_, reject) =>
+        setTimeout(() => reject(new Error("Gemini API timeout")), 15000)
+      ),
+    ]) as Response;
+
+    if (!response.ok) {
+      console.warn(`Gemini API error: ${response.status}`);
+      return "Unable to generate analysis at this time";
+    }
+
+    const data = await response.json();
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+    // Extract JSON from response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return responseText || "Unable to parse analysis";
+    }
+
+    const analysis = JSON.parse(jsonMatch[0]);
+    
+    // Format as readable text
+    return `📊 FOUNDER ANALYSIS FOR ${tokenSymbol}
+
+${analysis.summary}
+
+💡 RECOMMENDATION:
+${analysis.recommendation}
+
+🎯 KEY ACTIONS:
+${analysis.keyActions?.map((action: string, i: number) => `${i + 1}. ${action}`).join('\n')}`;
+  } catch (e) {
+    console.warn("generateFounderAIAnalysis error:", e);
+    return "Unable to generate analysis at this time";
+  }
+}
+
 export default { 
   fetchTokenData, 
   fetchBaseTokenData, 
   fetchSolanaTokenData, 
   fetchSecurityScan, 
-  generateAIAnalysis, 
+  generateAIAnalysis,
+  generateFounderAIAnalysis,
   fetchTokenOwner,
   fetchTaxInfo,
   fetchOwnershipRenounced,
