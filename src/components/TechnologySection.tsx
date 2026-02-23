@@ -350,7 +350,7 @@ const TechnologySection = () => {
             <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
           </Link>
           <Link
-            to="/dashboard"
+            to="/manage-project"
             className="inline-flex items-center gap-2 bg-gradient-to-b from-secondary/70 to-secondary/40 border border-[hsl(var(--border)/0.5)] text-foreground px-8 py-3.5 rounded-2xl text-sm font-display font-medium hover:border-primary/30 transition-all shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.06)]"
           >
             Manage Project

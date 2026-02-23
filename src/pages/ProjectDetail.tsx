@@ -2,28 +2,15 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Edit, Trash2, Download, Share2, AlertCircle, CheckCircle } from "lucide-react";
-import { subscribeToAuth } from "@/lib/firebase/auth";
 import { getProject, updateProject, deleteProject } from "@/lib/firebase/projects";
-import type { User } from "firebase/auth";
 import type { Project } from "@/types/profile";
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = subscribeToAuth((authUser) => {
-      setUser(authUser);
-      if (!authUser) {
-        navigate("/");
-      }
-    });
-    return unsubscribe;
-  }, [navigate]);
 
   useEffect(() => {
     if (!id) return;

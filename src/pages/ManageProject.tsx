@@ -3,58 +3,51 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Plus, Settings, Trash2, Clock, AlertCircle, Check } from "lucide-react";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import { subscribeToAuth } from "@/lib/firebase/auth";
 import { createProject, getUserProjects, deleteProject } from "@/lib/firebase/projects";
-import type { User } from "firebase/auth";
 import type { ProfileModel, Project } from "@/types/profile";
 
 const ProjectDashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  // Subscribe to auth
-  useEffect(() => {
-    const unsubscribe = subscribeToAuth((authUser) => {
-      setUser(authUser);
-      if (!authUser) {
-        navigate("/");
-      }
-    });
-    return unsubscribe;
-  }, [navigate]);
-
-  // Load projects when user changes
+  // Load projects on mount
   const loadProjects = useCallback(async () => {
-    if (!user) return;
     try {
       setLoading(true);
-      const userProjects = await getUserProjects(user.uid);
-      setProjects(userProjects.sort((a, b) => b.updatedAt - a.updatedAt));
+      // Get user ID from wallet or local storage - optional now
+      const userId = localStorage.getItem("walletAddress");
+      if (userId) {
+        const userProjects = await getUserProjects(userId);
+        setProjects(userProjects.sort((a, b) => b.updatedAt - a.updatedAt));
+      } else {
+        // Show empty state if no wallet connected
+        setProjects([]);
+      }
     } catch (err) {
       console.error("Failed to load projects:", err);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
-    if (user) {
-      loadProjects();
-    }
-  }, [user, loadProjects]);
+    loadProjects();
+  }, [loadProjects]);
 
   const handleCreateProject = async (profile: ProfileModel) => {
-    if (!user) return;
+    const userId = localStorage.getItem("walletAddress");
+    if (!userId) {
+      navigate("/");
+      return;
+    }
     try {
-      const newProject = await createProject(user.uid, profile);
+      const newProject = await createProject(userId, profile);
       setProjects((prev) => [newProject, ...prev]);
       setShowOnboarding(false);
-      // Navigate to project detail view (we'll create this next)
       navigate(`/manage-project/${newProject.id}`);
     } catch (err) {
       console.error("Failed to create project:", err);
