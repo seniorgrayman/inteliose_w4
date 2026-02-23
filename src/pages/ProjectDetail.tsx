@@ -1,10 +1,36 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Edit, Trash2, Download, AlertCircle, CheckCircle, Menu, X, Loader } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Download, AlertCircle, CheckCircle, Menu, X, Loader, Sparkles } from "lucide-react";
 import { getProject, updateProject, deleteProject } from "@/lib/firebase/projects";
-import { fetchSolanaTokenData, fetchBaseTokenData } from "@/lib/tokendata";
+import { fetchSolanaTokenData, fetchBaseTokenData, fetchTokenData, fetchSecurityScan, generateAIAnalysis, type AIAnalysis } from "@/lib/tokendata";
 import type { Project, TokenMetrics, ChecklistItem } from "@/types/profile";
+
+const formatCurrency = (value: string | number | undefined): string => {
+  if (!value || value === "—") return "—";
+  
+  // If it's already a formatted string (contains $ or M or K), return as-is
+  if (typeof value === "string" && (value.includes("$") || value.includes("M") || value.includes("K"))) {
+    return value;
+  }
+  
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return "—";
+  
+  // If less than 1 million, show in thousands (K) format
+  if (num < 1000000) {
+    return `$${(num / 1000).toFixed(2)}K`;
+  }
+  
+  // If 1 million or more, show with M
+  return `$${(num / 1000000).toFixed(2)}M`;
+};
+
+const truncateAddress = (address: string, chars = 8): string => {
+  if (!address) return "";
+  if (address.length <= chars * 2) return address;
+  return `${address.slice(0, chars)}...${address.slice(-chars)}`;
+};
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,10 +38,12 @@ const ProjectDetail = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tokenMetrics, setTokenMetrics] = useState<TokenMetrics | null>(null);
   const [tokenLoading, setTokenLoading] = useState(false);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [aiAnalysis, setAIAnalysis] = useState<AIAnalysis | null>(null);
+  const [aiLoading, setAILoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -34,31 +62,23 @@ const ProjectDetail = () => {
           {
             id: "1",
             title: "Token Analyzed",
-            description: "Project data loaded successfully",
+            description: "Project data loaded",
             completed: true,
             category: "token",
             timestamp: Date.now(),
           },
           {
-            id: "2",
-            title: "Risk Assessment",
-            description: proj.snapshot ? "Completed" : "Pending",
-            completed: !!proj.snapshot,
-            category: "safety",
-            timestamp: Date.now(),
-          },
-          {
             id: "3",
             title: "AI Analysis",
-            description: proj.aiDiagnosis ? "Generated" : "Not generated",
-            completed: !!proj.aiDiagnosis,
+            description: "Generating...",
+            completed: false,
             category: "analysis",
             timestamp: Date.now(),
           },
           {
             id: "4",
             title: "Market Metrics",
-            description: "Fetching token data...",
+            description: "Loading...",
             completed: false,
             category: "market",
             timestamp: Date.now(),
@@ -88,7 +108,7 @@ const ProjectDetail = () => {
 
       // Detect chain based on token address format
       // If address starts with 0x, it's a Base token; otherwise it's Solana
-      const isBase = tokenAddress.startsWith("0x");
+      const isBase = tokenAddress.toLowerCase().startsWith("0x");
 
       if (isBase) {
         // Base token - fetch from Base directly
@@ -134,11 +154,128 @@ const ProjectDetail = () => {
               : item
           )
         );
+
+        // Generate AI Analysis for token advice to founder
+        await generateFounderAIAnalysis(tokenAddress, metrics);
       }
     } catch (err) {
       console.error("Error fetching token metrics:", err);
     } finally {
       setTokenLoading(false);
+    }
+  };
+
+  const generateFounderAIAnalysis = async (tokenAddress: string, tokenMetrics: TokenMetrics) => {
+    try {
+      setAILoading(true);
+
+      const isBase = tokenAddress.toLowerCase().startsWith("0x");
+      const chain = isBase ? "Base" : "Solana";
+
+      // Fetch real token data from APIs - use fetchTokenData which handles all APIs
+      const tokenData = await fetchTokenData(tokenAddress, chain);
+      
+      // Fetch security scan
+      const securityData = await fetchSecurityScan(tokenAddress, chain);
+
+      if (tokenData && securityData) {
+        // Generate AI analysis tailored for founder advice with real-time token data
+        const founderPrompt = `You are a professional cryptocurrency advisor providing strategic recommendations for a token founder. Analyze this token and provide actionable advice to improve the token based on current market conditions and security metrics.
+
+Token: ${tokenMetrics.name} (${tokenMetrics.symbol})
+Chain: ${chain}
+
+Current Market Data:
+- Price: ${tokenData.price || "N/A"}
+- Market Cap: ${tokenData.marketCap || "N/A"}
+- 24h Volume: ${tokenData.volume24h || "N/A"}
+- Liquidity: ${tokenData.liquidity || "N/A"}
+
+Security Audit Results:
+- Hidden Owner: ${securityData.hiddenOwner ? "Yes ⚠️" : "No ✓"}
+- Suspicious Functions: ${securityData.suspiciousFunctions ? "Yes ⚠️" : "No ✓"}
+- Proxy Contract: ${securityData.proxyContract ? "Yes ⚠️" : "No ✓"}
+- Mintable: ${securityData.mintable ? "Yes ⚠️" : "No ✓"}
+- Can Pause Transfers: ${securityData.transferPausable ? "Yes ⚠️" : "No ✓"}
+- Buy Tax: ${securityData.buyTax}
+- Sell Tax: ${securityData.sellTax}
+
+Provide founder-centric strategic advice in JSON format:
+{
+  "summary": "2-3 sentence assessment of the token's current state and what the founder should focus on",
+  "riskLevel": "Very Low|Low|Medium|High|Very High (based on security and market metrics)",
+  "recommendation": "Specific, actionable advice for the founder (e.g., 'Focus on liquidity depth', 'Reduce market cap concentration', etc.)",
+  "keyPoints": ["founder action 1", "founder action 2", "founder action 3", "founder action 4"]
+}
+
+Be specific about founder actions they can take NOW to improve the token.`;
+
+        // Use Gemini to generate founder-centric analysis
+        const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+        if (geminiKey) {
+          try {
+            const response = await Promise.race([
+              fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-goog-api-key": geminiKey,
+                },
+                body: JSON.stringify({
+                  contents: [
+                    {
+                      parts: [
+                        {
+                          text: founderPrompt,
+                        },
+                      ],
+                    },
+                  ],
+                }),
+              }),
+              new Promise<Response>((_, reject) =>
+                setTimeout(() => reject(new Error("Gemini API timeout")), 15000)
+              ),
+            ]) as Response;
+
+            if (response.ok) {
+              const data = await response.json();
+              const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+              // Extract JSON from response
+              const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const analysis = JSON.parse(jsonMatch[0]);
+                setAIAnalysis({
+                  summary: analysis.summary || "Unable to generate summary",
+                  riskLevel: analysis.riskLevel || "Medium",
+                  recommendation: analysis.recommendation || "Review contract security",
+                  keyPoints: analysis.keyPoints || [],
+                });
+                
+                // Update checklist to show AI analysis is generated
+                setChecklist((prev) =>
+                  prev.map((item) =>
+                    item.id === "3"
+                      ? {
+                          ...item,
+                          completed: true,
+                          description: analysis.riskLevel || "Analyzed",
+                        }
+                      : item
+                  )
+                );
+              }
+            }
+          } catch (err) {
+            console.error("Error with Gemini API:", err);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error generating AI analysis:", err);
+    } finally {
+      setAILoading(false);
     }
   };
 
@@ -221,10 +358,6 @@ const ProjectDetail = () => {
                 <td>${tokenMetrics.volume24h || "—"}</td>
               </tr>
               <tr>
-                <td>Holders</td>
-                <td>${tokenMetrics.holders?.toLocaleString() || "—"}</td>
-              </tr>
-              <tr>
                 <td>Chain</td>
                 <td>${tokenMetrics.chain}</td>
               </tr>
@@ -242,12 +375,46 @@ const ProjectDetail = () => {
           </div>
           ` : ""}
 
+          ${aiAnalysis ? `
+          <div class="section">
+            <h2>AI Recommendations</h2>
+            <div class="card">
+              <p class="label">Risk Level</p>
+              <p class="value">${aiAnalysis.riskLevel}</p>
+            </div>
+            <p><strong>Summary:</strong> ${aiAnalysis.summary}</p>
+            <p><strong>Recommendation:</strong> ${aiAnalysis.recommendation}</p>
+            ${aiAnalysis.keyPoints && aiAnalysis.keyPoints.length > 0 ? `
+            <p><strong>Key Points:</strong></p>
+            <ul>
+              ${aiAnalysis.keyPoints.map(point => `<li>${point}</li>`).join("")}
+            </ul>
+            ` : ""}
+          </div>
+          ` : ""}
+
           ${project?.aiDiagnosis ? `
           <div class="section">
-            <h2>AI Analysis</h2>
+            <h2>Project Diagnosis</h2>
             <p>${project.aiDiagnosis.summary}</p>
           </div>
           ` : ""}
+
+          <div class="section">
+            <h2>Analysis Checklist</h2>
+            <table>
+              <tr>
+                <th>Item</th>
+                <th>Status</th>
+              </tr>
+              ${checklist.map(item => `
+              <tr>
+                <td>${item.title}</td>
+                <td>${item.completed ? "✓ Completed" : "Pending"}</td>
+              </tr>
+              `).join("")}
+            </table>
+          </div>
         </body>
       </html>
     `);
@@ -264,10 +431,10 @@ const ProjectDetail = () => {
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-6xl px-3 pb-16 pt-10 sm:px-6 lg:pt-14 flex items-center justify-center min-h-screen">
-        <div className="inline-flex items-center gap-2 text-white/60">
-          <div className="h-5 w-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-          Loading project...
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="inline-flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-3 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
+          <p className="text-slate-600 font-medium">Loading project...</p>
         </div>
       </div>
     );
@@ -275,17 +442,19 @@ const ProjectDetail = () => {
 
   if (!project) {
     return (
-      <div className="mx-auto w-full max-w-6xl px-3 pb-16 pt-10 sm:px-6 lg:pt-14">
-        <button
-          onClick={() => navigate("/manage-project")}
-          className="inline-flex items-center gap-2 text-white/70 hover:text-white transition mb-6"
-        >
-          <ArrowLeft size={18} />
-          Back to Projects
-        </button>
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-12 text-center backdrop-blur-xl">
-          <AlertCircle size={48} className="mx-auto mb-4 text-white/40" />
-          <h3 className="text-lg font-semibold text-white">Project not found</h3>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="mx-auto w-full max-w-6xl px-3 pb-16 pt-10 sm:px-6 lg:pt-14">
+          <button
+            onClick={() => navigate("/manage-project")}
+            className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition mb-6"
+          >
+            <ArrowLeft size={18} />
+            Back to Projects
+          </button>
+          <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+            <AlertCircle size={48} className="mx-auto mb-4 text-slate-400" />
+            <h3 className="text-lg font-semibold text-slate-900">Project not found</h3>
+          </div>
         </div>
       </div>
     );
@@ -296,9 +465,9 @@ const ProjectDetail = () => {
       {/* Sidebar */}
       <motion.div
         initial={{ x: -300 }}
-        animate={{ x: 0 }}
+        animate={{ x: sidebarOpen ? 0 : -300 }}
         transition={{ duration: 0.3 }}
-        className={`fixed left-0 top-0 z-40 h-full w-80 bg-white border-r border-slate-200 shadow-lg md:relative md:translate-x-0 ${
+        className={`fixed left-0 top-0 z-40 h-full w-80 bg-white border-r border-slate-200 shadow-lg md:relative md:translate-x-0 md:w-80 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -333,6 +502,8 @@ const ProjectDetail = () => {
                       {item.completed ? (
                         <CheckCircle size={16} className={`text-${colors.dot}`} />
                       ) : item.id === "4" && tokenLoading ? (
+                        <Loader size={16} className={`text-${colors.dot} animate-spin`} />
+                      ) : item.id === "3" && aiLoading ? (
                         <Loader size={16} className={`text-${colors.dot} animate-spin`} />
                       ) : (
                         <div className={`w-2 h-2 rounded-full ${colors.dot}`} />
@@ -380,15 +551,15 @@ const ProjectDetail = () => {
           {/* Header */}
           <div className="mb-8 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button
+              {/* <button
                 onClick={() => navigate("/manage-project")}
                 className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition"
               >
                 <ArrowLeft size={20} />
-              </button>
+              </button> */}
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition"
+                className="md:hidden ml-7 inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition"
               >
                 <Menu size={20} />
               </button>
@@ -402,12 +573,12 @@ const ProjectDetail = () => {
                 <Download size={16} />
                 <span className="text-xs hidden sm:inline">Export</span>
               </button>
-              <button
+              {/* <button
                 onClick={() => setIsEditing(!isEditing)}
                 className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition px-3"
               >
                 <Edit size={16} />
-              </button>
+              </button> */}
               <button
                 onClick={handleDelete}
                 className="inline-flex h-10 items-center justify-center rounded-lg border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 transition px-3"
@@ -434,7 +605,7 @@ const ProjectDetail = () => {
                   <h1 className="text-4xl font-bold text-slate-900">
                     {project.profile.isPrelaunch ? "Pre-launch Project" : "Token Analysis"}
                   </h1>
-                  <p className="mt-3 font-mono text-slate-600">{project.profile.tokenAddress || "Pre-launch"}</p>
+                  <p className="mt-3 font-mono text-slate-600 text-sm">{truncateAddress(project.profile.tokenAddress || "Pre-launch", 12)}</p>
                 </div>
 
                 {/* Risk & Status */}
@@ -590,23 +761,18 @@ const ProjectDetail = () => {
                   </div>
                   <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs font-semibold text-slate-600 uppercase">Market Cap</p>
-                    <p className="mt-2 text-lg font-bold text-slate-900">{tokenMetrics.marketCap || "—"}</p>
+                    <p className="mt-2 text-lg font-bold text-slate-900">{formatCurrency(tokenMetrics.marketCap)}</p>
                     <p className="text-sm text-slate-600">Total value</p>
                   </div>
                   <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs font-semibold text-slate-600 uppercase">Liquidity</p>
-                    <p className="mt-2 text-lg font-bold text-slate-900">{tokenMetrics.liquidity || "—"}</p>
+                    <p className="mt-2 text-lg font-bold text-slate-900">{formatCurrency(tokenMetrics.liquidity)}</p>
                     <p className="text-sm text-slate-600">Available funds</p>
                   </div>
                   <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs font-semibold text-slate-600 uppercase">24h Volume</p>
-                    <p className="mt-2 text-lg font-bold text-slate-900">{tokenMetrics.volume24h || "—"}</p>
+                    <p className="mt-2 text-lg font-bold text-slate-900">{formatCurrency(tokenMetrics.volume24h)}</p>
                     <p className="text-sm text-slate-600">Trading volume</p>
-                  </div>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold text-slate-600 uppercase">Holders</p>
-                    <p className="mt-2 text-lg font-bold text-slate-900">{tokenMetrics.holders?.toLocaleString() || "—"}</p>
-                    <p className="text-sm text-slate-600">Total holders</p>
                   </div>
                   <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 col-span-1 md:col-span-2">
                     <p className="text-xs font-semibold text-slate-600 uppercase">Chain</p>
@@ -617,10 +783,57 @@ const ProjectDetail = () => {
               </div>
             )}
 
+            {/* AI Analysis for Token */}
+            {(aiAnalysis || aiLoading) && (
+              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center">
+                    <Sparkles size={16} className="text-white" />
+                  </div>
+                  <h2 className="text-lg font-bold text-slate-900">AI Recommendations</h2>
+                </div>
+                
+                {aiLoading ? (
+                  <div className="flex items-center gap-3 text-slate-600">
+                    <Loader size={18} className="animate-spin" />
+                    <span>Analyzing token data...</span>
+                  </div>
+                ) : aiAnalysis ? (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                      <p className="text-xs font-semibold text-blue-700 uppercase mb-2">Risk Assessment</p>
+                      <p className="text-lg font-bold text-blue-900">{aiAnalysis.riskLevel}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 mb-2">Summary</p>
+                      <p className="text-slate-700 text-sm leading-relaxed">{aiAnalysis.summary}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 mb-3">Key Recommendations</p>
+                      <ul className="space-y-2">
+                        {aiAnalysis.keyPoints && aiAnalysis.keyPoints.slice(0, 4).map((point, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                            <span className="text-blue-600 font-bold flex-shrink-0">•</span>
+                            <span>{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    {aiAnalysis.recommendation && (
+                      <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                        <p className="text-xs font-semibold text-green-700 uppercase mb-1">Recommendation</p>
+                        <p className="text-sm font-bold text-green-900">{aiAnalysis.recommendation}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            )}
+
             {/* AI Diagnosis */}
             {project.aiDiagnosis && (
               <div className="rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition p-6">
-                <h2 className="text-lg font-bold text-slate-900 mb-6">AI Analysis</h2>
+                <h2 className="text-lg font-bold text-slate-900 mb-6">Project Diagnosis</h2>
                 <div className="space-y-4">
                   <p className="text-slate-800">{project.aiDiagnosis.summary}</p>
                   {project.aiDiagnosis.riskFactors.length > 0 && (
