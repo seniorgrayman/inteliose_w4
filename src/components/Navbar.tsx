@@ -1,5 +1,5 @@
 import { ArrowRight, Menu, Wallet, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "./WalletConnectModal";
 
@@ -22,6 +22,16 @@ const Navbar = () => {
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
 
+  // Restore wallet connection from localStorage on mount
+  useEffect(() => {
+    const savedAddress = localStorage.getItem("walletAddress");
+    const savedWallet = localStorage.getItem("walletType") as WalletType | null;
+    if (savedAddress && savedWallet) {
+      setConnectedAddress(savedAddress);
+      setConnectedWallet(savedWallet);
+    }
+  }, []);
+
   const handleConnected = (address: string, wallet: WalletType) => {
     setConnectedAddress(address);
     setConnectedWallet(wallet);
@@ -31,7 +41,7 @@ const Navbar = () => {
     <>
       <div className="relative z-10 w-full flex justify-center">
         <nav className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] rounded-full py-2 px-3 flex items-center gap-4 md:gap-6 text-sm max-w-full">
-          <a href="#" className="inline-flex items-center justify-center font-display font-bold text-lg md:text-xl tracking-tight text-white pr-1 md:pr-2 whitespace-nowrap">
+          <a href="#" className="inline-flex items-center justify-center font-display font-bold text-lg md:text-xl tracking-tight pr-1 md:pr-2 whitespace-nowrap">
             inteliose™
           </a>
           <div className="hidden lg:flex items-center gap-5">
@@ -65,9 +75,9 @@ const Navbar = () => {
               </button>
             )}
           </div>
-          <button className="lg:hidden text-white ml-1" onClick={() => setMobileOpen(!mobileOpen)}>
+          {/* <button className="lg:hidden ml-1" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
+          </button> */}
         </nav>
       </div>
 

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Plus, Settings, Trash2, Clock, AlertCircle, Check } from "lucide-react";
+import Navbar from "@/components/Navbar";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { createProject, getUserProjects, deleteProject } from "@/lib/firebase/projects";
 import type { ProfileModel, Project } from "@/types/profile";
@@ -41,6 +42,7 @@ const ProjectDashboard = () => {
   const handleCreateProject = async (profile: ProfileModel) => {
     const userId = localStorage.getItem("walletAddress");
     if (!userId) {
+      alert("Please connect your wallet first");
       navigate("/");
       return;
     }
@@ -48,6 +50,7 @@ const ProjectDashboard = () => {
       const newProject = await createProject(userId, profile);
       setProjects((prev) => [newProject, ...prev]);
       setShowOnboarding(false);
+      // Navigate to the new project detail, keeping wallet connection
       navigate(`/manage-project/${newProject.id}`);
     } catch (err) {
       console.error("Failed to create project:", err);
@@ -78,7 +81,8 @@ const ProjectDashboard = () => {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-3 pb-16 pt-10 sm:px-6 lg:pt-14">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <Navbar />
+      <div className="mb-8 mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs mb-3">
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />

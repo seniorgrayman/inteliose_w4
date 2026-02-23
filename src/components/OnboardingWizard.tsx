@@ -171,7 +171,7 @@ function Select({
           </svg>
         </button>
         {open && (
-          <div className="absolute top-full z-10 mt-2 w-full rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl">
+          <div className="absolute top-full z-10 mt-2 w-full rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl max-h-64 overflow-y-auto">
             {options.map((opt) => (
               <button
                 key={opt.value}
@@ -254,21 +254,35 @@ export default function OnboardingWizard({ onComplete, initialModel }: Onboardin
   const [stepIdx, setStepIdx] = useState(0);
   const [animKey, setAnimKey] = useState(0);
 
+  // Calculate actual steps based on whether token is pre-launch
+  const actualSteps = useMemo(() => {
+    if (model.isPrelaunch) {
+      // Skip the "stage" step for pre-launch tokens
+      return [
+        { key: "token", label: "Token" },
+        { key: "context", label: "Context" },
+        { key: "intent", label: "Intent" },
+        { key: "snapshot", label: "Summary" },
+      ] as const;
+    }
+    return STEPS;
+  }, [model.isPrelaunch]);
+
   useEffect(() => {
     setAnimKey((k) => k + 1);
   }, [stepIdx]);
 
   const canContinue = useMemo(() => {
-    const step = STEPS[stepIdx]?.key;
+    const step = actualSteps[stepIdx]?.key;
     if (step === "token") return model.isPrelaunch || model.tokenAddress.trim().length >= 10;
     if (step === "stage") return model.stage !== null;
     if (step === "context")
       return model.launchPlatform !== null && model.launchType !== null && model.category !== null;
     if (step === "intent") return model.intent !== null;
     return true;
-  }, [model, stepIdx]);
+  }, [model, stepIdx, actualSteps]);
 
-  const goNext = () => setStepIdx((i) => Math.min(i + 1, STEPS.length - 1));
+  const goNext = () => setStepIdx((i) => Math.min(i + 1, actualSteps.length - 1));
   const goBack = () => setStepIdx((i) => Math.max(i - 1, 0));
 
   const handleComplete = () => {
@@ -284,13 +298,13 @@ export default function OnboardingWizard({ onComplete, initialModel }: Onboardin
         </div>
       </div>
       <div className="flex items-center gap-2 text-xs text-white/50">
-        Step {stepIdx + 1} of {STEPS.length}
+        Step {stepIdx + 1} of {actualSteps.length}
       </div>
     </div>
   );
 
   const renderStep = () => {
-    const step = STEPS[stepIdx]?.key;
+    const step = actualSteps[stepIdx]?.key;
 
     if (step === "token") {
       return (
@@ -441,10 +455,10 @@ export default function OnboardingWizard({ onComplete, initialModel }: Onboardin
     if (step === "snapshot") {
       return (
         <GlassCard title="Project summary" subtitle="Ready to create your project">
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-96 overflow-y-auto">
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
               <p className="text-xs font-semibold text-white/60 uppercase">Token</p>
-              <p className="mt-1 font-mono text-sm text-white">{model.isPrelaunch ? "Pre-launch" : model.tokenAddress}</p>
+              <p className="mt-1 font-mono text-sm text-white break-all">{model.isPrelaunch ? "Pre-launch" : model.tokenAddress}</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -489,7 +503,7 @@ export default function OnboardingWizard({ onComplete, initialModel }: Onboardin
         {stepIdx > 0 && (
           <SecondaryButton onClick={goBack}>← Back</SecondaryButton>
         )}
-        {stepIdx < STEPS.length - 1 ? (
+        {stepIdx < actualSteps.length - 1 ? (
           <PrimaryButton onClick={goNext} disabled={!canContinue}>
             Next <ArrowRight size={16} />
           </PrimaryButton>

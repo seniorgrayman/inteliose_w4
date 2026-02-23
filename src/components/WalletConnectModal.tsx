@@ -145,6 +145,8 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
           const accounts = provider.accounts;
           
           if (accounts?.[0]) {
+            localStorage.setItem("walletAddress", accounts[0]);
+            localStorage.setItem("walletType", "phantom");
             onConnected(accounts[0], "phantom");
             onClose();
             return;
@@ -170,6 +172,8 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
       if (solanaProvider?.isPhantom) {
         const resp = await solanaProvider.connect();
         const address = resp.publicKey.toString();
+        localStorage.setItem("walletAddress", address);
+        localStorage.setItem("walletType", "phantom");
         onConnected(address, "phantom");
         onClose();
         return;
@@ -210,6 +214,8 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
           const accounts = provider.accounts;
           
           if (accounts?.[0]) {
+            localStorage.setItem("walletAddress", accounts[0]);
+            localStorage.setItem("walletType", "metamask");
             onConnected(accounts[0], "metamask");
             onClose();
             return;
@@ -235,6 +241,8 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
       if (evmProvider?.isMetaMask) {
         const accounts = await evmProvider.request({ method: "eth_requestAccounts" });
         if (accounts?.[0]) {
+          localStorage.setItem("walletAddress", accounts[0]);
+          localStorage.setItem("walletType", "metamask");
           onConnected(accounts[0], "metamask");
           onClose();
           return;
