@@ -474,12 +474,13 @@ Be specific about founder actions they can take NOW to improve the token.`;
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex">
       {/* Sidebar */}
       <motion.div
-        initial={{ x: -300 }}
-        animate={{ x: sidebarOpen ? 0 : -300 }}
+        initial={false}
+        animate={{ x: 0 }}
         transition={{ duration: 0.3 }}
-        className={`fixed left-0 top-0 z-40 h-full w-80 bg-white border-r border-slate-200 shadow-lg md:static md:translate-x-0 md:z-10 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`h-full w-80 bg-white border-r border-slate-200 
+          hidden md:flex md:flex-col md:relative md:shadow-none
+          fixed left-0 top-0 z-40 shadow-lg md:z-auto
+          ${sidebarOpen ? "flex flex-col" : "hidden"}`}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
@@ -561,15 +562,15 @@ Be specific about founder actions they can take NOW to improve the token.`;
           {/* Header */}
           <div className="mb-8 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {/* <button
+              <button
                 onClick={() => navigate("/manage-project")}
                 className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition"
               >
                 <ArrowLeft size={20} />
-              </button> */}
+              </button>
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="md:hidden ml-7 inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition"
+                className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition"
               >
                 <Menu size={20} />
               </button>
