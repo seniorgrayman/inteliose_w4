@@ -477,9 +477,9 @@ Be specific about founder actions they can take NOW to improve the token.`;
         initial={false}
         animate={{ x: 0 }}
         transition={{ duration: 0.3 }}
-        className={`h-full w-80 bg-white border-r border-slate-200 
-          hidden md:flex md:flex-col md:relative md:shadow-none
-          fixed left-0 top-0 z-40 shadow-lg md:z-auto
+        className={`h-screen w-80 bg-white border-r border-slate-200 overflow-y-auto
+          hidden md:flex md:flex-col md:relative md:shadow-none md:fixed md:left-0 md:top-0 md:z-20
+          fixed left-0 top-0 z-40 shadow-lg md:shadow-none
           ${sidebarOpen ? "flex flex-col" : "hidden"}`}
       >
         <div className="flex flex-col h-full">
@@ -557,7 +557,7 @@ Be specific about founder actions they can take NOW to improve the token.`;
       )}
 
       {/* Main Content */}
-      <div className="flex-1 w-full">
+      <div className="flex-1 w-full md:ml-80">
         <div className="mx-auto w-full max-w-6xl px-3 pb-16 pt-10 sm:px-6 lg:pt-14">
           {/* Header */}
           <div className="mb-8 flex items-center justify-between">

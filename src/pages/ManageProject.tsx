@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Plus, Settings, Trash2, Clock, AlertCircle, Check } from "lucide-react";
+import { ArrowRight, Plus, Settings, Trash2, Clock, AlertCircle, Check, Copy } from "lucide-react";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import WalletConnectModal from "@/components/WalletConnectModal";
 import { createProject, getUserProjects, deleteProject } from "@/lib/firebase/projects";
 import type { ProfileModel, Project } from "@/types/profile";
 
@@ -13,6 +14,17 @@ const ProjectDashboard = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [copiedCA, setCopiedCA] = useState<string | null>(null);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+
+  const checkWalletConnected = (): boolean => {
+    const walletAddress = localStorage.getItem("walletAddress");
+    if (!walletAddress) {
+      setShowWalletModal(true);
+      return false;
+    }
+    return true;
+  };
 
   // Load projects on mount
   const loadProjects = useCallback(async () => {
@@ -69,6 +81,18 @@ const ProjectDashboard = () => {
     }
   };
 
+  const truncateAddress = (address: string, chars = 6): string => {
+    if (!address) return "";
+    if (address.length <= chars * 2) return address;
+    return `${address.slice(0, chars)}...${address.slice(-chars)}`;
+  };
+
+  const handleCopyCA = (address: string) => {
+    navigator.clipboard.writeText(address);
+    setCopiedCA(address);
+    setTimeout(() => setCopiedCA(null), 2000);
+  };
+
   const getRiskColor = (baseline: string) => {
     if (baseline === "Low") return "text-green-700 bg-green-100";
     if (baseline === "Moderate") return "text-yellow-700 bg-yellow-100";
@@ -116,7 +140,7 @@ const ProjectDashboard = () => {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-2xl max-h-[80vh] overflow-auto rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-8 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_30px_100px_rgba(0,0,0,0.65)]"
             >
-              <OnboardingWizard onComplete={handleCreateProject} />
+              <OnboardingWizard onComplete={handleCreateProject} onWalletCheckNeeded={checkWalletConnected} />
               <button
                 onClick={() => setShowOnboarding(false)}
                 className="mt-8 text-sm text-white/50 hover:text-white/70 transition"
@@ -179,9 +203,29 @@ const ProjectDashboard = () => {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Token</p>
-                        <p className="mt-1 font-mono text-sm text-slate-900 truncate">
-                          {project.profile.isPrelaunch ? "Pre-launch" : project.profile.tokenAddress}
-                        </p>
+                        {project.profile.isPrelaunch ? (
+                          <p className="mt-1 font-mono text-sm text-slate-900">Pre-launch</p>
+                        ) : (
+                          <div className="mt-1 flex items-center gap-2">
+                            <p className="font-mono text-sm text-slate-900">
+                              {truncateAddress(project.profile.tokenAddress, 4)}
+                            </p>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyCA(project.profile.tokenAddress);
+                              }}
+                              className="inline-flex items-center justify-center w-5 h-5 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+                              title="Copy contract address"
+                            >
+                              {copiedCA === project.profile.tokenAddress ? (
+                                <Check size={12} className="text-green-600" />
+                              ) : (
+                                <Copy size={12} />
+                              )}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -270,6 +314,16 @@ const ProjectDashboard = () => {
         )}
       </div>
       </div>
+
+      {/* Wallet Connection Modal */}
+      <WalletConnectModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        onConnected={() => {
+          setShowWalletModal(false);
+          // User is now connected, they can proceed with project creation
+        }}
+      />
     </div>
   );
 };
