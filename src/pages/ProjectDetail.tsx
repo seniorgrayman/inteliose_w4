@@ -478,9 +478,8 @@ Be specific about founder actions they can take NOW to improve the token.`;
         animate={{ x: 0 }}
         transition={{ duration: 0.3 }}
         className={`h-screen w-80 bg-white border-r border-slate-200 overflow-y-auto
-          hidden md:flex md:flex-col md:relative md:shadow-none md:fixed md:left-0 md:top-0 md:z-20
-          fixed left-0 top-0 z-40 shadow-lg md:shadow-none
-          ${sidebarOpen ? "flex flex-col" : "hidden"}`}
+          ${sidebarOpen ? "flex" : "hidden"} md:flex md:flex-col
+          fixed md:relative left-0 top-0 md:top-auto md:left-auto z-40 md:z-auto shadow-lg md:shadow-none`}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
