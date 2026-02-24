@@ -470,19 +470,28 @@ const TokenCard = ({ token, isActive, onAnalyze }: { token: ConLaunchToken; isAc
 const ConLaunchLiveSection = () => {
   const [tokens, setTokens] = useState<ConLaunchToken[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedToken, setExpandedToken] = useState<ConLaunchToken | null>(null);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const live = await fetchClawnchTokens(8, 0);
         if (mounted && live && live.length) {
           setTokens(live);
+        } else if (mounted) {
+          setError("Unable to fetch Clawn.ch tokens at this time");
+          setTokens([]);
         }
       } catch (e) {
         console.error("Failed to load Clawnch tokens:", e);
+        if (mounted) {
+          setError("Sorry, we are unable to fetch Clawn.ch tokens at this time");
+          setTokens([]);
+        }
       } finally {
         if (mounted) {
           setIsLoading(false);
@@ -539,14 +548,43 @@ const ConLaunchLiveSection = () => {
           {/* Token Feed Column */}
           <div className="lg:col-span-2 space-y-3">
             <AnimatePresence mode="popLayout">
-              {isLoading ? renderSkeletons() : tokens.map((token) => (
-                <TokenCard
-                  key={token.id}
-                  token={token}
-                  isActive={expandedToken?.id === token.id}
-                  onAnalyze={() => handleAnalyze(token)}
-                />
-              ))}
+              {isLoading ? (
+                renderSkeletons()
+              ) : error ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-card/60 backdrop-blur-md border border-orange-500/30 rounded-2xl p-6 text-center"
+                >
+                  <div className="h-12 w-12 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-3">
+                    <AlertTriangle size={24} className="text-orange-500" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground mb-1">Unable to Load Tokens</p>
+                  <p className="text-xs text-muted-foreground">{error}</p>
+                </motion.div>
+              ) : tokens.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="bg-card/60 backdrop-blur-md border border-border rounded-2xl p-6 text-center"
+                >
+                  <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3">
+                    <TrendingUp size={20} className="text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-display text-muted-foreground">No tokens available</p>
+                </motion.div>
+              ) : (
+                tokens.map((token) => (
+                  <TokenCard
+                    key={token.id}
+                    token={token}
+                    isActive={expandedToken?.id === token.id}
+                    onAnalyze={() => handleAnalyze(token)}
+                  />
+                ))
+              )}
             </AnimatePresence>
           </div>
 
