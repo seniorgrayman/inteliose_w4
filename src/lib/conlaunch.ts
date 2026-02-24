@@ -13,7 +13,7 @@ export type ConLaunchToken = {
 };
 
 // Clawnch API - Memecoin launches on Base via Clanker
-const BASE = "https://clawn.ch/api";
+const BASE = "/api";
 
 async function getJson(path: string) {
   try {
@@ -55,26 +55,26 @@ function getMinutesSinceLaunch(launchedAt?: string): number | undefined {
  */
 export async function listTokens(limit = 8, offset = 0): Promise<ConLaunchToken[]> {
   try {
-    const data = await getJson(`/launches?limit=${Math.min(limit, 100)}&offset=${offset}`);
-    const launches = data?.launches ?? [];
+    const data = await getJson(`/tokens?limit=${Math.min(limit, 100)}&offset=${offset}`);
+    const tokens = data?.tokens ?? [];
     
-    if (!Array.isArray(launches) || launches.length === 0) {
-      console.warn("No launches found in Clawnch API response");
+    if (!Array.isArray(tokens) || tokens.length === 0) {
+      console.warn("No tokens found in Clawnch API response");
       return [];
     }
     
-    return launches.map((launch: any) => ({
-      id: launch.id ?? launch.contractAddress ?? String(Math.random()),
-      name: launch.name ?? "Unknown Token",
-      symbol: launch.symbol ?? "???",
-      description: launch.description ?? undefined,
-      image: launch.image ?? null,
+    return tokens.map((token: any) => ({
+      id: token.address ?? String(Math.random()),
+      name: token.name ?? "Unknown Token",
+      symbol: token.symbol ?? "???",
+      description: token.description ?? undefined,
+      image: token.image ?? null,
       vault_percentage: undefined, // Clawnch doesn't have vault data
-      deployed_ago: getMinutesSinceLaunch(launch.launchedAt),
-      address: launch.contractAddress ?? undefined,
-      agent: launch.agentName ?? undefined,
-      launchedAt: launch.launchedAt ?? undefined,
-      source: launch.source ?? undefined, // 'moltbook', 'moltx', or '4claw'
+      deployed_ago: getMinutesSinceLaunch(token.launchedAt),
+      address: token.address ?? undefined,
+      agent: token.agent ?? undefined,
+      launchedAt: token.launchedAt ?? undefined,
+      source: token.source ?? undefined, // 'moltbook', 'moltx', or '4claw'
     }));
   } catch (e) {
     console.warn("Clawnch listTokens failed, returning empty array");
@@ -104,27 +104,27 @@ export async function getTokenAnalytics(address: string): Promise<any | null> {
  */
 export async function getToken(address: string): Promise<ConLaunchToken | null> {
   try {
-    // Use launches endpoint with address filter
-    const data = await getJson(`/launches?address=${address}`);
-    const launches = data?.launches ?? [];
+    // Use tokens endpoint with address filter
+    const data = await getJson(`/tokens?address=${address}`);
+    const tokens = data?.tokens ?? [];
     
-    if (!Array.isArray(launches) || launches.length === 0) {
+    if (!Array.isArray(tokens) || tokens.length === 0) {
       return null;
     }
     
-    const launch = launches[0];
+    const token = tokens[0];
     return {
-      id: launch.id ?? launch.contractAddress ?? address,
-      name: launch.name ?? "Unknown Token",
-      symbol: launch.symbol ?? "???",
-      description: launch.description ?? undefined,
-      image: launch.image ?? null,
+      id: token.address ?? address,
+      name: token.name ?? "Unknown Token",
+      symbol: token.symbol ?? "???",
+      description: token.description ?? undefined,
+      image: token.image ?? null,
       vault_percentage: undefined,
-      deployed_ago: getMinutesSinceLaunch(launch.launchedAt),
-      address: launch.contractAddress ?? address,
-      agent: launch.agentName ?? undefined,
-      launchedAt: launch.launchedAt ?? undefined,
-      source: launch.source ?? undefined,
+      deployed_ago: getMinutesSinceLaunch(token.launchedAt),
+      address: token.address ?? address,
+      agent: token.agent ?? undefined,
+      launchedAt: token.launchedAt ?? undefined,
+      source: token.source ?? undefined,
     };
   } catch (e) {
     console.warn("Clawnch getToken failed for", address);
