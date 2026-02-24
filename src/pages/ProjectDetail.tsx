@@ -559,12 +559,12 @@ Be specific about founder actions they can take NOW to improve the token.`;
           {/* Header */}
           <div className="mb-8 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button
+              {/* <button
                 onClick={() => navigate("/manage-project")}
                 className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition"
               >
                 <ArrowLeft size={20} />
-              </button>
+              </button> */}
               <button
                 onClick={(e) => {
                   e.preventDefault();
