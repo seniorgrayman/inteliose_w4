@@ -124,6 +124,28 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
     try {
       const isMobile = isMobileDevice();
 
+      // First, check if we have injected Phantom provider (e.g., already in Phantom app)
+      const solanaProvider = (window as any)?.phantom?.solana;
+      if (solanaProvider?.isPhantom) {
+        try {
+          const resp = await solanaProvider.connect();
+          const address = resp.publicKey.toString();
+          localStorage.setItem("walletAddress", address);
+          localStorage.setItem("walletType", "phantom");
+          onConnected(address, "phantom");
+          onClose();
+          return;
+        } catch (e: any) {
+          console.log("Injected Phantom provider failed:", e?.message);
+          // If injected provider fails on mobile, continue to deep link as fallback
+          if (!isMobile) {
+            setError(e?.message || "Connection rejected.");
+            setConnecting(null);
+            return;
+          }
+        }
+      }
+
       if (isMobile) {
         // Mobile: Try WalletConnect first, then fallback to deeplink
         try {
@@ -167,18 +189,6 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
         }
       }
 
-      // Desktop: Use Phantom extension
-      const solanaProvider = (window as any)?.phantom?.solana;
-      if (solanaProvider?.isPhantom) {
-        const resp = await solanaProvider.connect();
-        const address = resp.publicKey.toString();
-        localStorage.setItem("walletAddress", address);
-        localStorage.setItem("walletType", "phantom");
-        onConnected(address, "phantom");
-        onClose();
-        return;
-      }
-
       setError("Phantom wallet not detected. Please install the extension or app.");
     } catch (e: any) {
       setError(e?.message || "Connection rejected.");
@@ -192,6 +202,29 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
     setConnecting("metamask");
     try {
       const isMobile = isMobileDevice();
+
+      // First, check if we have injected ethereum provider (e.g., already in MetaMask app or extension)
+      const evmProvider = (window as any)?.ethereum;
+      if (evmProvider?.isMetaMask) {
+        try {
+          const accounts = await evmProvider.request({ method: "eth_requestAccounts" });
+          if (accounts?.[0]) {
+            localStorage.setItem("walletAddress", accounts[0]);
+            localStorage.setItem("walletType", "metamask");
+            onConnected(accounts[0], "metamask");
+            onClose();
+            return;
+          }
+        } catch (e: any) {
+          console.log("Injected provider request failed:", e?.message);
+          // If injected provider fails on mobile, continue to deep link as fallback
+          if (!isMobile) {
+            setError(e?.message || "Connection rejected.");
+            setConnecting(null);
+            return;
+          }
+        }
+      }
 
       if (isMobile) {
         // Mobile: Try WalletConnect first, then fallback to deeplink
@@ -233,19 +266,6 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
             setConnecting(null);
             return;
           }
-        }
-      }
-
-      // Desktop: Use MetaMask extension
-      const evmProvider = (window as any)?.ethereum;
-      if (evmProvider?.isMetaMask) {
-        const accounts = await evmProvider.request({ method: "eth_requestAccounts" });
-        if (accounts?.[0]) {
-          localStorage.setItem("walletAddress", accounts[0]);
-          localStorage.setItem("walletType", "metamask");
-          onConnected(accounts[0], "metamask");
-          onClose();
-          return;
         }
       }
 
