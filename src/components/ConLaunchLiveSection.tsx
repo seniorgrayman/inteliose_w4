@@ -277,7 +277,7 @@ const ConLaunchLiveSection = () => {
       <div className="flex justify-between items-start border-b border-border pb-4 mb-6">
         <div>
           <h2 className="text-2xl md:text-3xl font-display font-medium tracking-tighter text-foreground">
-            ConLaunch Live
+            Clawn.ch Live
           </h2>
           <p className="text-sm text-muted-foreground mt-1">Real-time intelligence on agent-deployed tokens.</p>
         </div>

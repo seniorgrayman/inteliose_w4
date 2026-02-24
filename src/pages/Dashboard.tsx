@@ -294,7 +294,7 @@ const Dashboard = () => {
             }`}
           >
             <Radio size={14} />
-            ConLaunch
+            Clawn.ch
           </button>
         </div>
       </div>
