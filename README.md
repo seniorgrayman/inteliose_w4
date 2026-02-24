@@ -2,6 +2,8 @@
  
 ## Project info
 
+
+
 Updates
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
