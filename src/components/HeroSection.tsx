@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { Link } from "react-router-dom";
+import ComingSoonModal from "./ComingSoonModal";
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -85,8 +86,8 @@ const HeroSection = () => {
                 className="group-hover:translate-x-0.5 transition-transform"
               />
             </Link>
-            <Link
-              to="/manage-project"
+            <button
+              onClick={() => setShowComingSoon(true)}
               className="
                 inline-flex items-center gap-2 
                 bg-white 
@@ -98,10 +99,13 @@ const HeroSection = () => {
             >
               Manage Project
               <ExternalLink size={13} />
-            </Link>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Coming Soon Modal */}
+      <ComingSoonModal isOpen={showComingSoon} onClose={() => setShowComingSoon(false)} date="25th February 2026" />
     </section>
   );
 };

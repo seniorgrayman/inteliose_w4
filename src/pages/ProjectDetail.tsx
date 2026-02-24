@@ -5,6 +5,7 @@ import { ArrowLeft, Edit, Trash2, Download, AlertCircle, CheckCircle, Menu, X, L
 import { getProject, updateProject, deleteProject } from "@/lib/firebase/projects";
 import { fetchSolanaTokenData, fetchBaseTokenData, fetchTokenData, fetchSecurityScan, generateAIAnalysis, type AIAnalysis } from "@/lib/tokendata";
 import type { Project, TokenMetrics, ChecklistItem } from "@/types/profile";
+import ComingSoonModal from "@/components/ComingSoonModal";
 
 const formatCurrency = (value: string | number | undefined): string => {
   if (!value || value === "—") return "—";
@@ -46,6 +47,7 @@ const ProjectDetail = () => {
   const [aiLoading, setAILoading] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [copiedCA, setCopiedCA] = useState(false);
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -291,6 +293,10 @@ Be specific about founder actions they can take NOW to improve the token.`;
     }
   };
 
+  const handleManageProject = () => {
+    setComingSoonOpen(true);
+  };
+
   const handleCopyCA = () => {
     if (project?.profile.tokenAddress) {
       navigator.clipboard.writeText(project.profile.tokenAddress);
@@ -530,7 +536,7 @@ Be specific about founder actions they can take NOW to improve the token.`;
           {/* Sidebar Footer */}
           <div className="p-6 border-t border-slate-200 space-y-2">
             <button
-              onClick={() => navigate(`/manage-project/${id}/checklist`)}
+              onClick={handleManageProject}
               className="w-full px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition text-sm"
             >
               View Checklist
@@ -936,6 +942,9 @@ Be specific about founder actions they can take NOW to improve the token.`;
           </motion.div>
         </div>
       )}
+
+      {/* Coming Soon Modal */}
+      <ComingSoonModal isOpen={comingSoonOpen} onClose={() => setComingSoonOpen(false)} date="25th February 2026" />
     </div>
   );
 };

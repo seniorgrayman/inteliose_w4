@@ -14,16 +14,46 @@ export type ConLaunchToken = {
 
 // Clawnch API - Memecoin launches on Base via Clanker
 const BASE = "/api";
+const DIRECT_BASE = "https://clawn.ch/api";
 
 async function getJson(path: string) {
   try {
-    const url = `${BASE}${path}`;
+    // First try using the proxy (for development/localhost)
+    const proxyUrl = `${BASE}${path}`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!res.ok) throw new Error(`Clawnch API error: ${res.status}`);
-    return res.json();
+    
+    try {
+      const res = await fetch(proxyUrl, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error(`Clawnch API error: ${res.status}`);
+      return res.json();
+    } catch (proxyError) {
+      clearTimeout(timeout);
+      
+      // If proxy fails (e.g., on hosted app with CORS), try direct fetch with CORS headers
+      console.warn("Proxy failed, attempting direct fetch:", proxyError);
+      
+      const directUrl = `${DIRECT_BASE}${path}`;
+      const directController = new AbortController();
+      const directTimeout = setTimeout(() => directController.abort(), 8000);
+      
+      try {
+        const res = await fetch(directUrl, {
+          signal: directController.signal,
+          headers: {
+            'Accept': 'application/json',
+          },
+          mode: 'cors',
+        });
+        clearTimeout(directTimeout);
+        if (!res.ok) throw new Error(`Clawnch API error: ${res.status}`);
+        return res.json();
+      } catch (directError) {
+        clearTimeout(directTimeout);
+        throw directError;
+      }
+    }
   } catch (e: any) {
     console.warn("Clawnch API error:", e.message);
     throw e;
