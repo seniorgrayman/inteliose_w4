@@ -473,13 +473,11 @@ Be specific about founder actions they can take NOW to improve the token.`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex">
       {/* Sidebar */}
-      <motion.div
-        initial={false}
-        animate={{ x: 0 }}
-        transition={{ duration: 0.3 }}
+      <div
         className={`h-screen w-80 bg-white border-r border-slate-200 overflow-y-auto
           ${sidebarOpen ? "flex" : "hidden"} md:flex md:flex-col
-          fixed md:relative left-0 top-0 md:top-auto md:left-auto z-40 md:z-auto shadow-lg md:shadow-none`}
+          fixed md:relative left-0 top-0 md:top-auto md:left-auto z-40 md:z-auto shadow-lg md:shadow-none
+          transition-all duration-300 ease-in-out`}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
@@ -545,7 +543,7 @@ Be specific about founder actions they can take NOW to improve the token.`;
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Overlay for mobile */}
       {sidebarOpen && (
@@ -568,8 +566,13 @@ Be specific about founder actions they can take NOW to improve the token.`;
                 <ArrowLeft size={20} />
               </button>
               <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setSidebarOpen(prev => !prev);
+                }}
                 className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition"
+                type="button"
               >
                 <Menu size={20} />
               </button>
