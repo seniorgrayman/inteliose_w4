@@ -40,16 +40,16 @@ const Navbar = () => {
   return (
     <>
       <div className="relative z-10 w-full flex justify-center">
-        <nav className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] rounded-full py-2 px-3 flex items-center gap-4 md:gap-6 text-sm max-w-full">
-          <a href="#" className="inline-flex items-center justify-center font-display font-bold text-lg md:text-xl tracking-tight pr-1 md:pr-2 whitespace-nowrap">
+        <nav className="bg-[hsl(var(--glass-bg))] backdrop-blur-md border border-[hsl(var(--glass-border))] rounded-full py-2 px-3 flex items-center text-white gap-4 md:gap-6 text-sm max-w-full">
+          <Link to="/" className="inline-flex items-center justify-center font-display font-bold text-lg md:text-xl tracking-tight pr-1 md:pr-2 whitespace-nowrap">
             inteliose™
-          </a>
+          </Link>
           <div className="hidden lg:flex items-center gap-5">
             {navLinks.map((link) => (
               <button
                 key={link.target}
                 onClick={() => scrollTo(link.target)}
-                className="text-white/70 hover:text-white transition-colors whitespace-nowrap"
+                className="text-white/80 hover:text-white transition-colors whitespace-nowrap"
               >
                 {link.label}
               </button>

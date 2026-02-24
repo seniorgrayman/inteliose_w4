@@ -65,12 +65,15 @@ const FooterSection = () => {
               <XIcon size={16} />
             </a>
             {/* Telegram - Coming Soon */}
+
+            <a href="https://t.me/intelliose" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors text-primary/70 hover:text-primary border border-primary/20">
             <button
-              onClick={() => toast.info("Telegram coming soon!")}
+             
               className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors text-primary/70 hover:text-primary border border-primary/20"
             >
               <Send size={16} />
             </button>
+            </a>
           </div>
         </div>
 
