@@ -61,6 +61,13 @@ export async function fetchTokenDetailsBySymbol(symbol: string, chainId: string 
 export async function fetchTokenDetailsByAddress(address: string, chainId: string = "ethereum") {
   try {
     const response = await fetch(`${DEXSCREENER_API_BASE_URL}/token/${address}`);
+    
+    // Handle 404 - token not yet indexed on DexScreener
+    if (response.status === 404) {
+      console.warn(`Token not found on DexScreener: ${address}`);
+      return { _notAvailable: true }; // Special marker for UI
+    }
+    
     if (!response.ok) {
       throw new Error(`DexScreener API error: ${response.statusText}`);
     }

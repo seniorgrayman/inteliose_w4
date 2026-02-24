@@ -56,6 +56,7 @@ const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: 
   const [isLoading, setIsLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
+  const [notAvailableOnDex, setNotAvailableOnDex] = useState(false);
 
   // Default chain for Clawn.ch tokens (component scope so JSX can reference it)
   const chain: "Base" | "Solana" = "Base";
@@ -82,9 +83,14 @@ const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: 
         // Fetch real token data from APIs (prefer DexScreener for Base tokens)
         // Use fetchTokenDetailsByAddress to enrich Clawn.ch token info
         let fetchedTokenData: TokenData | null = null;
+        let dexNotAvailable = false;
         try {
           const ds = await fetchTokenDetailsByAddress(token.address || "", "base");
-          if (ds) {
+          if (ds && "_notAvailable" in ds) {
+            // Token not yet indexed on DexScreener
+            dexNotAvailable = true;
+            setNotAvailableOnDex(true);
+          } else if (ds) {
             fetchedTokenData = {
               name: ds.name || ds.symbol || "Unknown",
               symbol: ds.symbol || "???",
@@ -94,12 +100,15 @@ const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: 
               marketCap: ds.marketCap ? `$${(ds.marketCap / 1e6).toFixed(2)}M` : null,
               holders: null,
             };
+            setNotAvailableOnDex(false);
           } else {
             fetchedTokenData = await fetchTokenData(token.address, chain);
+            setNotAvailableOnDex(false);
           }
         } catch (e) {
           // Fallback to generic fetchTokenData on error
           fetchedTokenData = await fetchTokenData(token.address, chain);
+          setNotAvailableOnDex(false);
         }
         if (isMounted) {
           setTokenData(fetchedTokenData);
@@ -211,21 +220,36 @@ const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: 
       {/* Token Overview - Quick Facts */}
       <InnerCard>
         <SectionLabel icon={BarChart3}>Token Overview</SectionLabel>
-        <StatRow icon={Clock} label="Age since launch" value={`${token.deployed_ago}m`} isLoading={isLoading} />
-        <StatRow icon={DollarSign} label="Current price (USD)" value={displayValue(tokenData?.price)} isLoading={isLoading} />
-        <StatRow icon={BarChart3} label="Volume (24h)" value={displayValue(tokenData?.volume24h)} isLoading={isLoading} />
-        <StatRow icon={Droplets} label="Liquidity" value={displayValue(tokenData?.liquidity)} isLoading={isLoading} />
-        <StatRow icon={TrendingUp} label="Market cap" value={displayValue(tokenData?.marketCap)} isLoading={isLoading} />
-        {mintAuthority && (
-          <div className="flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 group">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary/80 to-secondary/40 border border-[hsl(var(--border)/0.5)] flex items-center justify-center shadow-[0_1px_0_0_hsl(0_0%_100%/0.5)_inset]">
-                <Shield size={12} className="text-primary/70" />
-              </div>
-              <p className="text-xs text-foreground/70">Mint Authority</p>
+        {notAvailableOnDex ? (
+          <div className="p-6 text-center space-y-3">
+            <AlertTriangle size={32} className="mx-auto text-amber-500/70" />
+            <div>
+              <p className="text-sm font-semibold text-foreground mb-1">Token Not Yet Indexed</p>
+              <p className="text-xs text-muted-foreground/70">
+                This token is not yet available on DexScreener. It may be newly launched or still being indexed.
+              </p>
             </div>
-            <p className="text-xs font-semibold text-foreground font-display tracking-tight">{mintAuthority}</p>
+            <p className="text-xs text-muted-foreground/50 pt-2">Please check back later for market data.</p>
           </div>
+        ) : (
+          <>
+            <StatRow icon={Clock} label="Age since launch" value={`${token.deployed_ago}m`} isLoading={isLoading} />
+            <StatRow icon={DollarSign} label="Current price (USD)" value={displayValue(tokenData?.price)} isLoading={isLoading} />
+            <StatRow icon={BarChart3} label="Volume (24h)" value={displayValue(tokenData?.volume24h)} isLoading={isLoading} />
+            <StatRow icon={Droplets} label="Liquidity" value={displayValue(tokenData?.liquidity)} isLoading={isLoading} />
+            <StatRow icon={TrendingUp} label="Market cap" value={displayValue(tokenData?.marketCap)} isLoading={isLoading} />
+            {mintAuthority && (
+              <div className="flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0 group">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-secondary/80 to-secondary/40 border border-[hsl(var(--border)/0.5)] flex items-center justify-center shadow-[0_1px_0_0_hsl(0_0%_100%/0.5)_inset]">
+                    <Shield size={12} className="text-primary/70" />
+                  </div>
+                  <p className="text-xs text-foreground/70">Mint Authority</p>
+                </div>
+                <p className="text-xs font-semibold text-foreground font-display tracking-tight">{mintAuthority}</p>
+              </div>
+            )}
+          </>
         )}
       </InnerCard>
 

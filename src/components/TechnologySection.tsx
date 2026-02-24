@@ -2,6 +2,7 @@ import { ArrowRight, BarChart3, Users, Bot, ExternalLink, Shield, Zap, Activity 
 import { motion, useInView, animate } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ComingSoonModal from "./ComingSoonModal";
 
 /* ─── ASCII Intelligence Matrix ─── */
 const ASCII_LINES = [
@@ -212,6 +213,7 @@ const features = [
 const TechnologySection = () => {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const [showComingSoon, setShowComingSoon] = useState(false);
 
   return (
     <section
@@ -351,6 +353,10 @@ const TechnologySection = () => {
           </Link>
           <Link
             to="/manage-project"
+            onClick={(e) => {
+              e.preventDefault();
+              setShowComingSoon(true);
+            }}
             className="inline-flex items-center gap-2 bg-gradient-to-b from-secondary/70 to-secondary/40 border border-[hsl(var(--border)/0.5)] text-foreground px-8 py-3.5 rounded-2xl text-sm font-display font-medium hover:border-primary/30 transition-all shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.06)]"
           >
             Manage Project
@@ -381,6 +387,8 @@ const TechnologySection = () => {
           ))}
         </div>
       </div>
+
+      <ComingSoonModal isOpen={showComingSoon} onClose={() => setShowComingSoon(false)} date="25th February 2026" />
     </section>
   );
 };
