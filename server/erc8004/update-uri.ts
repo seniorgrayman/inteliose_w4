@@ -36,6 +36,7 @@ const registrationFile = {
   name: "Inteliose Intelligence Agent",
   description:
     "Web4 AI intelligence agent for cryptocurrency token analysis. Provides health verdicts, risk baselines, failure mode detection, and revival plans for tokens on Base and Solana. Powered by on-chain data aggregation and Gemini AI.",
+  image: "https://www.daointel.io/logo.jpg",
   active: true,
   updatedAt: Math.floor(Date.now() / 1000),
   registrations: [
