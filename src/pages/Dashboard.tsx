@@ -166,19 +166,8 @@ const Dashboard = () => {
         setCurrentToken(tokenData);
       }
       
-      // Also try ConLaunch data for additional context
-      try {
-        const t = await fetchConLaunchToken(trimmedAddress);
-        if (t) {
-          setCurrentToken((prev) => ({
-            ...prev,
-            name: t.name ?? prev?.name,
-            symbol: t.symbol ?? prev?.symbol,
-          }));
-        }
-      } catch (e) {
-        // ignore ConLaunch errors
-      }
+  // NOTE: removed ConLaunch API call here to avoid hitting local /api/tokens?address
+  // If you need ConLaunch context later, fetch it in the Clawn.ch section only.
       
       // Fetch REAL security checks with real-time RPC data
       const securityData = await fetchSecurityScan(trimmedAddress, chain);
