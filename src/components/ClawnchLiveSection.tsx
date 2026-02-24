@@ -5,43 +5,38 @@ import {
   Clock, DollarSign, BarChart3, Percent, Activity, Globe, FileText,
   ExternalLink, MessageCircle, Sparkles, Zap, Cat
 } from "lucide-react";
+import { fetchTokenDetailsBySymbol } from "../lib/dexscreener";
 
-// --- Mock Data ---
-const TOKEN_NAMES = [
-  { name: "PurrBot", symbol: "PURR", desc: "Feline-themed autonomous liquidity provider with adaptive fee tiers.", vault: 30 },
-  { name: "WhiskerDAO", symbol: "WHSK", desc: "Community-governed memecoin launchpad for the Base ecosystem.", vault: 0 },
-  { name: "CatSwap", symbol: "CSWP", desc: "DEX aggregator with MEV protection and paw-print routing.", vault: 45 },
-  { name: "MeowFi", symbol: "MEOW", desc: "Yield farming protocol with auto-compounding catnip vaults.", vault: 20 },
-  { name: "TabbyAI", symbol: "TABI", desc: "AI agent for on-chain sentiment analysis and meme tracking.", vault: 0 },
-  { name: "Clawdius", symbol: "CLAW", desc: "Decentralized identity protocol with NFT-based reputation scoring.", vault: 55 },
-  { name: "NineLife", symbol: "9LFE", desc: "Insurance protocol offering coverage for DeFi exploits on Base.", vault: 35 },
-  { name: "Scratchy", symbol: "SCRH", desc: "Gamified token staking with scratch-card reward mechanics.", vault: 0 },
-  { name: "FurVault", symbol: "FURV", desc: "Time-locked vesting protocol for fair token distribution.", vault: 60 },
-  { name: "PawPrint", symbol: "PAWP", desc: "On-chain analytics dashboard for tracking whale movements.", vault: 15 },
-];
-
-type MockToken = {
-  id: string;
+// --- Token Data ---
+export type Token = {
+  id: string; // Generated UUID for React keys
   name: string;
   symbol: string;
-  description: string;
-  vault_percentage: number;
-  deployed_ago: number;
+  address: string; // Token address from DexScreener
+  pairAddress: string; // Pair address from DexScreener
+  description: string; // Placeholder or derived
+  vault_percentage: number; // Mocked for now
+  deployed_ago: number; // Mocked for now
+  priceUsd: string;
+  liquidity: number | null;
+  volume24h: number | null;
+  fdv: number | null;
+  marketCap: number | null;
+  // Add other fields from DexScreener as needed
 };
 
-const generateToken = (): MockToken => {
-  const pick = TOKEN_NAMES[Math.floor(Math.random() * TOKEN_NAMES.length)];
-  return {
-    id: crypto.randomUUID(),
-    name: pick.name,
-    symbol: pick.symbol,
-    description: pick.desc,
-    vault_percentage: pick.vault,
-    deployed_ago: Math.floor(Math.random() * 55) + 1,
-  };
-};
+// Initial list of token symbols to fetch
+const INITIAL_TOKEN_SYMBOLS = [
+  "WETH", "USDC", "DAI", "UNI", "LINK", "AAVE", "SNX", "COMP", "MKR", "CRV" // Using common symbols for testing
+];
 
-const initialTokens = (): MockToken[] => Array.from({ length: 6 }, generateToken);
+
+
+
+
+
+
+
 
 const InnerCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div className={`bg-gradient-to-b from-secondary/50 to-secondary/30 rounded-[20px] border border-[hsl(var(--border)/0.4)] p-5 shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.05)] ${className}`}>
@@ -77,31 +72,27 @@ const StatRow = ({ icon: Icon, label, value, sub }: { icon: any; label: string; 
   </div>
 );
 
-const generateAnalysis = (token: MockToken) => {
+const generateAnalysis = (token: Token) => {
   const rand = (min: number, max: number) => Math.floor(Math.random() * (max - min)) + min;
-  const price = (Math.random() * 0.001).toFixed(6);
-  const vol = rand(50, 900);
-  const liq = (Math.random() * 3).toFixed(2);
-  const mcap = (Math.random() * 5).toFixed(2);
-  const liqRatio = rand(15, 65);
+  const liqRatio = token.marketCap && token.liquidity ? Math.round((token.liquidity / token.marketCap) * 100) : rand(15, 65);
   const buys = rand(5, 40);
   const sells = rand(5, 60);
   const aiScore = rand(30, 85);
 
   return {
     age: `${token.deployed_ago}m`,
-    price: `$${price}`,
-    volume24h: `$${vol},${rand(100, 999)}`,
-    liquidity: `$${liq}M`,
-    marketCap: `$${mcap}M`,
+    price: `${parseFloat(token.priceUsd).toFixed(6)}`,
+    volume24h: `${token.volume24h ? token.volume24h.toLocaleString() : "N/A"}`,
+    liquidity: `${token.liquidity ? (token.liquidity / 1_000_000).toFixed(2) : "N/A"}M`,
+    marketCap: `${token.marketCap ? (token.marketCap / 1_000_000).toFixed(2) : "N/A"}M`,
     liqMarketCapRatio: `${liqRatio}%`,
     buySell1h: `${buys} / ${sells}`,
-    mintAuthority: Math.random() > 0.5 ? "Renounced" : "Active",
-    liquidityPool: `${liqRatio}%`,
+    mintAuthority: Math.random() > 0.5 ? "Renounced" : "Active", // This info is not from DexScreener, keeping mock
+    liquidityPool: `${liqRatio}%`, // This might need to be more accurate from DexScreener data
     rugpullRisk: liqRatio > 40 ? "Low" : liqRatio > 25 ? "Medium" : "High",
     aiScore,
-    aiSummary: `${token.name} operates on Base via Clawnch with a market cap of $${mcap}M and $${liq}M in liquidity. Trading activity shows ${sells > buys ? "sell-dominant" : "buy-dominant"} pressure with a ${buys}/${sells} buy/sell ratio in the last hour.`,
-    keySignals: `${sells > buys ? `Sell transactions outnumber buys by ${(sells / buys).toFixed(1)}:1 ratio.` : `Buy transactions lead with a ${(buys / sells).toFixed(1)}:1 ratio.`} Liquidity-to-market-cap ratio sits at ${liqRatio}%, ${liqRatio > 40 ? "indicating reasonable depth." : "suggesting elevated volatility risk."}`,
+    aiSummary: `${token.name} operates on Base via Clawnch with a market cap of ${token.marketCap ? (token.marketCap / 1_000_000).toFixed(2) : "N/A"}M and ${token.liquidity ? (token.liquidity / 1_000_000).toFixed(2) : "N/A"}M in liquidity. Trading activity shows ${sells > buys ? "sell-dominant" : "buy-dominant"} pressure with a ${buys}/${sells} buy/sell ratio in the last hour.`,
+    keySignals: `${sells > buys ? `Sell transactions outnumber buys by ${(sells / buys).toFixed(1)}:1 ratio.` : `Buy transactions lead with a ${(buys / sells).toFixed(1)}:1 ratio.`} Liquidity-to-market-cap-ratio sits at ${liqRatio}%, ${liqRatio > 40 ? "indicating reasonable depth." : "suggesting elevated volatility risk."}`,
     socials: [
       { name: "Website", icon: Globe },
       { name: "Docs", icon: FileText },
@@ -111,7 +102,7 @@ const generateAnalysis = (token: MockToken) => {
   };
 };
 
-const FullAnalysisView = ({ token, onClose }: { token: MockToken; onClose: () => void }) => {
+const FullAnalysisView = ({ token, onClose }: { token: Token; onClose: () => void }) => {
   const data = useMemo(() => generateAnalysis(token), [token.id]);
 
   return (
@@ -236,7 +227,7 @@ const FullAnalysisView = ({ token, onClose }: { token: MockToken; onClose: () =>
   );
 };
 
-const TokenCard = ({ token, isActive, onAnalyze }: { token: MockToken; isActive: boolean; onAnalyze: () => void }) => (
+const TokenCard = ({ token, isActive, onAnalyze }: { token: Token; isActive: boolean; onAnalyze: () => void }) => (
   <motion.div
     layout
     initial={{ opacity: 0, y: -20 }}
@@ -271,21 +262,36 @@ const TokenCard = ({ token, isActive, onAnalyze }: { token: MockToken; isActive:
 );
 
 const ClawnchLiveSection = () => {
-  const [tokens, setTokens] = useState<MockToken[]>(initialTokens);
-  const [todayCount, setTodayCount] = useState(84);
-  const [expandedToken, setExpandedToken] = useState<MockToken | null>(null);
+  const [tokens, setTokens] = useState<Token[]>([]); // Initialize with empty array
+  const [todayCount, setTodayCount] = useState(0); // Start from 0 or fetch real count
+  const [expandedToken, setExpandedToken] = useState<Token | null>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTokens((prev) => {
-        const newToken = generateToken();
-        const updated = [newToken, ...prev];
-        return updated.slice(0, 8);
-      });
-      setTodayCount((c) => c + 1);
-    }, 7000);
-    return () => clearInterval(interval);
-  }, []);
+    const fetchInitialTokens = async () => {
+      const fetchedTokens: Token[] = [];
+      for (const symbol of INITIAL_TOKEN_SYMBOLS) {
+        const tokenData = await fetchTokenDetailsBySymbol(symbol, "base"); // Assuming "base" chain for Clawnch
+        if (tokenData) {
+          fetchedTokens.push({
+            ...tokenData,
+            id: crypto.randomUUID(),
+            description: `${tokenData.name} (${tokenData.symbol}) on Base.`, // Placeholder description
+            vault_percentage: Math.floor(Math.random() * 60), // Mocked
+            deployed_ago: Math.floor(Math.random() * 55) + 1, // Mocked
+          });
+        }
+      }
+      setTokens(fetchedTokens.slice(0, 8)); // Display first 8
+      setTodayCount(fetchedTokens.length); // Update count based on fetched tokens
+    };
+
+    fetchInitialTokens();
+
+    // Implement a refresh mechanism if needed, similar to the old interval
+    // For now, let's just fetch once on mount.
+    // If continuous updates are required, this useEffect would need to be more complex
+    // to handle polling or websockets.
+  }, []); // Empty dependency array to run once on mount
 
   const handleAnalyze = useCallback((token: MockToken) => {
     setExpandedToken(token);

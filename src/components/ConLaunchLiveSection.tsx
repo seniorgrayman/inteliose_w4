@@ -47,7 +47,6 @@ const StatRow = ({ icon: Icon, label, value, sub, isLoading }: { icon: any; labe
 // --- Full Analysis View (fetches its own data) ---
 const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: () => void }) => {
   const [analysis, setAnalysis] = useState<TokenData | null>(null);
-  const [clawnchData, setClawnchData] = useState<any>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(false);
@@ -67,12 +66,6 @@ const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: 
           setAnalysis(tokenData);
         }
 
-        // Fetch Clawnch-specific analytics
-        const clawnchAnalytics = await getTokenAnalytics(token.address);
-        if (isMounted) {
-          setClawnchData(clawnchAnalytics);
-        }
-
         // Generate AI analysis using the same prompt as Dashboard
         setAiLoading(true);
         const aiResult = await generateFounderAIAnalysis(
@@ -82,7 +75,7 @@ const FullAnalysisView = ({ token, onClose }: { token: ConLaunchToken; onClose: 
           tokenData?.volume24h || "N/A",
           tokenData?.marketCap || "N/A",
           String(tokenData?.holders || "N/A"),
-          clawnchAnalytics?.fees?.totalEarned || "N/A"
+          "N/A" // No longer fetching clawnch data
         );
         if (isMounted) {
           setAiAnalysis(aiResult);
