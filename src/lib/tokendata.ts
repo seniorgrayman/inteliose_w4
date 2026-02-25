@@ -12,6 +12,8 @@ export interface TokenData {
   liquidity: string | null;
   marketCap: string | null;
   holders: number | null;
+  image?: string | null;
+  address?: string;
 }
 
 export interface SecurityScan {
@@ -63,6 +65,8 @@ export async function fetchBaseTokenData(address: string): Promise<TokenData | n
       liquidity: pair.liquidity?.usd ? `$${(pair.liquidity.usd / 1e6).toFixed(2)}M` : null,
       marketCap: pair.marketCap ? `$${(pair.marketCap / 1e6).toFixed(2)}M` : null,
       holders: null,
+      image: pair.info?.imageUrl || pair.baseToken?.image || null,
+      address: address,
     };
   } catch (e) {
     console.warn("fetchBaseTokenData error:", e);
@@ -124,6 +128,8 @@ export async function fetchSolanaFallback(mint: string): Promise<TokenData | nul
       liquidity: pair.liquidity?.usd ? `$${(pair.liquidity.usd / 1e6).toFixed(2)}M` : null,
       marketCap: pair.marketCap ? `$${(pair.marketCap / 1e6).toFixed(2)}M` : null,
       holders: null,
+      image: pair.info?.imageUrl || pair.baseToken?.image || null,
+      address: mint,
     };
   } catch (e) {
     console.warn("fetchSolanaFallback error:", e);

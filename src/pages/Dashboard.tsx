@@ -441,10 +441,24 @@ const Dashboard = () => {
               {/* Token Overview */}
               <GlassCard>
                 <SectionLabel icon={BarChart3}>Token Overview</SectionLabel>
-                <h2 className="text-3xl font-display font-medium tracking-tighter text-foreground mb-1">
-                  {currentToken?.name || "Unknown"} <span className="text-muted-foreground/60 font-normal text-2xl">({currentToken?.symbol || "??"})</span>
-                </h2>
-                <p className="text-sm text-muted-foreground mb-8">Quick facts + instant risk signal.</p>
+                <div className="flex items-start gap-4 mb-6">
+                  {currentToken?.image && (
+                    <motion.img
+                      src={currentToken.image}
+                      alt={currentToken?.name || "Token"}
+                      className="w-20 h-20 rounded-2xl border border-[hsl(var(--border)/0.5)] object-cover shadow-lg"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    />
+                  )}
+                  <div className="flex-1">
+                    <h2 className="text-3xl font-display font-medium tracking-tighter text-foreground">
+                      {currentToken?.name || "Unknown"} <span className="text-muted-foreground/60 font-normal text-2xl">({currentToken?.symbol || "??"})</span>
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-2">Quick facts + instant risk signal.</p>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-5">
                   <InnerCard>
