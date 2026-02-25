@@ -12,24 +12,31 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
     proxy: {
-      // Inteliose backend server (A2A + ERC-8004 + Intel APIs)
-      '/intel': {
+      // Inteliose backend server — /api/intel/* and /api/a2a → localhost:3001
+      '/api/intel': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
-      '/a2a': {
+      '/api/a2a': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
-      '/.well-known': {
+      '/api/well-known': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/well-known\/agent-card/, '/.well-known/agent-card.json'),
       },
-
-      // Existing proxy for clawn.ch
-      '/api': {
-        target: 'https://clawn.ch',
+      '/api/health': {
+        target: 'http://localhost:3001',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/api/erc8004-registration': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/erc8004-registration/, '/erc8004-registration.json'),
       },
 
       // Proxy for daointel.io
