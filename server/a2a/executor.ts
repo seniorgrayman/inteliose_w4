@@ -103,35 +103,35 @@ export async function handleA2ARequest(req: JsonRpcRequest): Promise<JsonRpcResp
       }
 
       // Create task
-      const task = taskStore.createTask(params?.contextId);
-      taskStore.addMessage(task.id, message);
-      taskStore.updateStatus(task.id, "working");
+      const task = await taskStore.createTask(params?.contextId);
+      await taskStore.addMessage(task.id, message);
+      await taskStore.updateStatus(task.id, "working");
 
       // Parse and execute skill
       const { skillId, input } = parseSkillRequest(message);
 
       if (!skillId) {
-        taskStore.updateStatus(task.id, "failed", {
+        await taskStore.updateStatus(task.id, "failed", {
           role: "agent",
           parts: [{ type: "text", text: "Could not determine which skill to use. Please provide a tokenAddress and chain." }],
         });
         return {
           jsonrpc: "2.0",
           id,
-          result: { task: taskStore.getTask(task.id) },
+          result: { task: await taskStore.getTask(task.id) },
         };
       }
 
       const result = await executeSkill(skillId, input);
 
       if (result.error) {
-        taskStore.updateStatus(task.id, "failed", {
+        await taskStore.updateStatus(task.id, "failed", {
           role: "agent",
           parts: [{ type: "text", text: result.error }],
         });
       } else {
         // Add artifact
-        taskStore.addArtifact(task.id, {
+        await taskStore.addArtifact(task.id, {
           artifactId: crypto.randomUUID(),
           name: `${skillId}-result`,
           parts: result.parts,
@@ -139,7 +139,7 @@ export async function handleA2ARequest(req: JsonRpcRequest): Promise<JsonRpcResp
 
         // Mark completed with summary message
         const textPart = result.parts.find((p) => p.type === "text");
-        taskStore.updateStatus(task.id, "completed", {
+        await taskStore.updateStatus(task.id, "completed", {
           role: "agent",
           parts: [textPart || { type: "text", text: "Analysis complete." }],
         });
@@ -148,7 +148,7 @@ export async function handleA2ARequest(req: JsonRpcRequest): Promise<JsonRpcResp
       return {
         jsonrpc: "2.0",
         id,
-        result: { task: taskStore.getTask(task.id) },
+        result: { task: await taskStore.getTask(task.id) },
       };
     }
 
@@ -161,7 +161,7 @@ export async function handleA2ARequest(req: JsonRpcRequest): Promise<JsonRpcResp
           error: { code: -32602, message: "taskId is required" },
         };
       }
-      const task = taskStore.getTask(taskId);
+      const task = await taskStore.getTask(taskId);
       if (!task) {
         return {
           jsonrpc: "2.0",
@@ -175,13 +175,13 @@ export async function handleA2ARequest(req: JsonRpcRequest): Promise<JsonRpcResp
     case "ListTasks": {
       const limit = params?.limit || 50;
       const offset = params?.offset || 0;
-      const tasks = taskStore.listTasks(limit, offset);
+      const tasks = await taskStore.listTasks(limit, offset);
       return { jsonrpc: "2.0", id, result: { tasks } };
     }
 
     case "CancelTask": {
       const taskId = params?.taskId;
-      const task = taskStore.getTask(taskId);
+      const task = await taskStore.getTask(taskId);
       if (!task) {
         return {
           jsonrpc: "2.0",
@@ -196,8 +196,8 @@ export async function handleA2ARequest(req: JsonRpcRequest): Promise<JsonRpcResp
           error: { code: -32002, message: "Task is in a terminal state and cannot be canceled" },
         };
       }
-      taskStore.updateStatus(taskId, "canceled");
-      return { jsonrpc: "2.0", id, result: { task: taskStore.getTask(taskId) } };
+      await taskStore.updateStatus(taskId, "canceled");
+      return { jsonrpc: "2.0", id, result: { task: await taskStore.getTask(taskId) } };
     }
 
     default:
@@ -212,13 +212,13 @@ export async function handleA2ARequest(req: JsonRpcRequest): Promise<JsonRpcResp
 /**
  * Get task store stats for the dashboard
  */
-export function getA2AStats() {
+export async function getA2AStats() {
   return taskStore.getStats();
 }
 
 /**
  * Get recent tasks for the activity feed
  */
-export function getRecentTasks(limit = 20) {
+export async function getRecentTasks(limit = 20) {
   return taskStore.listTasks(limit);
 }
