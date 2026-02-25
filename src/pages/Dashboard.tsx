@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   ArrowRight, Clock, DollarSign, BarChart3, Droplets, TrendingUp,
@@ -12,6 +12,9 @@ import ConLaunchLiveSection from "@/components/ConLaunchLiveSection";
 import AgentStatusCard from "@/components/AgentStatusCard";
 import A2AActivityFeed from "@/components/A2AActivityFeed";
 import AgentCardPreview from "@/components/AgentCardPreview";
+import BurnConfirmModal from "@/components/BurnConfirmModal";
+import { useBurn } from "@/hooks/useBurn";
+import type { EVMProvider } from "@/types/wallet";
 import { getToken as fetchConLaunchToken } from "@/lib/conlaunch";
 import { fetchTokenData, fetchSecurityScan, generateAIAnalysis, fetchMintAuthority, fetchHolderDistribution, type AIAnalysis, type HolderDistribution } from "@/lib/tokendata";
 
@@ -114,6 +117,32 @@ const Dashboard = () => {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  // ─── EVM Provider + Burn Integration ───
+  const getEVMProvider = useCallback((): EVMProvider | null => {
+    if (connectedWallet === "phantom" && (window as any).phantom?.ethereum) {
+      return (window as any).phantom.ethereum as EVMProvider;
+    }
+    if (connectedWallet === "metamask" && (window as any).ethereum) {
+      return (window as any).ethereum as EVMProvider;
+    }
+    return null;
+  }, [connectedWallet]);
+
+  const {
+    requestBurn,
+    showBurnModal,
+    estimate: burnEstimate,
+    burnStatus,
+    burnError,
+    tokenBalance,
+    confirmBurn,
+    cancelBurn,
+  } = useBurn({
+    walletAddress: connectedAddress,
+    getProvider: getEVMProvider,
+    openWalletModal: () => setWalletModalOpen(true),
+  });
+
   const handleCopyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
     setCopiedAddress(address);
@@ -153,6 +182,11 @@ const Dashboard = () => {
 
     // Clear validation error when valid
     setValidationError(null);
+
+    // ─── Burn Gate: require token burn before analysis ───
+    const burnApproved = await requestBurn(trimmedAddress);
+    if (!burnApproved) return;
+
     setIsAnalyzing(true);
     
     // Clear previous data to avoid caching
@@ -819,6 +853,16 @@ const Dashboard = () => {
         isOpen={walletModalOpen}
         onClose={() => setWalletModalOpen(false)}
         onConnected={handleWalletConnected}
+      />
+
+      <BurnConfirmModal
+        open={showBurnModal}
+        estimate={burnEstimate}
+        tokenBalance={tokenBalance}
+        burnStatus={burnStatus}
+        burnError={burnError}
+        onConfirm={confirmBurn}
+        onCancel={cancelBurn}
       />
     </div>
   );

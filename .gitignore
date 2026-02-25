@@ -27,3 +27,4 @@ server/erc8004/.env
 *.njsproj
 *.sln
 *.sw?
+.vercel
