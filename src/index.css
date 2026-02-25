@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 15% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 10%;
+
+    --primary: 240 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 10% 96%;
+    --secondary-foreground: 220 15% 10%;
+
+    --muted: 220 10% 96%;
+    --muted-foreground: 220 5% 46%;
+
+    --accent: 220 10% 96%;
+    --accent-foreground: 220 15% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 10% 88%;
+    --input: 220 10% 88%;
+    --ring: 240 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* Custom Inteliose tokens */
+    --surface-dark: 228 14% 8%;
+    --surface-dark-foreground: 0 0% 100%;
+    --emerald-glow: 240 100% 50%;
+    --emerald-muted: 240 30% 20%;
+    --glass-bg: 0 0% 100% / 0.05;
+    --glass-border: 0 0% 100% / 0.1;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 228 14% 8%;
+    --foreground: 0 0% 96%;
+    --card: 228 14% 8%;
+    --card-foreground: 0 0% 96%;
+    --popover: 228 14% 8%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 240 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 20% 14%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 220 20% 14%;
+    --muted-foreground: 220 10% 60%;
+    --accent: 220 20% 14%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 96%;
+    --border: 220 20% 14%;
+    --input: 220 20% 14%;
+    --ring: 240 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-display {
+    font-family: 'Manrope', sans-serif;
+  }
+}
+
+@layer utilities {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

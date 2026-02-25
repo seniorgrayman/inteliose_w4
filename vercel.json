@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/.well-known/agent-card.json",
+      "destination": "/api/well-known/agent-card"
+    },
+    {
+      "source": "/erc8004-registration.json",
+      "destination": "/api/erc8004-registration"
+    },
+    {
+      "source": "/a2a",
+      "destination": "/api/a2a"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}
