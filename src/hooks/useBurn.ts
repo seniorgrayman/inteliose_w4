@@ -60,6 +60,44 @@ export function useBurn({ walletAddress, getProvider, openWalletModal }: UseBurn
       }
 
       try {
+        // Get the EVM address from the provider (handles Phantom Solana → EVM bridge)
+        let evmAddress: string;
+        try {
+          const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
+          if (!accounts.length) throw new Error("No EVM account");
+          evmAddress = accounts[0];
+        } catch {
+          setBurnError("Please connect your wallet to Base (EVM) network.");
+          return false;
+        }
+
+        // Switch to Base chain (chainId 8453 = 0x2105)
+        try {
+          await provider.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: "0x2105" }],
+          });
+        } catch (switchErr: any) {
+          // 4902 = chain not added, try to add it
+          if (switchErr?.code === 4902) {
+            try {
+              await provider.request({
+                method: "wallet_addEthereumChain",
+                params: [{
+                  chainId: "0x2105",
+                  chainName: "Base",
+                  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+                  rpcUrls: ["https://mainnet.base.org"],
+                  blockExplorerUrls: ["https://basescan.org"],
+                }],
+              });
+            } catch {
+              // continue anyway — balance check may still work
+            }
+          }
+          // other errors (user rejected, etc.) — continue, balance check will fail gracefully
+        }
+
         // Phase 1: Estimate
         setBurnStatus("estimating");
         setBurnError(null);
@@ -72,13 +110,13 @@ export function useBurn({ walletAddress, getProvider, openWalletModal }: UseBurn
 
         setEstimate(est);
 
-        // Check balance
+        // Check balance using the EVM address on Base
         if (est.tokenAddress && est.tokenDecimals != null) {
           try {
             const bal = await checkTokenBalance(
               provider,
               est.tokenAddress,
-              walletAddress,
+              evmAddress,
               est.tokenDecimals
             );
             setTokenBalance(bal);
@@ -97,10 +135,10 @@ export function useBurn({ walletAddress, getProvider, openWalletModal }: UseBurn
 
         if (!confirmed) return false;
 
-        // Phase 3: Submit to create pending record
+        // Phase 3: Submit to create pending record using EVM address
         setBurnStatus("signing");
         const submission = await submitBurn(
-          walletAddress,
+          evmAddress,
           query,
           est.tokenAmount!,
           est.complexity!
@@ -136,6 +174,7 @@ export function useBurn({ walletAddress, getProvider, openWalletModal }: UseBurn
 
         return true;
       } catch (err: any) {
+        console.error("[useBurn] Error:", err);
         const msg = err?.message || "Burn failed";
         if (err?.code === 4001 || msg.includes("rejected") || msg.includes("denied")) {
           cancelBurn();

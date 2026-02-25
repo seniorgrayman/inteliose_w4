@@ -47,26 +47,47 @@ export async function submitBurn(
   tokenAmount: number,
   complexity: string
 ): Promise<BurnSubmission> {
-  const resp = await fetch(`${API_BASE}/submit`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ walletAddress, query, tokenAmount, complexity }),
-  });
-  if (!resp.ok) throw new Error(`Submit failed: ${resp.status}`);
-  return resp.json();
+  const payload = { walletAddress, query, tokenAmount, complexity };
+
+  // Retry once on server error (Firestore cold-start resilience)
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const resp = await fetch(`${API_BASE}/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (resp.ok) return resp.json();
+    if (resp.status >= 500 && attempt === 0) {
+      await new Promise((r) => setTimeout(r, 1500));
+      continue;
+    }
+    const body = await resp.json().catch(() => ({}));
+    throw new Error(body.error || `Submit failed: ${resp.status}`);
+  }
+  throw new Error("Submit failed after retries");
 }
 
 export async function processBurn(
   burnId: string,
   txHash: string
 ): Promise<BurnVerification> {
-  const resp = await fetch(`${API_BASE}/process`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ burnId, txHash }),
-  });
-  if (!resp.ok) throw new Error(`Process failed: ${resp.status}`);
-  return resp.json();
+  const payload = { burnId, txHash };
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const resp = await fetch(`${API_BASE}/process`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (resp.ok) return resp.json();
+    if (resp.status >= 500 && attempt === 0) {
+      await new Promise((r) => setTimeout(r, 2000));
+      continue;
+    }
+    const body = await resp.json().catch(() => ({}));
+    throw new Error(body.error || `Process failed: ${resp.status}`);
+  }
+  throw new Error("Process failed after retries");
 }
 
 // ─── On-Chain Operations ───────────────────────────────────────────────

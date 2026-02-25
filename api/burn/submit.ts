@@ -44,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const docRef = await addDoc(collection(db, "burn_transactions"), {
+    const burnData = {
       wallet_address: walletAddress.toLowerCase(),
       query_text: query.trim().slice(0, 2000),
       token_address: tokenAddress,
@@ -57,7 +57,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error_message: null,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),
-    });
+    };
+
+    // Retry Firestore write once on failure (cold-start resilience)
+    let docRef;
+    try {
+      docRef = await addDoc(collection(db, "burn_transactions"), burnData);
+    } catch (firstErr: any) {
+      console.warn("Burn submit first attempt failed, retrying:", firstErr.message);
+      await new Promise((r) => setTimeout(r, 1000));
+      docRef = await addDoc(collection(db, "burn_transactions"), burnData);
+    }
 
     return res.status(200).json({
       burnId: docRef.id,
@@ -67,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       deadAddress: "0x000000000000000000000000000000000000dEaD",
     });
   } catch (err: any) {
-    console.error("Burn submit error:", err.message);
-    return res.status(500).json({ error: "Internal error" });
+    console.error("Burn submit error:", err.message, err.stack);
+    return res.status(500).json({ error: `Burn record creation failed: ${err.message}` });
   }
 }

@@ -45,9 +45,11 @@ export default function BurnConfirmModal({
   const symbol = estimate.tokenSymbol || "TOKEN";
   const amount = estimate.tokenAmount || 0;
   const usdCost = estimate.usdCost;
-  const hasBalance = tokenBalance != null && tokenBalance >= amount;
+  const balanceKnown = tokenBalance != null;
+  const hasBalance = balanceKnown && tokenBalance >= amount;
   const isProcessing = burnStatus === "signing" || burnStatus === "confirming";
   const isError = burnStatus === "error";
+  const canBurn = hasBalance && !isProcessing;
 
   return (
     <AnimatePresence>
@@ -210,7 +212,7 @@ export default function BurnConfirmModal({
                   </motion.div>
 
                   {/* Insufficient balance warning */}
-                  {tokenBalance != null && !hasBalance && (
+                  {balanceKnown && !hasBalance && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -220,7 +222,26 @@ export default function BurnConfirmModal({
                       <div>
                         <p className="text-red-600 text-xs font-display font-semibold">Insufficient Balance</p>
                         <p className="text-red-500/70 text-[11px] mt-0.5 font-display">
-                          You need {(amount - tokenBalance).toLocaleString()} more {symbol}
+                          {tokenBalance === 0
+                            ? `You don't hold any ${symbol} tokens. Buy ${symbol} on Base to continue.`
+                            : `You need ${(amount - tokenBalance!).toLocaleString()} more ${symbol}`}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Balance check failed */}
+                  {!balanceKnown && burnStatus === "awaiting_confirmation" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="flex items-start gap-2.5 p-4 rounded-2xl bg-amber-500/[0.06] border border-amber-500/15"
+                    >
+                      <AlertTriangle size={16} className="text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-amber-600 text-xs font-display font-semibold">Unable to verify balance</p>
+                        <p className="text-amber-500/70 text-[11px] mt-0.5 font-display">
+                          Make sure your wallet is connected to Base network.
                         </p>
                       </div>
                     </motion.div>
@@ -274,10 +295,10 @@ export default function BurnConfirmModal({
                     Cancel
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.03, y: -1, boxShadow: "0 12px 40px hsl(240 100% 50% / 0.25)" }}
-                    whileTap={{ scale: 0.97 }}
+                    whileHover={canBurn ? { scale: 1.03, y: -1, boxShadow: "0 12px 40px hsl(240 100% 50% / 0.25)" } : {}}
+                    whileTap={canBurn ? { scale: 0.97 } : {}}
                     onClick={onConfirm}
-                    disabled={isProcessing || (tokenBalance != null && !hasBalance)}
+                    disabled={!canBurn}
                     className="flex-1 px-4 py-3.5 rounded-2xl bg-primary text-primary-foreground text-sm font-display font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_6px_25px_hsl(var(--primary)/0.3),0_1px_0_0_hsl(0_0%_100%/0.15)_inset]"
                   >
                     {isProcessing ? (
@@ -285,7 +306,7 @@ export default function BurnConfirmModal({
                     ) : (
                       <Zap size={16} />
                     )}
-                    {isProcessing ? "Processing..." : "Burn & Analyze"}
+                    {isProcessing ? "Processing..." : !balanceKnown ? "Balance Unknown" : !hasBalance ? "Insufficient Balance" : "Burn & Analyze"}
                   </motion.button>
                 </div>
               </div>
