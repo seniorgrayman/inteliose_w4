@@ -3,7 +3,7 @@
  * Connects to the local backend server for A2A and ERC-8004 data
  */
 
-const BACKEND_BASE = ""; // Uses Vite proxy (/intel/*, /a2a, /.well-known)
+const BACKEND_BASE = "/api"; // Vercel serverless functions at /api/*
 
 // --- ERC-8004 ---
 
@@ -155,7 +155,7 @@ export interface AgentCard {
 
 export async function fetchAgentCard(): Promise<AgentCard | null> {
   try {
-    const res = await fetch(`${BACKEND_BASE}/.well-known/agent-card.json`, {
+    const res = await fetch(`${BACKEND_BASE}/well-known/agent-card`, {
       signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
