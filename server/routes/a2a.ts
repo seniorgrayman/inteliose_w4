@@ -43,8 +43,8 @@ router.post("/a2a", async (req, res) => {
  * GET /intel/a2a/stats
  * Dashboard endpoint — A2A activity stats
  */
-router.get("/intel/a2a/stats", (_req, res) => {
-  const stats = getA2AStats();
+router.get("/intel/a2a/stats", async (_req, res) => {
+  const stats = await getA2AStats();
   res.json(stats);
 });
 
@@ -52,9 +52,9 @@ router.get("/intel/a2a/stats", (_req, res) => {
  * GET /intel/a2a/tasks
  * Dashboard endpoint — recent A2A tasks for activity feed
  */
-router.get("/intel/a2a/tasks", (req, res) => {
+router.get("/intel/a2a/tasks", async (req, res) => {
   const limit = parseInt(req.query.limit as string) || 20;
-  const tasks = getRecentTasks(limit);
+  const tasks = await getRecentTasks(limit);
   res.json({ tasks });
 });
 
