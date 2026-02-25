@@ -1,18 +1,19 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   ArrowRight, Clock, DollarSign, BarChart3, Droplets, TrendingUp,
   Percent, Activity, Globe, FileText, MessageCircle, ExternalLink,
   ChevronDown, Search, Sparkles, Wallet, Shield, Zap, Radio, Copy, Check, BarChart2,
-  Fingerprint, FileCode
+  Fingerprint, FileCode, LogOut
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
+import { truncateAddress } from "@/components/WalletConnectModal";
 import ConLaunchLiveSection from "@/components/ConLaunchLiveSection";
 import AgentStatusCard from "@/components/AgentStatusCard";
 import A2AActivityFeed from "@/components/A2AActivityFeed";
 import AgentCardPreview from "@/components/AgentCardPreview";
 import BurnConfirmModal from "@/components/BurnConfirmModal";
+import { useWallet, getEVMProviderForType } from "@/contexts/WalletContext";
 import { useBurn } from "@/hooks/useBurn";
 import type { EVMProvider } from "@/types/wallet";
 import { getToken as fetchConLaunchToken } from "@/lib/conlaunch";
@@ -110,23 +111,29 @@ const Dashboard = () => {
   const [currentToken, setCurrentToken] = useState<any | null>(null);
   const [holders, setHolders] = useState<HolderDistribution | null>(null);
   const [mintAuthority, setMintAuthority] = useState<string | null>(null);
-  const [walletModalOpen, setWalletModalOpen] = useState(false);
-  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
-  const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
+  const { isConnected, fullWalletAddress, walletType, openConnectModal, disconnect } = useWallet();
+  const connectedAddress = isConnected ? fullWalletAddress : null;
   const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch" | "agent-status" | "a2a-activity" | "agent-card">("analyze");
+  const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
+  const walletDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close wallet dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (walletDropdownRef.current && !walletDropdownRef.current.contains(e.target as Node)) {
+        setWalletDropdownOpen(false);
+      }
+    };
+    if (walletDropdownOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [walletDropdownOpen]);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   // ─── EVM Provider + Burn Integration ───
   const getEVMProvider = useCallback((): EVMProvider | null => {
-    if (connectedWallet === "phantom" && (window as any).phantom?.ethereum) {
-      return (window as any).phantom.ethereum as EVMProvider;
-    }
-    if (connectedWallet === "metamask" && (window as any).ethereum) {
-      return (window as any).ethereum as EVMProvider;
-    }
-    return null;
-  }, [connectedWallet]);
+    return getEVMProviderForType(walletType) as EVMProvider | null;
+  }, [walletType]);
 
   const {
     requestBurn,
@@ -140,18 +147,13 @@ const Dashboard = () => {
   } = useBurn({
     walletAddress: connectedAddress,
     getProvider: getEVMProvider,
-    openWalletModal: () => setWalletModalOpen(true),
+    openWalletModal: openConnectModal,
   });
 
   const handleCopyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
     setCopiedAddress(address);
     setTimeout(() => setCopiedAddress(null), 2000);
-  };
-
-  const handleWalletConnected = (address: string, wallet: WalletType) => {
-    setConnectedAddress(address);
-    setConnectedWallet(wallet);
   };
 
   const handleAnalyze = async () => {
@@ -274,19 +276,73 @@ const Dashboard = () => {
               ← Back to Home
             </Link>
             {connectedAddress ? (
-              <motion.button
-                initial={{ scale: 0.95 }}
-                animate={{ scale: 1 }}
-                className="bg-primary/[0.06] border border-primary/15 text-foreground px-5 py-2.5 rounded-2xl text-sm transition-all font-display flex items-center gap-2 shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset,0_0_20px_hsl(var(--primary)/0.06)]"
-              >
-                <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.5)] animate-pulse" />
-                {truncateAddress(connectedAddress)}
-              </motion.button>
+              <div className="relative" ref={walletDropdownRef}>
+                <motion.button
+                  initial={{ scale: 0.95 }}
+                  animate={{ scale: 1 }}
+                  onClick={() => setWalletDropdownOpen((p) => !p)}
+                  className="bg-primary/[0.06] border border-primary/15 text-foreground px-5 py-2.5 rounded-2xl text-sm transition-all font-display flex items-center gap-2 shadow-[0_1px_0_0_hsl(0_0%_100%/0.3)_inset,0_0_20px_hsl(var(--primary)/0.06)] hover:bg-primary/[0.1] cursor-pointer"
+                >
+                  <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.5)] animate-pulse" />
+                  {truncateAddress(connectedAddress)}
+                  <ChevronDown size={12} className={`text-muted-foreground transition-transform ${walletDropdownOpen ? "rotate-180" : ""}`} />
+                </motion.button>
+
+                <AnimatePresence>
+                  {walletDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full mt-2 w-56 bg-card/95 backdrop-blur-2xl border border-[hsl(var(--border)/0.5)] rounded-2xl shadow-[0_20px_60px_-15px_hsl(0_0%_0%/0.15),0_1px_0_0_hsl(0_0%_100%/0.4)_inset] overflow-hidden z-50"
+                    >
+                      <div className="px-4 py-3 border-b border-border/30">
+                        <p className="text-[10px] text-muted-foreground/60 font-display font-bold uppercase tracking-[0.12em]">Connected</p>
+                        <p className="text-xs text-foreground font-mono mt-1">{truncateAddress(connectedAddress)}</p>
+                      </div>
+                      <div className="py-1.5">
+                        <button
+                          onClick={() => {
+                            window.open(`https://basescan.org/address/${connectedAddress}`, "_blank");
+                            setWalletDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-primary/[0.05] hover:text-foreground transition-colors font-display"
+                        >
+                          <ExternalLink size={14} className="text-muted-foreground/60" />
+                          View on Basescan
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(connectedAddress);
+                            setWalletDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-primary/[0.05] hover:text-foreground transition-colors font-display"
+                        >
+                          <Copy size={14} className="text-muted-foreground/60" />
+                          Copy Address
+                        </button>
+                        <div className="h-px bg-border/30 mx-3 my-1" />
+                        <button
+                          onClick={() => {
+                            disconnect();
+                            setWalletDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-destructive/80 hover:bg-destructive/[0.05] hover:text-destructive transition-colors font-display"
+                        >
+                          <LogOut size={14} />
+                          Disconnect
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             ) : (
               <motion.button
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setWalletModalOpen(true)}
+                onClick={openConnectModal}
                 className="bg-foreground text-background px-6 py-2.5 rounded-2xl text-sm hover:bg-foreground/90 transition-all font-display font-semibold flex items-center gap-2 shadow-[0_4px_15px_hsl(0_0%_0%/0.15),0_1px_3px_hsl(0_0%_0%/0.1)]"
               >
                 <Wallet size={14} />
@@ -469,11 +525,11 @@ const Dashboard = () => {
 
                 <div className="flex items-center gap-3 flex-wrap w-full md:w-auto">
                   <motion.button
-                    whileHover={{ scale: 1.03, y: -2, boxShadow: "0 12px 40px hsl(240 100% 50% / 0.25)" }}
-                    whileTap={{ scale: 0.97 }}
+                    whileHover={!tokenAddress.trim() || isAnalyzing ? {} : { scale: 1.03, y: -2, boxShadow: "0 12px 40px hsl(240 100% 50% / 0.25)" }}
+                    whileTap={!tokenAddress.trim() || isAnalyzing ? {} : { scale: 0.97 }}
                     onClick={handleAnalyze}
-                    disabled={isAnalyzing}
-                    className="bg-primary text-primary-foreground px-6 md:px-8 py-3 md:py-4 rounded-2xl text-sm font-display font-semibold flex items-center gap-2.5 transition-all disabled:opacity-50 whitespace-nowrap shadow-[0_6px_25px_hsl(var(--primary)/0.3),0_1px_0_0_hsl(0_0%_100%/0.15)_inset] w-full md:w-auto justify-center"
+                    disabled={isAnalyzing || !tokenAddress.trim()}
+                    className="bg-primary text-primary-foreground px-6 md:px-8 py-3 md:py-4 rounded-2xl text-sm font-display font-semibold flex items-center gap-2.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap shadow-[0_6px_25px_hsl(var(--primary)/0.3),0_1px_0_0_hsl(0_0%_100%/0.15)_inset] w-full md:w-auto justify-center"
                   >
                     {isAnalyzing ? (
                       <>
@@ -848,12 +904,6 @@ const Dashboard = () => {
           <AgentCardPreview />
         )}
       </div>
-
-      <WalletConnectModal
-        isOpen={walletModalOpen}
-        onClose={() => setWalletModalOpen(false)}
-        onConnected={handleWalletConnected}
-      />
 
       <BurnConfirmModal
         open={showBurnModal}

@@ -1,281 +1,29 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Wallet, Loader2, Zap, Shield, ArrowRight } from "lucide-react";
+import { X, Loader2, Zap, Shield, ArrowRight } from "lucide-react";
+import { useWallet, type WalletType } from "@/contexts/WalletContext";
 import phantomLogo from "@/assets/phantom-logo.jpg";
 import metamaskLogo from "@/assets/metamask-logo.png";
-
-// Polyfill for global object
-if (typeof globalThis !== "undefined" && typeof (globalThis as any).global === "undefined") {
-  (globalThis as any).global = globalThis;
-}
-
-type WalletType = "phantom" | "metamask";
-
-interface WalletConnectModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConnected: (address: string, wallet: WalletType) => void;
-}
 
 const truncateAddress = (addr: string) =>
   addr.length > 10 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
 
-// Lazy load WalletConnectProvider to avoid global issues
-let WalletConnectProvider: any = null;
-
-const initWalletConnect = async () => {
-  if (!WalletConnectProvider) {
-    const module = await import("@walletconnect/web3-provider");
-    WalletConnectProvider = module.default;
-  }
-  return WalletConnectProvider;
-};
-
-// Mobile detection utility
-const isMobileDevice = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-};
-
-// Deep link utilities for mobile wallets
-const deepLinkUtils = {
-  phantom: {
-    scheme: "phantom://",
-    deeplink: (url: string) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}`,
-    appLink: "https://phantom.app",
-  },
-  metamask: {
-    scheme: "metamask://",
-    deeplink: (url: string) => `https://metamask.app.link/dapp/${url}`,
-    appLink: "https://metamask.io",
-  },
-};
-
-// Check if wallet app is installed on mobile
-const isWalletAppInstalled = async (walletType: WalletType): Promise<boolean> => {
-  if (!isMobileDevice()) return false;
-
-  const timeout = new Promise((resolve) => setTimeout(() => resolve(false), 1500));
-  
-  if (walletType === "phantom") {
-    // Try to detect Phantom app
-    const phantomCheck = new Promise((resolve) => {
-      const iframe = document.createElement("iframe");
-      iframe.style.display = "none";
-      iframe.src = "phantom://";
-      iframe.onload = () => {
-        document.body.removeChild(iframe);
-        resolve(true);
-      };
-      iframe.onerror = () => {
-        document.body.removeChild(iframe);
-        resolve(false);
-      };
-      document.body.appendChild(iframe);
-    });
-    
-    return Promise.race([phantomCheck, timeout]) as Promise<boolean>;
-  }
-
-  if (walletType === "metamask") {
-    // Try to detect MetaMask app
-    const metamaskCheck = new Promise((resolve) => {
-      const iframe = document.createElement("iframe");
-      iframe.style.display = "none";
-      iframe.src = "metamask://";
-      iframe.onload = () => {
-        document.body.removeChild(iframe);
-        resolve(true);
-      };
-      iframe.onerror = () => {
-        document.body.removeChild(iframe);
-        resolve(false);
-      };
-      document.body.appendChild(iframe);
-    });
-    
-    return Promise.race([metamaskCheck, timeout]) as Promise<boolean>;
-  }
-
-  return false;
-};
-
-// Initiate deep link to wallet app
-const initiateDeepLink = (walletType: WalletType) => {
-  const currentUrl = window.location.href;
-  const utils = deepLinkUtils[walletType];
-
-  if (walletType === "phantom") {
-    // Phantom deeplink format
-    const deeplink = utils.deeplink(currentUrl);
-    window.location.href = deeplink;
-  } else if (walletType === "metamask") {
-    // MetaMask deeplink format
-    window.location.href = `metamask://dapp/${window.location.hostname}${window.location.pathname}`;
-  }
-};
-
-const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModalProps) => {
+const WalletConnectModal = () => {
+  const { isModalOpen, closeModal, connect } = useWallet();
   const [connecting, setConnecting] = useState<WalletType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const connectPhantom = useCallback(async () => {
+  const handleConnect = async (type: WalletType) => {
     setError(null);
-    setConnecting("phantom");
+    setConnecting(type);
     try {
-      const isMobile = isMobileDevice();
-
-      // First, check if we have injected Phantom provider (e.g., already in Phantom app)
-      const solanaProvider = (window as any)?.phantom?.solana;
-      if (solanaProvider?.isPhantom) {
-        try {
-          const resp = await solanaProvider.connect();
-          const address = resp.publicKey.toString();
-          localStorage.setItem("walletAddress", address);
-          localStorage.setItem("walletType", "phantom");
-          onConnected(address, "phantom");
-          onClose();
-          return;
-        } catch (e: any) {
-          console.log("Injected Phantom provider failed:", e?.message);
-          // If injected provider fails on mobile, continue to deep link as fallback
-          if (!isMobile) {
-            setError(e?.message || "Connection rejected.");
-            setConnecting(null);
-            return;
-          }
-        }
-      }
-
-      if (isMobile) {
-        // Mobile: Try WalletConnect first, then fallback to deeplink
-        try {
-          const Provider = await initWalletConnect();
-          const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
-          
-          const provider = new Provider({
-            projectId: projectId || "5261912a5c184ed019675c830f491d1a",
-            chains: [1, 8453, 137],
-            rpcMap: {
-              1: "https://eth-mainnet.g.alchemy.com/v2/demo",
-              8453: "https://mainnet.base.org",
-              137: "https://polygon-rpc.com",
-            },
-            methods: ["eth_sendTransaction", "eth_signTransaction", "personal_sign", "eth_sign"],
-          });
-
-          await provider.enable();
-          const accounts = provider.accounts;
-          
-          if (accounts?.[0]) {
-            localStorage.setItem("walletAddress", accounts[0]);
-            localStorage.setItem("walletType", "phantom");
-            onConnected(accounts[0], "phantom");
-            onClose();
-            return;
-          }
-        } catch (wcError: any) {
-          console.log("WalletConnect failed, attempting Phantom deeplink...");
-          // Fallback to Phantom deeplink - this will open the app and keep user there
-          try {
-            initiateDeepLink("phantom");
-            // If deeplink succeeds, the connection will be established within the app
-            // Note: Connection handling may need to be managed via window events or callback
-            return;
-          } catch (e) {
-            setError("Phantom not found. Install from: https://phantom.app");
-            setConnecting(null);
-            return;
-          }
-        }
-      }
-
-      setError("Phantom wallet not detected. Please install the extension or app.");
+      await connect(type);
     } catch (e: any) {
-      setError(e?.message || "Connection rejected.");
+      setError(e?.message || "Connection failed.");
     } finally {
       setConnecting(null);
     }
-  }, [onConnected, onClose]);
-
-  const connectMetaMask = useCallback(async () => {
-    setError(null);
-    setConnecting("metamask");
-    try {
-      const isMobile = isMobileDevice();
-
-      // First, check if we have injected ethereum provider (e.g., already in MetaMask app or extension)
-      const evmProvider = (window as any)?.ethereum;
-      if (evmProvider?.isMetaMask) {
-        try {
-          const accounts = await evmProvider.request({ method: "eth_requestAccounts" });
-          if (accounts?.[0]) {
-            localStorage.setItem("walletAddress", accounts[0]);
-            localStorage.setItem("walletType", "metamask");
-            onConnected(accounts[0], "metamask");
-            onClose();
-            return;
-          }
-        } catch (e: any) {
-          console.log("Injected provider request failed:", e?.message);
-          // If injected provider fails on mobile, continue to deep link as fallback
-          if (!isMobile) {
-            setError(e?.message || "Connection rejected.");
-            setConnecting(null);
-            return;
-          }
-        }
-      }
-
-      if (isMobile) {
-        // Mobile: Try WalletConnect first, then fallback to deeplink
-        try {
-          const Provider = await initWalletConnect();
-          const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
-          
-          const provider = new Provider({
-            projectId: projectId || "5261912a5c184ed019675c830f491d1a",
-            chains: [1, 8453, 137],
-            rpcMap: {
-              1: "https://eth-mainnet.g.alchemy.com/v2/demo",
-              8453: "https://mainnet.base.org",
-              137: "https://polygon-rpc.com",
-            },
-            methods: ["eth_sendTransaction", "eth_signTransaction", "personal_sign", "eth_sign"],
-          });
-
-          await provider.enable();
-          const accounts = provider.accounts;
-          
-          if (accounts?.[0]) {
-            localStorage.setItem("walletAddress", accounts[0]);
-            localStorage.setItem("walletType", "metamask");
-            onConnected(accounts[0], "metamask");
-            onClose();
-            return;
-          }
-        } catch (wcError: any) {
-          console.log("WalletConnect failed, attempting MetaMask deeplink...");
-          // Fallback to MetaMask deeplink - this will open the app and keep user there
-          try {
-            initiateDeepLink("metamask");
-            // If deeplink succeeds, the connection will be established within the app
-            // Note: Connection handling may need to be managed via window events or callback
-            return;
-          } catch (e) {
-            setError("MetaMask not found. Install from: https://metamask.io");
-            setConnecting(null);
-            return;
-          }
-        }
-      }
-
-      setError("MetaMask not detected. Please install the extension or app.");
-    } catch (e: any) {
-      setError(e?.message || "Connection rejected.");
-    } finally {
-      setConnecting(null);
-    }
-  }, [onConnected, onClose]);
+  };
 
   const wallets = [
     {
@@ -283,7 +31,6 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
       name: "Phantom",
       description: "Base wallet",
       logo: phantomLogo,
-      connect: connectPhantom,
       chain: "Base / Solana",
     },
     {
@@ -291,23 +38,22 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
       name: "MetaMask",
       description: "EVM wallet (Base, ETH)",
       logo: metamaskLogo,
-      connect: connectMetaMask,
       chain: "Base / EVM",
     },
   ];
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isModalOpen && (
         <>
-          {/* Backdrop — white frosted */}
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-[100] bg-[hsl(0_0%_100%/0.6)] backdrop-blur-2xl"
-            onClick={onClose}
+            onClick={closeModal}
           />
 
           {/* Modal */}
@@ -323,7 +69,7 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
               <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-64 rounded-full bg-primary/[0.06] blur-[120px] pointer-events-none" />
               <div className="absolute -bottom-20 -right-20 w-60 h-60 rounded-full bg-primary/[0.04] blur-[100px] pointer-events-none" />
 
-              {/* Main Card — Dashboard-style glassmorphism */}
+              {/* Card */}
               <div className="relative rounded-[28px] bg-gradient-to-b from-card/95 to-card/85 backdrop-blur-3xl border border-[hsl(var(--border)/0.4)] shadow-[0_1px_0_0_hsl(0_0%_100%/0.6)_inset,0_-1px_0_0_hsl(0_0%_0%/0.04)_inset,0_30px_80px_-20px_hsl(0_0%_0%/0.12),0_2px_8px_-2px_hsl(0_0%_0%/0.06)] overflow-hidden">
                 {/* Bevel highlights */}
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(0_0%_100%/0.9)] to-transparent rounded-t-[28px] pointer-events-none z-20" />
@@ -360,13 +106,12 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
                       transition={{ delay: 0.3 }}
                       whileHover={{ scale: 1.1, rotate: 90 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={onClose}
+                      onClick={closeModal}
                       className="w-9 h-9 rounded-xl bg-gradient-to-b from-secondary/60 to-secondary/30 border border-[hsl(var(--border)/0.5)] flex items-center justify-center text-muted-foreground hover:text-foreground transition-all shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset]"
                     >
                       <X size={14} />
                     </motion.button>
                   </div>
-
                 </div>
 
                 {/* Wallet Options */}
@@ -379,7 +124,7 @@ const WalletConnectModal = ({ isOpen, onClose, onConnected }: WalletConnectModal
                       transition={{ delay: 0.35 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
                       whileHover={{ y: -3, scale: 1.01, boxShadow: "0 15px 50px -15px hsl(var(--primary) / 0.12)" }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={wallet.connect}
+                      onClick={() => handleConnect(wallet.id)}
                       disabled={connecting !== null}
                       className="w-full group flex items-center gap-4 p-5 rounded-[20px] border border-[hsl(var(--border)/0.4)] bg-gradient-to-b from-secondary/50 to-secondary/25 hover:border-primary/25 transition-all disabled:opacity-50 relative overflow-hidden shadow-[0_1px_0_0_hsl(0_0%_100%/0.4)_inset,0_2px_6px_-2px_hsl(0_0%_0%/0.05)]"
                     >
