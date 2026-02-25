@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Environment files (contain private keys!)
+.env
+server/.env
+server/erc8004/.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

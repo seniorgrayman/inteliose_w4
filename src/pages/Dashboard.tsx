@@ -3,11 +3,15 @@ import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   ArrowRight, Clock, DollarSign, BarChart3, Droplets, TrendingUp,
   Percent, Activity, Globe, FileText, MessageCircle, ExternalLink,
-  ChevronDown, Search, Sparkles, Wallet, Shield, Zap, Radio, Copy, Check, BarChart2
+  ChevronDown, Search, Sparkles, Wallet, Shield, Zap, Radio, Copy, Check, BarChart2,
+  Fingerprint, FileCode
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import WalletConnectModal, { truncateAddress, type WalletType } from "@/components/WalletConnectModal";
 import ConLaunchLiveSection from "@/components/ConLaunchLiveSection";
+import AgentStatusCard from "@/components/AgentStatusCard";
+import A2AActivityFeed from "@/components/A2AActivityFeed";
+import AgentCardPreview from "@/components/AgentCardPreview";
 import { getToken as fetchConLaunchToken } from "@/lib/conlaunch";
 import { fetchTokenData, fetchSecurityScan, generateAIAnalysis, fetchMintAuthority, fetchHolderDistribution, type AIAnalysis, type HolderDistribution } from "@/lib/tokendata";
 
@@ -106,7 +110,7 @@ const Dashboard = () => {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
-  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch">("analyze");
+  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch" | "agent-status" | "a2a-activity" | "agent-card">("analyze");
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -284,6 +288,41 @@ const Dashboard = () => {
           >
             <Radio size={14} />
             Clawn.ch
+          </button>
+          <button
+            onClick={() => setActiveTab("agent-status")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
+              activeTab === "agent-status"
+                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Fingerprint size={14} />
+            <span className="hidden sm:inline">Agent Status</span>
+            <span className="sm:hidden">Agent</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("a2a-activity")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
+              activeTab === "a2a-activity"
+                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Activity size={14} />
+            A2A
+          </button>
+          <button
+            onClick={() => setActiveTab("agent-card")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
+              activeTab === "agent-card"
+                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileCode size={14} />
+            <span className="hidden sm:inline">Agent Card</span>
+            <span className="sm:hidden">Card</span>
           </button>
         </div>
       </div>
@@ -761,6 +800,18 @@ const Dashboard = () => {
 
         {activeTab === "conlaunch" && (
           <ConLaunchLiveSection />
+        )}
+
+        {activeTab === "agent-status" && (
+          <AgentStatusCard />
+        )}
+
+        {activeTab === "a2a-activity" && (
+          <A2AActivityFeed />
+        )}
+
+        {activeTab === "agent-card" && (
+          <AgentCardPreview />
         )}
       </div>
 
