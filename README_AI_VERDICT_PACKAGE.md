@@ -166,7 +166,7 @@ This package contains everything needed to integrate the AI Verdict analysis sys
 
 ```bash
 # ✅ Required
-GEMINI_API_KEY=your_key_here
+VITE_GEMINI_API_KEY_II=your_key_here
 GEMINI_MODEL=gemini-2.5-flash
 
 # ✅ At least one required

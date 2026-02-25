@@ -4,7 +4,7 @@ import { REPUTATION_REGISTRY_ABI } from "./abis/ReputationRegistry.js";
 import { getContracts } from "./contracts.js";
 
 function getConfig() {
-  const useTestnet = process.env.ERC8004_TESTNET !== "false";
+  const useTestnet = process.env.VITE_ERC8004_TESTNET !== "false";
   const contracts = getContracts(useTestnet);
   const client = createPublicClient({
     chain: useTestnet ? baseSepolia : base,

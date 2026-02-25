@@ -154,7 +154,7 @@
 ### Step 1: Copy Configuration
 ```bash
 # Copy these environment variable names and setup process
-- GEMINI_API_KEY
+- VITE_GEMINI_API_KEY_II
 - GEMINI_MODEL
 - QUICKNODE_API_KEY (primary)
 - HELIUS_API_KEY (fallback)

@@ -215,7 +215,7 @@ Provide founder-centric strategic advice in JSON format:
 Be specific about founder actions they can take NOW to improve the token.`;
 
         // Use Gemini to generate founder-centric analysis
-        const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+        const geminiKey = import.meta.env.VITE_GEMINI_API_KEY_II || "";
         if (geminiKey) {
           try {
             const response = await Promise.race([

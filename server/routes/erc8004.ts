@@ -7,7 +7,7 @@ const router = Router();
 
 // Read agent ID lazily (env may be loaded after module init)
 function getAgentId(): bigint {
-  return BigInt(process.env.INTELIOSE_AGENT_ID || "0");
+  return BigInt(process.env.VITE_INTELIOSE_AGENT_ID || "0");
 }
 
 /**
@@ -15,7 +15,7 @@ function getAgentId(): bigint {
  * Returns Inteliose's ERC-8004 agent identity info
  */
 router.get("/intel/erc8004/agent", async (_req, res) => {
-  const USE_TESTNET = process.env.ERC8004_TESTNET !== "false";
+  const USE_TESTNET = process.env.VITE_ERC8004_TESTNET !== "false";
   const contracts = getContracts(USE_TESTNET);
 
   if (getAgentId() === 0n) {

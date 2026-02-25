@@ -1251,7 +1251,7 @@ const verdict = await fetchWithDedup(
 
 ```bash
 # Gemini API
-GEMINI_API_KEY=AIzaSyBZpeX5o2Se5QWCclGOQAQhK0_yuSRYPP4
+VITE_GEMINI_API_KEY_II=AIzaSyBZpeX5o2Se5QWCclGOQAQhK0_yuSRYPP4
 GEMINI_MODEL=gemini-2.5-flash
 
 # Solana RPC Providers
