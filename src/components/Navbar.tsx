@@ -1,7 +1,8 @@
-import { ArrowRight, Menu, Wallet, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ArrowRight, Wallet, X } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import WalletConnectModal, { truncateAddress, type WalletType } from "./WalletConnectModal";
+import { useWallet } from "@/contexts/WalletContext";
+import { truncateAddress } from "./WalletConnectModal";
 
 const navLinks = [
   { label: "Product", target: "context" },
@@ -18,24 +19,7 @@ const scrollTo = (id: string) => {
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [walletModalOpen, setWalletModalOpen] = useState(false);
-  const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
-  const [connectedWallet, setConnectedWallet] = useState<WalletType | null>(null);
-
-  // Restore wallet connection from localStorage on mount
-  useEffect(() => {
-    const savedAddress = localStorage.getItem("walletAddress");
-    const savedWallet = localStorage.getItem("walletType") as WalletType | null;
-    if (savedAddress && savedWallet) {
-      setConnectedAddress(savedAddress);
-      setConnectedWallet(savedWallet);
-    }
-  }, []);
-
-  const handleConnected = (address: string, wallet: WalletType) => {
-    setConnectedAddress(address);
-    setConnectedWallet(wallet);
-  };
+  const { isConnected, fullWalletAddress, openConnectModal } = useWallet();
 
   return (
     <>
@@ -59,14 +43,14 @@ const Navbar = () => {
             <Link to="/dashboard" className="hidden sm:inline-flex bg-transparent border border-[hsl(0_0%_100%/0.2)] text-white px-4 py-1.5 rounded-full text-sm hover:bg-[hsl(0_0%_100%/0.1)] transition-colors whitespace-nowrap">
               Launch App
             </Link>
-            {connectedAddress ? (
+            {isConnected && fullWalletAddress ? (
               <button className="bg-white text-foreground px-3 md:px-4 py-1.5 rounded-full text-xs md:text-sm hover:bg-blue-50 transition-colors whitespace-nowrap flex items-center gap-2 font-display">
                 <Wallet size={14} />
-                {truncateAddress(connectedAddress)}
+                {truncateAddress(fullWalletAddress)}
               </button>
             ) : (
               <button
-                onClick={() => setWalletModalOpen(true)}
+                onClick={openConnectModal}
                 className="bg-white text-foreground px-3 md:px-4 py-1.5 rounded-full text-xs md:text-sm hover:bg-blue-50 transition-colors whitespace-nowrap flex items-center gap-2"
               >
                 <Wallet size={14} />
@@ -75,9 +59,6 @@ const Navbar = () => {
               </button>
             )}
           </div>
-          {/* <button className="lg:hidden ml-1" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-          </button> */}
         </nav>
       </div>
 
@@ -114,12 +95,6 @@ const Navbar = () => {
           </div>
         </div>
       )}
-
-      <WalletConnectModal
-        isOpen={walletModalOpen}
-        onClose={() => setWalletModalOpen(false)}
-        onConnected={handleConnected}
-      />
     </>
   );
 };

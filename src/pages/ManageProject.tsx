@@ -3,40 +3,36 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Plus, Settings, Trash2, Clock, AlertCircle, Check, Copy } from "lucide-react";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import WalletConnectModal from "@/components/WalletConnectModal";
+import { useWallet } from "@/contexts/WalletContext";
 import { createProject, getUserProjects, deleteProject } from "@/lib/firebase/projects";
 import type { ProfileModel, Project } from "@/types/profile";
 
 const ProjectDashboard = () => {
   const navigate = useNavigate();
+  const { isConnected, fullWalletAddress, openConnectModal } = useWallet();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [copiedCA, setCopiedCA] = useState<string | null>(null);
-  const [showWalletModal, setShowWalletModal] = useState(false);
 
   const checkWalletConnected = (): boolean => {
-    const walletAddress = localStorage.getItem("walletAddress");
-    if (!walletAddress) {
-      setShowWalletModal(true);
+    if (!isConnected || !fullWalletAddress) {
+      openConnectModal();
       return false;
     }
     return true;
   };
 
-  // Load projects on mount
+  // Load projects when wallet is connected
   const loadProjects = useCallback(async () => {
     try {
       setLoading(true);
-      // Get user ID from wallet or local storage - optional now
-      const userId = localStorage.getItem("walletAddress");
-      if (userId) {
-        const userProjects = await getUserProjects(userId);
+      if (fullWalletAddress) {
+        const userProjects = await getUserProjects(fullWalletAddress);
         setProjects(userProjects.sort((a, b) => b.updatedAt - a.updatedAt));
       } else {
-        // Show empty state if no wallet connected
         setProjects([]);
       }
     } catch (err) {
@@ -44,20 +40,19 @@ const ProjectDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fullWalletAddress]);
 
   useEffect(() => {
     loadProjects();
   }, [loadProjects]);
 
   const handleCreateProject = async (profile: ProfileModel) => {
-    const userId = localStorage.getItem("walletAddress");
-    if (!userId) {
-      navigate("/");
+    if (!fullWalletAddress) {
+      openConnectModal();
       return;
     }
     try {
-      const newProject = await createProject(userId, profile);
+      const newProject = await createProject(fullWalletAddress, profile);
       setProjects((prev) => [newProject, ...prev]);
       setShowOnboarding(false);
       navigate(`/manage-project/${newProject.id}`);
@@ -315,15 +310,6 @@ const ProjectDashboard = () => {
       </div>
       </div>
 
-      {/* Wallet Connection Modal */}
-      <WalletConnectModal
-        isOpen={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
-        onConnected={() => {
-          setShowWalletModal(false);
-          // User is now connected, they can proceed with project creation
-        }}
-      />
     </div>
   );
 };

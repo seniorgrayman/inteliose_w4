@@ -1,6 +1,5 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Base-0052FF?style=for-the-badge&logo=coinbase&logoColor=white" alt="Base Chain" />
-  <img src="https://img.shields.io/badge/Solana-9945FF?style=for-the-badge&logo=solana&logoColor=white" alt="Solana" />
   <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
@@ -9,9 +8,9 @@
 
 # Inteliose
 
-**Autonomous on-chain intelligence agent for token risk profiling, failure-mode detection, and multi-chain analysis.**
+**Autonomous on-chain intelligence agent for token risk profiling, failure-mode detection, and Base chain analysis.**
 
-Inteliose is a Web3-native intelligence platform that provides structural risk analysis for tokens across Base and Solana. It operates as an autonomous agent with A2A (Agent-to-Agent) communication capabilities, ERC-8004 identity registration, and a token-burn access model that aligns user incentives with protocol sustainability.
+Inteliose is a Web3-native intelligence platform that provides structural risk analysis for tokens on Base. It operates as an autonomous agent with A2A (Agent-to-Agent) communication capabilities, ERC-8004 identity registration, and a token-burn access model that aligns user incentives with protocol sustainability.
 
 ---
 
@@ -37,7 +36,7 @@ Inteliose surfaces what dashboards don't — structural fragility, attention dec
 
 ### Key Capabilities
 
-- **Multi-chain token analysis** across Base (EVM) and Solana ecosystems
+- **Token analysis** on Base (EVM)
 - **Security scanning** for proxy contracts, hidden owners, mintable tokens, and suspicious functions
 - **AI-powered diagnostics** with founder-level risk recommendations
 - **Real-time memecoin launch tracking** via Clawnch integration
@@ -156,7 +155,7 @@ Resource multipliers are applied additively: real-time data (+50%), historical d
 Inteliose exposes a JSON-RPC 2.0 endpoint at `/a2a` for inter-agent communication. Other agents can request token health checks, risk baselines, and failure mode analysis programmatically.
 
 **Declared Skills:**
-- `token-health-check` — Multi-chain token safety analysis
+- `token-health-check` — Token safety analysis on Base
 - `risk-baseline` — Structural risk profiling
 
 ### ERC-8004 Registration
@@ -254,7 +253,7 @@ inteliose/
 │   │   ├── useBurn.ts
 │   │   └── useWalletConnection.ts
 │   ├── lib/                      # Core libraries
-│   │   ├── tokendata.ts          # Multi-chain token fetching
+│   │   ├── tokendata.ts          # Token data fetching
 │   │   ├── conlaunch.ts          # Memecoin launch tracking
 │   │   ├── inteliose-api.ts      # Backend API client
 │   │   └── firebase/             # Firebase client & Firestore ops
@@ -302,7 +301,7 @@ The following environment variables are required for deployment. All client-acce
 | `VITE_BURN_FALLBACK_TOKENS` | Fallback token amount when price unavailable |
 | `VITE_BASE_RPC_URL` | Base chain RPC endpoint |
 | `VITE_GEMINI_API_KEY_II` | Gemini AI API key for analysis |
-| `VITE_QUICKNODE_API_KEY` | QuickNode RPC for Solana data |
+| `VITE_QUICKNODE_API_KEY` | QuickNode RPC endpoint |
 | `VITE_ZERION_API_KEY_BASE` | Zerion API for Base token data |
 | `VITE_INTELIOSE_AGENT_ID` | ERC-8004 agent registry ID |
 
