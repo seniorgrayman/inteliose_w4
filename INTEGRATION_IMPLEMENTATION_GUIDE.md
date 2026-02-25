@@ -22,7 +22,7 @@ Create `.env.local`:
 
 ```bash
 # GEMINI AI (Required)
-GEMINI_API_KEY=your_gemini_api_key_here
+VITE_GEMINI_API_KEY_II=your_gemini_api_key_here
 GEMINI_MODEL=gemini-2.5-flash
 
 # SOLANA RPC PROVIDERS (At least one required)
@@ -520,7 +520,7 @@ const diagnoseCache = new Map<string, { at: number; body: AiDiagnosis }>();
 const diagnoseInFlight = new Map<string, Promise<AiDiagnosis>>();
 
 async function geminiDiagnose(body: ReqBody): Promise<AiDiagnosis> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  const apiKey = process.env.VITE_GEMINI_API_KEY_II?.trim();
   if (!apiKey) throw new Error("missing_gemini_key");
 
   const modelId = process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash";

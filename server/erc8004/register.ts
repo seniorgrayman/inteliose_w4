@@ -22,18 +22,18 @@ let privateKey: Hex;
 
 if (fs.existsSync(ENV_PATH)) {
   const envContent = fs.readFileSync(ENV_PATH, "utf-8");
-  const match = envContent.match(/AGENT_PRIVATE_KEY=(0x[a-fA-F0-9]{64})/);
+  const match = envContent.match(/VITE_AGENT_PRIVATE_KEY=(0x[a-fA-F0-9]{64})/);
   if (match) {
     privateKey = match[1] as Hex;
     console.log("Loaded existing agent wallet from .env");
   } else {
     privateKey = `0x${crypto.randomBytes(32).toString("hex")}` as Hex;
-    fs.appendFileSync(ENV_PATH, `\nAGENT_PRIVATE_KEY=${privateKey}\n`);
+    fs.appendFileSync(ENV_PATH, `\nVITE_AGENT_PRIVATE_KEY=${privateKey}\n`);
     console.log("Generated new wallet and saved to server/.env");
   }
 } else {
   privateKey = `0x${crypto.randomBytes(32).toString("hex")}` as Hex;
-  fs.writeFileSync(ENV_PATH, `AGENT_PRIVATE_KEY=${privateKey}\n`);
+  fs.writeFileSync(ENV_PATH, `VITE_AGENT_PRIVATE_KEY=${privateKey}\n`);
   console.log("Generated new wallet and created server/.env");
 }
 
@@ -187,16 +187,16 @@ async function main() {
 ║                                                              ║
 ║  NEXT STEP:                                                  ║
 ║  Add this to your server/.env:                               ║
-║  INTELIOSE_AGENT_ID=${agentId.padEnd(39)}║
-║  ERC8004_TESTNET=false                                       ║
+║  VITE_INTELIOSE_AGENT_ID=${agentId.padEnd(39)}║
+║  VITE_ERC8004_TESTNET=false                                       ║
 ╚══════════════════════════════════════════════════════════════╝
 `);
 
       // Auto-save agent ID to .env
       const envContent = fs.readFileSync(ENV_PATH, "utf-8");
-      if (!envContent.includes("INTELIOSE_AGENT_ID")) {
-        fs.appendFileSync(ENV_PATH, `INTELIOSE_AGENT_ID=${agentId}\n`);
-        fs.appendFileSync(ENV_PATH, `ERC8004_TESTNET=false\n`);
+      if (!envContent.includes("VITE_INTELIOSE_AGENT_ID")) {
+        fs.appendFileSync(ENV_PATH, `VITE_INTELIOSE_AGENT_ID=${agentId}\n`);
+        fs.appendFileSync(ENV_PATH, `VITE_ERC8004_TESTNET=false\n`);
         console.log("Agent ID saved to server/.env automatically.");
       }
     } else {

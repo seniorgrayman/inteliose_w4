@@ -49,7 +49,7 @@ app.get("/erc8004-registration.json", (req, res) => {
   const host = req.headers["x-forwarded-host"] || req.get("host");
   const baseUrl = `${protocol}://${host}`;
 
-  const agentId = process.env.INTELIOSE_AGENT_ID || "0";
+  const agentId = process.env.VITE_INTELIOSE_AGENT_ID || "0";
 
   res.json({
     type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",

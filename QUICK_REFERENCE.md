@@ -18,7 +18,7 @@
 
 ```bash
 # Must Have
-GEMINI_API_KEY=your_key
+VITE_GEMINI_API_KEY_II=your_key
 GEMINI_MODEL=gemini-2.5-flash
 
 # At Least One

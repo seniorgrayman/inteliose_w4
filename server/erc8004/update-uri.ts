@@ -17,12 +17,12 @@ import path from "path";
 const ENV_PATH = path.join(import.meta.dirname, ".env");
 const envContent = fs.readFileSync(ENV_PATH, "utf-8");
 
-const pkMatch = envContent.match(/AGENT_PRIVATE_KEY=(0x[a-fA-F0-9]{64})/);
-if (!pkMatch) { console.error("No AGENT_PRIVATE_KEY in .env"); process.exit(1); }
+const pkMatch = envContent.match(/VITE_AGENT_PRIVATE_KEY=(0x[a-fA-F0-9]{64})/);
+if (!pkMatch) { console.error("No VITE_AGENT_PRIVATE_KEY in .env"); process.exit(1); }
 const privateKey = pkMatch[1] as Hex;
 
-const idMatch = envContent.match(/INTELIOSE_AGENT_ID=(\d+)/);
-if (!idMatch) { console.error("No INTELIOSE_AGENT_ID in .env"); process.exit(1); }
+const idMatch = envContent.match(/VITE_INTELIOSE_AGENT_ID=(\d+)/);
+if (!idMatch) { console.error("No VITE_INTELIOSE_AGENT_ID in .env"); process.exit(1); }
 const agentId = BigInt(idMatch[1]);
 
 const account = privateKeyToAccount(privateKey);

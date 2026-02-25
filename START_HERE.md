@@ -180,7 +180,7 @@ AI fails → Return error, frontend uses telemetry-only
 
 ### Environment Variables (5 required)
 ```bash
-GEMINI_API_KEY=your_key                    # Google Gemini API
+VITE_GEMINI_API_KEY_II=your_key                    # Google Gemini API
 GEMINI_MODEL=gemini-2.5-flash              # Model choice
 QUICKNODE_API_KEY=https://...              # Primary RPC
 HELIUS_API_KEY=https://...                 # Fallback RPC

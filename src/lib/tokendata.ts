@@ -582,7 +582,7 @@ export async function generateAIAnalysis(
   chain: "Base" | "Solana"
 ): Promise<AIAnalysis | null> {
   try {
-    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY_II || "";
     if (!geminiKey) {
       console.warn("Gemini API key not configured");
       return null;
@@ -722,7 +722,7 @@ export async function generateFounderAIAnalysis(
   feesEarned: string
 ): Promise<string> {
   try {
-    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY_II || "";
     if (!geminiKey) {
       return "AI analysis not available - missing API configuration";
     }
