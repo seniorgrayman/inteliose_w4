@@ -2,7 +2,7 @@
  * Base RPC helper with fallback endpoints and timeout.
  */
 const BASE_RPC_ENDPOINTS = [
-  process.env.BASE_RPC_URL || "https://mainnet.base.org",
+  process.env.VITE_BASE_RPC_URL || "https://mainnet.base.org",
   "https://base.llamarpc.com",
   "https://1rpc.io/base",
 ];

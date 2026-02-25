@@ -1,11 +1,12 @@
 /**
  * POST /api/burn/submit
- * Create a pending burn record in Supabase, return burnId.
+ * Create a pending burn record in Firestore, return burnId.
  */
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { setCorsHeaders } from "../_lib/cors.js";
 import { checkRateLimit } from "../_lib/rate-limit.js";
-import { getSupabase } from "../_lib/supabase.js";
+import { db } from "../_lib/firebase.js";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 const WALLET_RE = /^0x[a-fA-F0-9]{40}$/;
 
@@ -18,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const rl = checkRateLimit(`submit:${ip}`, 10);
   if (!rl.allowed) return res.status(429).json({ error: "Rate limited" });
 
-  if (process.env.BURN_ENABLED !== "true") {
+  if (process.env.VITE_BURN_ENABLED !== "true") {
     return res.status(200).json({ burnRequired: false });
   }
 
@@ -37,39 +38,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Invalid complexity" });
   }
 
-  const tokenAddress = process.env.BURN_TOKEN_ADDRESS || "";
+  const tokenAddress = process.env.VITE_BURN_TOKEN_ADDRESS || "";
   if (!tokenAddress) {
     return res.status(503).json({ error: "Burn token not configured" });
   }
 
   try {
-    const supabase = getSupabase();
-
-    const { data, error } = await supabase
-      .from("burn_transactions")
-      .insert({
-        wallet_address: walletAddress.toLowerCase(),
-        query_text: query.trim().slice(0, 2000),
-        token_address: tokenAddress,
-        amount_burned: tokenAmount,
-        complexity,
-        status: "pending",
-        ai_model: "inteliose",
-        chain_id: 8453,
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      console.error("Supabase insert error:", error.message);
-      return res.status(500).json({ error: "Failed to create burn record" });
-    }
+    const docRef = await addDoc(collection(db, "burn_transactions"), {
+      wallet_address: walletAddress.toLowerCase(),
+      query_text: query.trim().slice(0, 2000),
+      token_address: tokenAddress,
+      amount_burned: tokenAmount,
+      complexity,
+      status: "pending",
+      ai_model: "inteliose",
+      chain_id: 8453,
+      burn_signature: null,
+      error_message: null,
+      created_at: serverTimestamp(),
+      updated_at: serverTimestamp(),
+    });
 
     return res.status(200).json({
-      burnId: data.id,
+      burnId: docRef.id,
       tokenAmount,
       tokenAddress,
-      tokenDecimals: parseInt(process.env.BURN_TOKEN_DECIMALS || "18", 10),
+      tokenDecimals: parseInt(process.env.VITE_BURN_TOKEN_DECIMALS || "18", 10),
       deadAddress: "0x000000000000000000000000000000000000dEaD",
     });
   } catch (err: any) {

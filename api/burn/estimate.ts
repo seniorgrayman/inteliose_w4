@@ -11,8 +11,8 @@ import { checkRateLimit } from "../_lib/rate-limit.js";
 import { getTokenPriceUsd, tokensForUsd } from "../_lib/price.js";
 import { calculateUsdCost } from "../_lib/complexity.js";
 
-const BURN_BASE_USD = parseFloat(process.env.BURN_USD_COST || "0.25");
-const FALLBACK_TOKENS = parseInt(process.env.BURN_FALLBACK_TOKENS || "200", 10);
+const BURN_BASE_USD = parseFloat(process.env.VITE_BURN_USD_COST || "0.25");
+const FALLBACK_TOKENS = parseInt(process.env.VITE_BURN_FALLBACK_TOKENS || "200", 10);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   setCorsHeaders(res, req.headers.origin);
@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const rl = checkRateLimit(`estimate:${ip}`, 30);
   if (!rl.allowed) return res.status(429).json({ error: "Rate limited" });
 
-  if (process.env.BURN_ENABLED !== "true") {
+  if (process.env.VITE_BURN_ENABLED !== "true") {
     return res.status(200).json({ burnRequired: false });
   }
 
@@ -35,9 +35,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Query too long (max 2000 chars)" });
   }
 
-  const tokenAddress = process.env.BURN_TOKEN_ADDRESS || "";
-  const tokenDecimals = parseInt(process.env.BURN_TOKEN_DECIMALS || "18", 10);
-  const tokenSymbol = process.env.BURN_TOKEN_SYMBOL || "TOKEN";
+  const tokenAddress = process.env.VITE_BURN_TOKEN_ADDRESS || "";
+  const tokenDecimals = parseInt(process.env.VITE_BURN_TOKEN_DECIMALS || "18", 10);
+  const tokenSymbol = process.env.VITE_BURN_TOKEN_SYMBOL || "TOKEN";
 
   const { usdCost, complexity, multipliers } = calculateUsdCost(query, BURN_BASE_USD);
 
