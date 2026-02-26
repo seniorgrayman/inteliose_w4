@@ -137,4 +137,35 @@ router.get("/farcaster/status", async (_req, res) => {
   }
 });
 
+/**
+ * GET /farcaster/casts
+ * Fetch recent casts from the bot
+ */
+router.get("/farcaster/casts", async (req, res) => {
+  try {
+    const botFid = getBotFid();
+    if (!botFid) {
+      return res.json({ casts: [] });
+    }
+
+    const { neynarClient } = await import("../farcaster/neynar-client.js");
+    const limit = Math.min(parseInt(req.query.limit as string) || 25, 50);
+    const result = await neynarClient().fetchCastsForUser({ fid: botFid, limit });
+    const casts = ((result as any)?.casts || []).map((c: any) => ({
+      hash: c.hash,
+      text: c.text || "",
+      timestamp: c.timestamp,
+      likes: c.reactions?.likes_count || 0,
+      recasts: c.reactions?.recasts_count || 0,
+      replies: c.replies?.count || 0,
+      parentHash: c.parent_hash || null,
+    }));
+
+    res.json({ casts });
+  } catch (err: any) {
+    console.error("Farcaster casts error:", err);
+    res.status(500).json({ error: "Failed to fetch casts" });
+  }
+});
+
 export default router;
