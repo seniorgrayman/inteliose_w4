@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { MessageCircle, ExternalLink, CheckCircle, AlertCircle, Clock, Radio, Users, Zap, Link2 } from "lucide-react";
-import { fetchFarcasterStatus, type FarcasterStatus } from "@/lib/farcaster-api";
+import { MessageCircle, ExternalLink, CheckCircle, AlertCircle, Clock, Radio, Users, Zap, Link2, Heart, Repeat2, MessageSquare } from "lucide-react";
+import { fetchFarcasterStatus, fetchFarcasterCasts, type FarcasterStatus, type FarcasterCast } from "@/lib/farcaster-api";
 
 const GlassCard = ({ children, className = "", glow = false }: { children: React.ReactNode; className?: string; glow?: boolean }) => {
   const ref = useRef(null);
@@ -51,7 +51,9 @@ const SectionLabel = ({ children, icon: Icon }: { children: React.ReactNode; ico
 
 export default function FarcasterStatusCard() {
   const [status, setStatus] = useState<FarcasterStatus | null>(null);
+  const [casts, setCasts] = useState<FarcasterCast[]>([]);
   const [loading, setLoading] = useState(true);
+  const [castsLoading, setCastsLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
@@ -61,6 +63,16 @@ export default function FarcasterStatusCard() {
       setLoading(false);
     }
     load();
+  }, []);
+
+  useEffect(() => {
+    async function loadCasts() {
+      setCastsLoading(true);
+      const data = await fetchFarcasterCasts(25);
+      setCasts(data);
+      setCastsLoading(false);
+    }
+    loadCasts();
   }, []);
 
   if (loading) {
@@ -172,10 +184,72 @@ export default function FarcasterStatusCard() {
             href={`https://warpcast.com/${profile.username}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
+            className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors mb-8"
           >
             View on Warpcast <ExternalLink size={10} />
           </a>
+        )}
+
+        {/* Bot Casts Feed */}
+        <SectionLabel icon={Radio}>Recent Casts</SectionLabel>
+
+        {castsLoading ? (
+          <div className="flex items-center gap-3 py-8 justify-center">
+            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+              <Clock size={14} className="text-primary" />
+            </motion.div>
+            <span className="text-sm text-muted-foreground font-display">Loading casts...</span>
+          </div>
+        ) : casts.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-sm text-muted-foreground/60 font-display">No casts yet</p>
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
+            {casts.map((cast, i) => (
+              <motion.div
+                key={cast.hash}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.4 }}
+              >
+                <InnerCard className="hover:border-primary/20 transition-all duration-300">
+                  <p className="text-sm text-foreground/90 leading-relaxed mb-3 whitespace-pre-wrap break-words">
+                    {cast.text}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5 text-muted-foreground/50">
+                        <Heart size={12} />
+                        <span className="text-[11px] font-display font-semibold">{cast.likes}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground/50">
+                        <Repeat2 size={12} />
+                        <span className="text-[11px] font-display font-semibold">{cast.recasts}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-muted-foreground/50">
+                        <MessageSquare size={12} />
+                        <span className="text-[11px] font-display font-semibold">{cast.replies}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] text-muted-foreground/40 font-display">
+                        {new Date(cast.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <a
+                        href={`https://warpcast.com/${profile?.username || "inteliose"}/${cast.hash.slice(0, 10)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary/50 hover:text-primary transition-colors"
+                      >
+                        <ExternalLink size={10} />
+                      </a>
+                    </div>
+                  </div>
+                </InnerCard>
+              </motion.div>
+            ))}
+          </div>
         )}
       </div>
     </GlassCard>

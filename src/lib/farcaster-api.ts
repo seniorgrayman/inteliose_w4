@@ -26,6 +26,29 @@ export interface FarcasterStatus {
   botActive: boolean;
 }
 
+export interface FarcasterCast {
+  hash: string;
+  text: string;
+  timestamp: string;
+  likes: number;
+  recasts: number;
+  replies: number;
+  parentHash: string | null;
+}
+
+export async function fetchFarcasterCasts(limit = 25): Promise<FarcasterCast[]> {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/farcaster/casts?limit=${limit}`, {
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return data.casts || [];
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchFarcasterStatus(): Promise<FarcasterStatus> {
   try {
     const res = await fetch(`${BACKEND_BASE}/farcaster/status`, {
