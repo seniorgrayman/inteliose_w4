@@ -13,6 +13,10 @@
       "destination": "/api/a2a"
     },
     {
+      "source": "/farcaster/frame",
+      "destination": "/api/farcaster/frame"
+    },
+    {
       "source": "/:path*",
       "destination": "/index.html"
     }
