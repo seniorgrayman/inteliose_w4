@@ -76,22 +76,22 @@ const AgentStatusComingSoonModal = ({ isOpen, onClose }: AgentStatusComingSoonMo
                   whileHover={{ scale: 1.05 }}
                   className="flex flex-col items-center gap-2 p-3 rounded-lg bg-purple-500/5 border border-purple-500/10"
                 >
-                  <Brain size={20} className="text-purple-400" />
-                  <span className="text-xs font-semibold text-purple-300">Intelligence</span>
+                  <Brain size={20} className="text-purple-700" />
+                  <span className="text-xs font-semibold text-purple-800">Intelligence</span>
                 </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex flex-col items-center gap-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10"
                 >
-                  <TrendingUp size={20} className="text-blue-400" />
-                  <span className="text-xs font-semibold text-blue-300">Performance</span>
+                  <TrendingUp size={20} className="text-blue-700" />
+                  <span className="text-xs font-semibold text-blue-800">Performance</span>
                 </motion.div>
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   className="flex flex-col items-center gap-2 p-3 rounded-lg bg-cyan-500/5 border border-cyan-500/10 col-span-2"
                 >
-                  <Shield size={20} className="text-cyan-400" />
-                  <span className="text-xs font-semibold text-cyan-300">Health Metrics</span>
+                  <Shield size={20} className="text-cyan-700" />
+                  <span className="text-xs font-semibold text-cyan-800">Health Metrics</span>
                 </motion.div>
               </div>
 
