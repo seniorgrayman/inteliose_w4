@@ -15,7 +15,6 @@ import AgentCardPreview from "@/components/AgentCardPreview";
 import BurnConfirmModal from "@/components/BurnConfirmModal";
 import ComingSoonModal from "@/components/ComingSoonModal";
 import ClankerComingSoonModal from "@/components/ClankerComingSoonModal";
-import AgentStatusComingSoonModal from "@/components/AgentStatusComingSoonModal";
 import AgentCardComingSoonModal from "@/components/AgentCardComingSoonModal";
 import FarcasterStatusCard from "@/components/FarcasterStatusCard";
 import { useWallet, getEVMProviderForType } from "@/contexts/WalletContext";
@@ -120,7 +119,7 @@ const Dashboard = () => {
   const connectedAddress = isConnected ? fullWalletAddress : null;
   const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch" | "agent-status" | "a2a-activity" | "agent-card" | "farcaster">("analyze");
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
-  const [comingSoonModal, setComingSoonModal] = useState<"clanker" | "agent-status" | "agent-card" | null>(null);
+  const [comingSoonModal, setComingSoonModal] = useState<"clanker" | "agent-card" | null>(null);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close wallet dropdown on outside click
@@ -382,8 +381,12 @@ const Dashboard = () => {
             Clanker
           </button>
           <button
-            onClick={() => setComingSoonModal("agent-status")}
-            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap text-muted-foreground hover:text-foreground`}
+            onClick={() => setActiveTab("agent-status")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
+              activeTab === "agent-status"
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
             <Fingerprint size={14} />
             <span className="hidden sm:inline">Agent Status</span>
@@ -927,12 +930,6 @@ const Dashboard = () => {
       {/* Clanker Coming Soon Modal */}
       <ClankerComingSoonModal
         isOpen={comingSoonModal === "clanker"}
-        onClose={() => setComingSoonModal(null)}
-      />
-
-      {/* Agent Status Coming Soon Modal */}
-      <AgentStatusComingSoonModal
-        isOpen={comingSoonModal === "agent-status"}
         onClose={() => setComingSoonModal(null)}
       />
 
