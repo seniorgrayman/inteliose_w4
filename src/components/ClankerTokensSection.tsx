@@ -195,185 +195,6 @@ export default function ClankerTokensSection() {
     setTimeout(() => setCopiedAddress(null), 2000);
   };
 
-  const AnalysisModal = () => {
-    if (!analysisModal || !selectedToken) return null;
-
-    return (
-      <AnimatePresence>
-        {analysisModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-            onClick={() => setAnalysisModal(false)}
-          >
-            <motion.div
-              initial={{ y: "100%", opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: "100%", opacity: 0 }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full md:w-full md:max-w-2xl md:rounded-[28px] rounded-t-[28px] bg-card border border-[hsl(var(--border)/0.4)] shadow-2xl max-h-[80vh] md:max-h-[90vh] overflow-y-auto"
-            >
-              {/* Header */}
-              <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-[hsl(var(--border)/0.3)] px-5 md:px-8 py-4 flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-display font-semibold text-foreground">
-                    {selectedToken.symbol}
-                  </h3>
-                  <p className="text-xs text-muted-foreground/60">{selectedToken.name}</p>
-                </div>
-                <button
-                  onClick={() => setAnalysisModal(false)}
-                  className="p-2 rounded-xl hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-all"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="px-5 md:px-8 py-6 space-y-6">
-                {analysis.isLoading ? (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                    >
-                      <Loader size={24} className="text-primary" />
-                    </motion.div>
-                    <p className="mt-4 text-sm text-muted-foreground">Analyzing token...</p>
-                  </div>
-                ) : analysis.error ? (
-                  <div className="bg-destructive/10 border border-destructive/20 rounded-2xl px-5 py-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle size={18} className="text-destructive mt-0.5 shrink-0" />
-                      <div>
-                        <p className="font-display font-semibold text-destructive">{analysis.error}</p>
-                        <p className="text-sm text-muted-foreground/80 mt-1">
-                          This token has not been deployed yet or cannot be found on DexScreener.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : analysis.tokenData ? (
-                  <>
-                    {/* Token Stats */}
-                    <GlassCard>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <InnerCard>
-                          <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">
-                            Price
-                          </p>
-                          <p className="text-lg font-display font-bold text-foreground">
-                            {formatPrice(analysis.tokenData.priceUsd)}
-                          </p>
-                        </InnerCard>
-                        <InnerCard>
-                          <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">
-                            Market Cap
-                          </p>
-                          <p className="text-lg font-display font-bold text-foreground">
-                            {formatLargeNumber(analysis.tokenData.fdv)}
-                          </p>
-                        </InnerCard>
-                        <InnerCard>
-                          <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">
-                            Liquidity
-                          </p>
-                          <p className="text-lg font-display font-bold text-foreground">
-                            {formatLargeNumber(analysis.tokenData.liquidity)}
-                          </p>
-                        </InnerCard>
-                      </div>
-                    </GlassCard>
-
-                    {/* Security Data */}
-                    {analysis.securityData && (
-                      <GlassCard>
-                        <h4 className="font-display font-semibold text-foreground mb-4">Security</h4>
-                        <div className="space-y-2">
-                          {Object.entries(analysis.securityData).map(([key, value]: [string, any]) => (
-                            <div
-                              key={key}
-                              className="flex items-center justify-between text-sm py-2 border-b border-border/30 last:border-b-0"
-                            >
-                              <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
-                              <span className="font-display font-semibold text-foreground">
-                                {typeof value === "boolean" ? (value ? "✓" : "✗") : String(value)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </GlassCard>
-                    )}
-
-                    {/* AI Analysis */}
-                    {analysis.aiAnalysis && (
-                      <GlassCard glow>
-                        <div className="flex items-center gap-2.5 mb-4">
-                          <div className="w-7 h-7 rounded-lg bg-primary/8 border border-primary/15 flex items-center justify-center">
-                            <Sparkles size={13} className="text-primary" />
-                          </div>
-                          <h4 className="font-display font-semibold text-foreground">AI Analysis</h4>
-                        </div>
-                        <div className="space-y-4">
-                          <div>
-                            <h5 className="text-sm font-display font-semibold text-foreground mb-2">
-                              Summary
-                            </h5>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                              {analysis.aiAnalysis.summary}
-                            </p>
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-display font-semibold text-foreground mb-2">
-                              Risk Level
-                            </h5>
-                            <div className={`inline-block px-3 py-1 rounded-lg text-xs font-display font-semibold ${
-                              analysis.aiAnalysis.riskLevel === "Very Low" ? "bg-green-500/10 text-green-500" :
-                              analysis.aiAnalysis.riskLevel === "Low" ? "bg-green-500/10 text-green-500" :
-                              analysis.aiAnalysis.riskLevel === "Medium" ? "bg-yellow-500/10 text-yellow-500" :
-                              analysis.aiAnalysis.riskLevel === "High" ? "bg-orange-500/10 text-orange-500" :
-                              "bg-red-500/10 text-red-500"
-                            }`}>
-                              {analysis.aiAnalysis.riskLevel}
-                            </div>
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-display font-semibold text-foreground mb-2">
-                              Key Points
-                            </h5>
-                            <ul className="space-y-1">
-                              {analysis.aiAnalysis.keyPoints?.map((point: string, idx: number) => (
-                                <li key={idx} className="text-xs text-muted-foreground flex gap-2">
-                                  <span className="text-primary shrink-0">•</span>
-                                  <span>{point}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-display font-semibold text-foreground mb-2">
-                              Recommendation
-                            </h5>
-                            <p className="text-xs text-muted-foreground leading-relaxed">
-                              {analysis.aiAnalysis.recommendation}
-                            </p>
-                          </div>
-                        </div>
-                      </GlassCard>
-                    )}
-                  </>
-                ) : null}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    );
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -593,7 +414,178 @@ export default function ClankerTokensSection() {
         )}
       </div>
 
-      <AnalysisModal />
+      <AnimatePresence>
+        {analysisModal && selectedToken && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setAnalysisModal(false)}
+          >
+            <motion.div
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full md:w-full md:max-w-2xl md:rounded-[28px] rounded-t-[28px] bg-card border border-[hsl(var(--border)/0.4)] shadow-2xl max-h-[80vh] md:max-h-[90vh] overflow-y-auto"
+            >
+              {/* Header */}
+              <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-xl border-b border-[hsl(var(--border)/0.3)] px-5 md:px-8 py-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-display font-semibold text-foreground">
+                    {selectedToken.symbol}
+                  </h3>
+                  <p className="text-xs text-muted-foreground/60">{selectedToken.name}</p>
+                </div>
+                <button
+                  onClick={() => setAnalysisModal(false)}
+                  className="p-2 rounded-xl hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-all"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="px-5 md:px-8 py-6 space-y-6">
+                {analysis.isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    >
+                      <Loader size={24} className="text-primary" />
+                    </motion.div>
+                    <p className="mt-4 text-sm text-muted-foreground">Analyzing token...</p>
+                  </div>
+                ) : analysis.error ? (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-2xl px-5 py-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle size={18} className="text-destructive mt-0.5 shrink-0" />
+                      <div>
+                        <p className="font-display font-semibold text-destructive">{analysis.error}</p>
+                        <p className="text-sm text-muted-foreground/80 mt-1">
+                          This token has not been deployed yet or cannot be found on DexScreener.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : analysis.tokenData ? (
+                  <>
+                    {/* Token Stats */}
+                    <GlassCard>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <InnerCard>
+                          <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">
+                            Price
+                          </p>
+                          <p className="text-lg font-display font-bold text-foreground">
+                            {formatPrice(analysis.tokenData.priceUsd)}
+                          </p>
+                        </InnerCard>
+                        <InnerCard>
+                          <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">
+                            Market Cap
+                          </p>
+                          <p className="text-lg font-display font-bold text-foreground">
+                            {formatLargeNumber(analysis.tokenData.fdv)}
+                          </p>
+                        </InnerCard>
+                        <InnerCard>
+                          <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">
+                            Liquidity
+                          </p>
+                          <p className="text-lg font-display font-bold text-foreground">
+                            {formatLargeNumber(analysis.tokenData.liquidity)}
+                          </p>
+                        </InnerCard>
+                      </div>
+                    </GlassCard>
+
+                    {/* Security Data */}
+                    {analysis.securityData && (
+                      <GlassCard>
+                        <h4 className="font-display font-semibold text-foreground mb-4">Security</h4>
+                        <div className="space-y-2">
+                          {Object.entries(analysis.securityData).map(([key, value]: [string, any]) => (
+                            <div
+                              key={key}
+                              className="flex items-center justify-between text-sm py-2 border-b border-border/30 last:border-b-0"
+                            >
+                              <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
+                              <span className="font-display font-semibold text-foreground">
+                                {typeof value === "boolean" ? (value ? "✓" : "✗") : String(value)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </GlassCard>
+                    )}
+
+                    {/* AI Analysis */}
+                    {analysis.aiAnalysis && (
+                      <GlassCard glow>
+                        <div className="flex items-center gap-2.5 mb-4">
+                          <div className="w-7 h-7 rounded-lg bg-primary/8 border border-primary/15 flex items-center justify-center">
+                            <Sparkles size={13} className="text-primary" />
+                          </div>
+                          <h4 className="font-display font-semibold text-foreground">AI Analysis</h4>
+                        </div>
+                        <div className="space-y-4">
+                          <div>
+                            <h5 className="text-sm font-display font-semibold text-foreground mb-2">
+                              Summary
+                            </h5>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              {analysis.aiAnalysis.summary}
+                            </p>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-display font-semibold text-foreground mb-2">
+                              Risk Level
+                            </h5>
+                            <div className={`inline-block px-3 py-1 rounded-lg text-xs font-display font-semibold ${
+                              analysis.aiAnalysis.riskLevel === "Very Low" ? "bg-green-500/10 text-green-500" :
+                              analysis.aiAnalysis.riskLevel === "Low" ? "bg-green-500/10 text-green-500" :
+                              analysis.aiAnalysis.riskLevel === "Medium" ? "bg-yellow-500/10 text-yellow-500" :
+                              analysis.aiAnalysis.riskLevel === "High" ? "bg-orange-500/10 text-orange-500" :
+                              "bg-red-500/10 text-red-500"
+                            }`}>
+                              {analysis.aiAnalysis.riskLevel}
+                            </div>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-display font-semibold text-foreground mb-2">
+                              Key Points
+                            </h5>
+                            <ul className="space-y-1">
+                              {analysis.aiAnalysis.keyPoints?.map((point: string, idx: number) => (
+                                <li key={idx} className="text-xs text-muted-foreground flex gap-2">
+                                  <span className="text-primary shrink-0">•</span>
+                                  <span>{point}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-display font-semibold text-foreground mb-2">
+                              Recommendation
+                            </h5>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              {analysis.aiAnalysis.recommendation}
+                            </p>
+                          </div>
+                        </div>
+                      </GlassCard>
+                    )}
+                  </>
+                ) : null}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
