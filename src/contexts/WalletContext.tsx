@@ -241,6 +241,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       if (isMobile) {
         console.log(`[Wallet] Initiating ${type} deep link on mobile...`);
         initiateDeepLink(type);
+        // Deep link will redirect the user away, so we don't need to close the modal here
+        // The user will return with the connection established by the wallet app
         return;
       }
 
