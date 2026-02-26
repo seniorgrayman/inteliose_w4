@@ -501,18 +501,6 @@ export default function ClankerTokensSection() {
                     </motion.div>
                     <p className="mt-4 text-sm text-muted-foreground">Analyzing token...</p>
                   </div>
-                ) : !analysis.aiAnalysis ? (
-                  <div className="bg-destructive/10 border border-destructive/20 rounded-2xl px-5 py-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle size={18} className="text-destructive mt-0.5 shrink-0" />
-                      <div>
-                        <p className="font-display font-semibold text-destructive">{analysis.error || "Failed to analyze token"}</p>
-                        <p className="text-sm text-muted-foreground/80 mt-1">
-                          Please try again later.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 ) : (
                   <>
                     {/* Token Overview from Clanker */}
