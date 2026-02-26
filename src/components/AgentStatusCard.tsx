@@ -185,7 +185,7 @@ export default function AgentStatusCard() {
               <div>
                 <p className="text-sm font-display font-semibold text-amber-500 mb-1">Registration Required</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Inteliose needs to be registered on the ERC-8004 Identity Registry (Base chain) to start building on-chain reputation. Set <code className="text-xs bg-secondary/60 px-1.5 py-0.5 rounded">VITE_INTELIOSE_AGENT_ID</code> in the server environment after registration.
+                  Inteliose needs to be registered on the ERC-8004 Identity Registry (Base) to start building on-chain reputation. Set <code className="text-xs bg-secondary/60 px-1.5 py-0.5 rounded">VITE_INTELIOSE_AGENT_ID</code> in the server environment after registration.
                 </p>
               </div>
             </div>
