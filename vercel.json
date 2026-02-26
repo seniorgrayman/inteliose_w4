@@ -13,8 +13,8 @@
       "destination": "/api/a2a"
     },
     {
-      "source": "/farcaster/:sub*",
-      "destination": "/api/farcaster/:sub*"
+      "source": "/farcaster/frame",
+      "destination": "/api/farcaster/frame"
     },
     {
       "source": "/:path*",
