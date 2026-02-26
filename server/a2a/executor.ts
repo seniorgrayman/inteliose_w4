@@ -1,6 +1,7 @@
 import { TaskStore } from "./task-store.js";
 import { executeTokenHealthCheck } from "./skills/token-health-check.js";
 import { executeRiskBaseline } from "./skills/risk-baseline.js";
+import { autoCastResult } from "../farcaster/auto-publisher.js";
 import type {
   JsonRpcRequest,
   JsonRpcResponse,
@@ -143,6 +144,9 @@ export async function handleA2ARequest(req: JsonRpcRequest): Promise<JsonRpcResp
           role: "agent",
           parts: [textPart || { type: "text", text: "Analysis complete." }],
         });
+
+        // Fire-and-forget auto-publish to Farcaster
+        autoCastResult(await taskStore.getTask(task.id)).catch(() => {});
       }
 
       return {

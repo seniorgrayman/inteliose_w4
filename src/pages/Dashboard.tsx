@@ -18,6 +18,7 @@ import ClankerComingSoonModal from "@/components/ClankerComingSoonModal";
 import AgentStatusComingSoonModal from "@/components/AgentStatusComingSoonModal";
 import A2AComingSoonModal from "@/components/A2AComingSoonModal";
 import AgentCardComingSoonModal from "@/components/AgentCardComingSoonModal";
+import FarcasterStatusCard from "@/components/FarcasterStatusCard";
 import { useWallet, getEVMProviderForType } from "@/contexts/WalletContext";
 import { useBurn } from "@/hooks/useBurn";
 import type { EVMProvider } from "@/types/wallet";
@@ -118,7 +119,7 @@ const Dashboard = () => {
   const [mintAuthority, setMintAuthority] = useState<string | null>(null);
   const { isConnected, fullWalletAddress, walletType, openConnectModal, disconnect } = useWallet();
   const connectedAddress = isConnected ? fullWalletAddress : null;
-  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch" | "agent-status" | "a2a-activity" | "agent-card">("analyze");
+  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch" | "agent-status" | "a2a-activity" | "agent-card" | "farcaster">("analyze");
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
   const [comingSoonModal, setComingSoonModal] = useState<"clanker" | "agent-status" | "a2a-activity" | "agent-card" | null>(null);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
@@ -403,6 +404,17 @@ const Dashboard = () => {
             <FileCode size={14} />
             <span className="hidden sm:inline">Agent Card</span>
             <span className="sm:hidden">Card</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("farcaster")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
+              activeTab === "farcaster"
+                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <MessageCircle size={14} />
+            Farcaster
           </button>
         </div>
       </div>
@@ -892,6 +904,10 @@ const Dashboard = () => {
 
         {activeTab === "agent-card" && (
           <AgentCardPreview />
+        )}
+
+        {activeTab === "farcaster" && (
+          <FarcasterStatusCard />
         )}
       </div>
 

@@ -13,6 +13,10 @@
       "destination": "/api/a2a"
     },
     {
+      "source": "/farcaster/:sub*",
+      "destination": "/api/farcaster/:sub*"
+    },
+    {
       "source": "/:path*",
       "destination": "/index.html"
     }

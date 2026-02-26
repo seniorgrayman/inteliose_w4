@@ -8,6 +8,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@neynar/nodejs-sdk": "^3.137.0",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "firebase": "^12.9.0",

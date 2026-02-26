@@ -21,6 +21,7 @@ import express from "express";
 import cors from "cors";
 import a2aRoutes from "./routes/a2a.js";
 import erc8004Routes from "./routes/erc8004.js";
+import farcasterRoutes from "./routes/farcaster.js";
 import { buildAgentCard } from "./a2a/agent-card.js";
 
 const app = express();
@@ -90,6 +91,9 @@ app.use(a2aRoutes);
 // ERC-8004 routes (under /intel/erc8004/*)
 app.use(erc8004Routes);
 
+// Farcaster routes
+app.use(farcasterRoutes);
+
 // Start server
 app.listen(PORT, () => {
   console.log(`
@@ -105,7 +109,11 @@ app.listen(PORT, () => {
 ║  ├─ GET  /intel/a2a/tasks           A2A Activity Feed    ║
 ║  ├─ GET  /intel/erc8004/agent       Agent Identity       ║
 ║  ├─ GET  /intel/erc8004/reputation  Reputation Score     ║
-║  └─ GET  /erc8004-registration.json Registration File    ║
+║  ├─ GET  /erc8004-registration.json Registration File    ║
+║  ├─ POST /farcaster/webhook        Farcaster Webhook     ║
+║  ├─ GET  /farcaster/frame          Farcaster Frame       ║
+║  ├─ POST /farcaster/frame-action   Frame Action          ║
+║  └─ GET  /farcaster/status         Bot Status            ║
 ╚══════════════════════════════════════════════════════════╝
   `);
 });
