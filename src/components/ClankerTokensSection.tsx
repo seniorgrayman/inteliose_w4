@@ -22,7 +22,7 @@ import {
   formatTimeSince,
   type ClankerToken,
 } from "@/lib/clanker";
-import { fetchTokenData, fetchSecurityScan, generateAIAnalysis, type AIAnalysis } from "@/lib/tokendata";
+import { fetchTokenData, fetchSecurityScan, generateAIAnalysis, type AIAnalysis, type TokenData } from "@/lib/tokendata";
 
 const GlassCard = ({
   children,
@@ -138,47 +138,85 @@ export default function ClankerTokensSection() {
     });
 
     try {
-      // Fetch token data from DexScreener
+      // Try to fetch token data from DexScreener
       const tokenData = await fetchTokenData(token.contract_address, "Base");
       
-      if (!tokenData) {
-        setAnalysis((prev) => ({
-          ...prev,
-          error: "Token not deployed yet on DexScreener",
-          isLoading: false,
-        }));
-        return;
+      // Fetch security scan (optional, may fail for new tokens)
+      let securityData = null;
+      if (tokenData) {
+        securityData = await fetchSecurityScan(token.contract_address, "Base");
       }
 
-      // Fetch security scan
-      const securityData = await fetchSecurityScan(token.contract_address, "Base");
-
-      // Generate AI analysis
+      // Generate AI analysis based on available data
       let aiAnalysis: AIAnalysis | null = null;
-      if (tokenData && securityData) {
-        aiAnalysis = await generateAIAnalysis(
-          tokenData.name,
-          tokenData.symbol,
-          tokenData,
-          securityData,
-          "Base"
-        );
-      }
+      
+      // Create token data for analysis from DexScreener or Clanker data
+      const analysisTokenData: TokenData = tokenData || {
+        name: token.name,
+        symbol: token.symbol,
+        price: token.price_usd?.toString() || null,
+        volume24h: token.volume_24h_usd?.toString() || null,
+        liquidity: token.liquidity_usd?.toString() || null,
+        marketCap: token.market_cap_usd?.toString() || null,
+        holders: null,
+        image: token.logo_uri,
+        address: token.contract_address,
+      };
+      
+      aiAnalysis = await generateAIAnalysis(
+        token.name,
+        token.symbol,
+        analysisTokenData,
+        securityData,
+        "Base"
+      );
 
       setAnalysis({
         tokenAddress: token.contract_address,
-        tokenData,
+        tokenData: tokenData,
         securityData,
         aiAnalysis,
         isLoading: false,
         error: null,
       });
     } catch (error) {
-      setAnalysis((prev) => ({
-        ...prev,
-        error: "Failed to analyze token",
-        isLoading: false,
-      }));
+      // If DexScreener fails, just use Clanker data and AI analysis
+      try {
+        const analysisTokenData: TokenData = {
+          name: token.name,
+          symbol: token.symbol,
+          price: token.price_usd?.toString() || null,
+          volume24h: token.volume_24h_usd?.toString() || null,
+          liquidity: token.liquidity_usd?.toString() || null,
+          marketCap: token.market_cap_usd?.toString() || null,
+          holders: null,
+          image: token.logo_uri,
+          address: token.contract_address,
+        };
+        
+        const aiAnalysis = await generateAIAnalysis(
+          token.name,
+          token.symbol,
+          analysisTokenData,
+          null,
+          "Base"
+        );
+        
+        setAnalysis({
+          tokenAddress: token.contract_address,
+          tokenData: null,
+          securityData: null,
+          aiAnalysis,
+          isLoading: false,
+          error: null,
+        });
+      } catch (err) {
+        setAnalysis((prev) => ({
+          ...prev,
+          error: "Failed to analyze token",
+          isLoading: false,
+        }));
+      }
     }
   };
 
@@ -459,47 +497,86 @@ export default function ClankerTokensSection() {
                     </motion.div>
                     <p className="mt-4 text-sm text-muted-foreground">Analyzing token...</p>
                   </div>
-                ) : analysis.error ? (
+                ) : !analysis.aiAnalysis ? (
                   <div className="bg-destructive/10 border border-destructive/20 rounded-2xl px-5 py-4">
                     <div className="flex items-start gap-3">
                       <AlertCircle size={18} className="text-destructive mt-0.5 shrink-0" />
                       <div>
-                        <p className="font-display font-semibold text-destructive">{analysis.error}</p>
+                        <p className="font-display font-semibold text-destructive">{analysis.error || "Failed to analyze token"}</p>
                         <p className="text-sm text-muted-foreground/80 mt-1">
-                          This token has not been deployed yet or cannot be found on DexScreener.
+                          Please try again later.
                         </p>
                       </div>
                     </div>
                   </div>
-                ) : analysis.tokenData ? (
+                ) : (
                   <>
-                    {/* Token Stats */}
+                    {/* Token Overview from Clanker */}
                     <GlassCard>
+                      <div className="flex items-start gap-4 mb-6">
+                        {selectedToken?.logo_uri && (
+                          <img
+                            src={selectedToken.logo_uri}
+                            alt={selectedToken.symbol}
+                            className="w-16 h-16 rounded-xl"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        )}
+                        <div className="flex-1">
+                          <p className="text-xs text-muted-foreground/60 mb-1 font-display font-bold uppercase">About</p>
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {selectedToken?.description || "No description available"}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Token Stats */}
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <InnerCard>
-                          <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">
-                            Price
-                          </p>
-                          <p className="text-lg font-display font-bold text-foreground">
-                            {formatPrice(analysis.tokenData.priceUsd)}
-                          </p>
-                        </InnerCard>
-                        <InnerCard>
-                          <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">
-                            Market Cap
-                          </p>
-                          <p className="text-lg font-display font-bold text-foreground">
-                            {formatLargeNumber(analysis.tokenData.fdv)}
-                          </p>
-                        </InnerCard>
-                        <InnerCard>
-                          <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">
-                            Liquidity
-                          </p>
-                          <p className="text-lg font-display font-bold text-foreground">
-                            {formatLargeNumber(analysis.tokenData.liquidity)}
-                          </p>
-                        </InnerCard>
+                        {analysis.tokenData ? (
+                          <>
+                            <InnerCard>
+                              <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">Price</p>
+                              <p className="text-lg font-display font-bold text-foreground">
+                                ${parseFloat(analysis.tokenData.price || "0").toFixed(2)}
+                              </p>
+                            </InnerCard>
+                            <InnerCard>
+                              <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">Market Cap</p>
+                              <p className="text-lg font-display font-bold text-foreground">
+                                {formatLargeNumber(parseFloat(analysis.tokenData.marketCap || "0"))}
+                              </p>
+                            </InnerCard>
+                            <InnerCard>
+                              <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">Liquidity</p>
+                              <p className="text-lg font-display font-bold text-foreground">
+                                {formatLargeNumber(parseFloat(analysis.tokenData.liquidity || "0"))}
+                              </p>
+                            </InnerCard>
+                          </>
+                        ) : selectedToken ? (
+                          <>
+                            <InnerCard>
+                              <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">Price</p>
+                              <p className="text-lg font-display font-bold text-foreground">
+                                ${(selectedToken.price_usd || 0).toFixed(6)}
+                              </p>
+                            </InnerCard>
+                            <InnerCard>
+                              <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">Market Cap</p>
+                              <p className="text-lg font-display font-bold text-foreground">
+                                {formatLargeNumber(selectedToken.market_cap_usd || 0)}
+                              </p>
+                            </InnerCard>
+                            <InnerCard>
+                              <p className="text-[10px] text-muted-foreground/60 mb-2 font-display font-bold uppercase">Liquidity</p>
+                              <p className="text-lg font-display font-bold text-foreground">
+                                {formatLargeNumber(selectedToken.liquidity_usd || 0)}
+                              </p>
+                            </InnerCard>
+                          </>
+                        ) : null}
                       </div>
                     </GlassCard>
 
@@ -580,7 +657,7 @@ export default function ClankerTokensSection() {
                       </GlassCard>
                     )}
                   </>
-                ) : null}
+                )}
               </div>
             </motion.div>
           </motion.div>
