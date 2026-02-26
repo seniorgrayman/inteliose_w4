@@ -167,6 +167,64 @@ The agent is registered under the ERC-8004 identity standard with:
 
 ---
 
+## API Endpoints & Features
+
+### Overview
+
+Inteliose provides a comprehensive set of API endpoints across multiple categories for token analysis, agent communication, and identity management. Below is a complete breakdown of all available endpoints and their capabilities.
+
+| Category | Endpoints | What They Do |
+|----------|-----------|--------------|
+| **Token Analysis (A2A)** | `token-health-check`, `risk-baseline` | Full DYOR analysis with AI verdict (GREEN/YELLOW/RED), risk assessment, failure modes. Fast security scans with security flags, tax rates, ownership status. |
+| **Agent Communication** | `POST /a2a`, `GET /a2a/stats`, `GET /a2a/tasks` | JSON-RPC 2.0 endpoint for inter-agent requests. Real-time communication statistics and recent task logs. |
+| **Burn-to-Query System** | `POST /api/burn/estimate`, `POST /api/burn/submit`, `POST /api/burn/process` | Calculate burn costs based on query complexity. Submit burn transactions. Verify on-chain burn verification. |
+| **Agent Identity** | `GET /.well-known/agent-card.json`, `GET /erc8004-registration.json`, `GET /intel/erc8004/agent` | Agent discovery and capability advertisement. ERC-8004 registration metadata. Agent identity info and status. |
+| **Reputation System** | `GET /intel/erc8004/reputation`, `GET /intel/erc8004/lookup/[agentId]` | View agent reputation scores and feedback. Look up other agents by ID. |
+| **Health & Status** | `GET /health` | Service health check and status verification. |
+
+### Detailed Endpoint Reference
+
+#### Token Analysis (A2A Skills)
+
+| Skill | Input | Output | Use Case |
+|-------|-------|--------|----------|
+| **token-health-check** | Token address + chain (Base) | Health verdict (GREEN/YELLOW/RED), risk factors, failure modes, recommendations, key points | Full due diligence analysis with AI-powered insights |
+| **risk-baseline** | Token address + chain | Security flags (hidden owner, proxy, mintable, blacklist), buy/sell tax, ownership status | Quick lightweight security scan |
+
+#### Burn-to-Query System
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/burn/estimate` | POST | Calculate USD cost and token burn amount based on query complexity |
+| `/api/burn/submit` | POST | Submit and sign a burn transaction via wallet |
+| `/api/burn/process` | POST | Verify on-chain burn execution and grant query access |
+
+#### Agent Communication & Discovery
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `GET /.well-known/agent-card.json` | GET | Retrieve agent card with capabilities and skills |
+| `POST /a2a` | POST | Send JSON-RPC 2.0 requests to Inteliose agent |
+| `GET /api/intel/a2a/stats` | GET | Get aggregate A2A communication statistics |
+| `GET /api/intel/a2a/tasks` | GET | List recent A2A tasks with request/response data |
+
+#### Agent Identity & Reputation
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `GET /erc8004-registration.json` | GET | ERC-8004 registration metadata and services |
+| `GET /intel/erc8004/agent` | GET | Inteliose agent identity info and status |
+| `GET /intel/erc8004/reputation` | GET | View agent reputation scores and feedback summary |
+| `GET /intel/erc8004/lookup/[agentId]` | GET | Look up specific agent by ID |
+
+#### Health & Utility
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `GET /health` | GET | Service health check and status |
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone https://github.com/QuinanceFinance/inteliose.git .)",
+      "Bash(git checkout -b main origin/main)",
+      "Read(//Users/x/Documents/Cursor Projects/MontraFi/**)",
+      "Read(//Users/x/Documents/Cursor Projects/montrafi/**)",
+      "Bash(npm install @supabase/supabase-js)",
+      "Bash(npm run build)",
+      "Bash(git checkout -b sorrowz)",
+      "Bash(git add api/_lib/cors.ts api/_lib/complexity.ts api/_lib/price.ts api/_lib/rate-limit.ts api/_lib/rpc.ts api/_lib/supabase.ts api/burn/estimate.ts api/burn/submit.ts api/burn/process.ts src/types/burn.ts src/types/wallet.ts src/services/burnService.ts src/hooks/useBurn.ts src/components/BurnConfirmModal.tsx src/pages/Dashboard.tsx package.json package-lock.json)",
+      "Bash(git push -u origin sorrowz)"
+    ]
+  }
+}

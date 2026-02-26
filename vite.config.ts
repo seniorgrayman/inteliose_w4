@@ -40,6 +40,12 @@ export default defineConfig(({ mode }) => ({
         rewrite: (path) => path.replace(/^\/api\/erc8004-registration/, '/erc8004-registration.json'),
       },
 
+      '/api/farcaster': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+
       // Proxy for daointel.io
       '/daointel': {
         target: 'https://daointel.io',

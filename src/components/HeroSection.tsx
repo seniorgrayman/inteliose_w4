@@ -1,14 +1,8 @@
 import { ArrowRight, ExternalLink } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import { Link } from "react-router-dom";
-import ComingSoonModal from "./ComingSoonModal";
 
 const HeroSection = () => {
-  const navigate = useNavigate();
-  const [showComingSoon, setShowComingSoon] = useState(false);
-
   // Using a public example image URL – replace with your own if needed
   const bgImageUrl =
     "https://www.shutterstock.com/image-illustration/base-logo-coins-metallic-effects-600nw-2518016629.jpg";
@@ -63,7 +57,7 @@ const HeroSection = () => {
 
         <p className="text-base text-sm md:text-lg text-white/90 max-w-2xl">
           Inteliose is a founder and traders centric intelligence platform
-          leveraging web4 on base chain. We analyze your token, classify risk
+          leveraging web4 on base. We analyze your token, classify risk
           baselines, and surface failure modes before they burn your project.
         </p>
 
@@ -86,8 +80,8 @@ const HeroSection = () => {
                 className="group-hover:translate-x-0.5 transition-transform"
               />
             </Link>
-            <button
-              onClick={() => setShowComingSoon(true)}
+            <Link
+              to="/manage-project"
               className="
                 inline-flex items-center gap-2 
                 bg-white 
@@ -99,13 +93,10 @@ const HeroSection = () => {
             >
               Manage Project
               <ExternalLink size={13} />
-            </button>
+            </Link>
           </div>
         </div>
       </div>
-
-      {/* Coming Soon Modal */}
-      <ComingSoonModal isOpen={showComingSoon} onClose={() => setShowComingSoon(false)} date="25th February 2026" />
     </section>
   );
 };

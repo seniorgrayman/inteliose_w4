@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 
 export type WalletType = "phantom" | "metamask";
 export type NetworkStatus = "connected" | "wrong_network" | "disconnected";
@@ -6,6 +6,34 @@ export type NetworkStatus = "connected" | "wrong_network" | "disconnected";
 // Base Mainnet
 const BASE_CHAIN_ID = 8453;
 const BASE_CHAIN_HEX = "0x2105";
+
+// ─── Mobile Detection ────────────────────────────────────────────────────────
+
+const isMobileDevice = (): boolean => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+// ─── Deep Link Utilities ─────────────────────────────────────────────────────
+
+const deepLinkUtils = {
+  phantom: {
+    deeplink: (url: string) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}`,
+  },
+  metamask: {
+    deeplink: (_url: string) => `metamask://dapp/${window.location.hostname}${window.location.pathname}`,
+  },
+};
+
+const initiateDeepLink = (walletType: WalletType) => {
+  const utils = deepLinkUtils[walletType];
+  const currentUrl = window.location.href;
+
+  if (walletType === "phantom") {
+    window.location.href = utils.deeplink(currentUrl);
+  } else if (walletType === "metamask") {
+    window.location.href = utils.deeplink(currentUrl);
+  }
+};
 
 // ─── Provider helpers ────────────────────────────────────────────────────────
 
@@ -163,30 +191,66 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     hasHandledDisconnect.current = false;
 
     try {
+      const isMobile = isMobileDevice();
       const provider = type === "phantom" ? getPhantomEVMProvider() : getMetaMaskProvider();
 
-      if (!provider) {
+      // If provider not found and it's desktop, open download page
+      if (!provider && !isMobile) {
         window.open(
           type === "phantom" ? "https://phantom.app/" : "https://metamask.io/download/",
           "_blank"
         );
+        setIsConnecting(false);
         return;
       }
 
-      const accounts: string[] = await provider.request({ method: "eth_requestAccounts" });
-      if (!accounts.length) return;
+      // If provider exists, try to connect directly
+      if (provider) {
+        try {
+          const accounts: string[] = await provider.request({ method: "eth_requestAccounts" });
+          if (!accounts.length) {
+            setIsConnecting(false);
+            return;
+          }
 
-      const addr = accounts[0];
-      await ensureBaseChain(provider);
-      setConnectedState(type, addr);
-      setIsModalOpen(false);
-      console.log(`[Wallet] ${type} connected:`, addr);
-    } catch (err: any) {
-      if (err.code === 4001 || err.message?.includes("rejected")) {
-        console.log("[Wallet] User rejected connection");
-      } else {
-        console.error("[Wallet] Connect error:", err);
+          const addr = accounts[0];
+          await ensureBaseChain(provider);
+          setConnectedState(type, addr);
+          setIsModalOpen(false);
+          console.log(`[Wallet] ${type} connected:`, addr);
+          setIsConnecting(false);
+          return;
+        } catch (err: any) {
+          // If user rejected on desktop, show error
+          if (!isMobile) {
+            if (err.code === 4001 || err.message?.includes("rejected")) {
+              console.log("[Wallet] User rejected connection");
+              setIsConnecting(false);
+              return;
+            }
+            console.error("[Wallet] Connect error:", err);
+            setIsConnecting(false);
+            return;
+          }
+          // On mobile, fall through to deep link if provider connection fails
+          console.log("[Wallet] Provider connection failed on mobile, attempting deep link...");
+        }
       }
+
+      // Mobile: Try deep link as fallback or primary method
+      if (isMobile) {
+        console.log(`[Wallet] Initiating ${type} deep link on mobile...`);
+        initiateDeepLink(type);
+        return;
+      }
+
+      // No provider and not mobile
+      window.open(
+        type === "phantom" ? "https://phantom.app/" : "https://metamask.io/download/",
+        "_blank"
+      );
+    } catch (err: any) {
+      console.error("[Wallet] Connect error:", err);
     } finally {
       setIsConnecting(false);
     }
