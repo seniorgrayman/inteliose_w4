@@ -13,6 +13,11 @@ import AgentStatusCard from "@/components/AgentStatusCard";
 import A2AActivityFeed from "@/components/A2AActivityFeed";
 import AgentCardPreview from "@/components/AgentCardPreview";
 import BurnConfirmModal from "@/components/BurnConfirmModal";
+import ComingSoonModal from "@/components/ComingSoonModal";
+import ClankerComingSoonModal from "@/components/ClankerComingSoonModal";
+import AgentStatusComingSoonModal from "@/components/AgentStatusComingSoonModal";
+import A2AComingSoonModal from "@/components/A2AComingSoonModal";
+import AgentCardComingSoonModal from "@/components/AgentCardComingSoonModal";
 import { useWallet, getEVMProviderForType } from "@/contexts/WalletContext";
 import { useBurn } from "@/hooks/useBurn";
 import type { EVMProvider } from "@/types/wallet";
@@ -115,6 +120,7 @@ const Dashboard = () => {
   const connectedAddress = isConnected ? fullWalletAddress : null;
   const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch" | "agent-status" | "a2a-activity" | "agent-card">("analyze");
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
+  const [comingSoonModal, setComingSoonModal] = useState<"clanker" | "agent-status" | "a2a-activity" | "agent-card" | null>(null);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close wallet dropdown on outside click
@@ -369,46 +375,30 @@ const Dashboard = () => {
             <span className="sm:hidden">Analyze</span>
           </button>
           <button
-            onClick={() => setActiveTab("conlaunch")}
-            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
-              activeTab === "conlaunch"
-                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            onClick={() => setComingSoonModal("clanker")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap text-muted-foreground hover:text-foreground`}
           >
             <Radio size={14} />
-            Clawn.ch
+            Clanker
           </button>
           <button
-            onClick={() => setActiveTab("agent-status")}
-            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
-              activeTab === "agent-status"
-                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            onClick={() => setComingSoonModal("agent-status")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap text-muted-foreground hover:text-foreground`}
           >
             <Fingerprint size={14} />
             <span className="hidden sm:inline">Agent Status</span>
             <span className="sm:hidden">Agent</span>
           </button>
           <button
-            onClick={() => setActiveTab("a2a-activity")}
-            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
-              activeTab === "a2a-activity"
-                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            onClick={() => setComingSoonModal("a2a-activity")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap text-muted-foreground hover:text-foreground`}
           >
             <Activity size={14} />
             A2A
           </button>
           <button
-            onClick={() => setActiveTab("agent-card")}
-            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
-              activeTab === "agent-card"
-                ? "bg-foreground text-background shadow-[0_4px_15px_hsl(0_0%_0%/0.15)]"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            onClick={() => setComingSoonModal("agent-card")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap text-muted-foreground hover:text-foreground`}
           >
             <FileCode size={14} />
             <span className="hidden sm:inline">Agent Card</span>
@@ -913,6 +903,30 @@ const Dashboard = () => {
         burnError={burnError}
         onConfirm={confirmBurn}
         onCancel={cancelBurn}
+      />
+
+      {/* Clanker Coming Soon Modal */}
+      <ClankerComingSoonModal
+        isOpen={comingSoonModal === "clanker"}
+        onClose={() => setComingSoonModal(null)}
+      />
+
+      {/* Agent Status Coming Soon Modal */}
+      <AgentStatusComingSoonModal
+        isOpen={comingSoonModal === "agent-status"}
+        onClose={() => setComingSoonModal(null)}
+      />
+
+      {/* A2A Activity Coming Soon Modal */}
+      <A2AComingSoonModal
+        isOpen={comingSoonModal === "a2a-activity"}
+        onClose={() => setComingSoonModal(null)}
+      />
+
+      {/* Agent Card Coming Soon Modal */}
+      <AgentCardComingSoonModal
+        isOpen={comingSoonModal === "agent-card"}
+        onClose={() => setComingSoonModal(null)}
       />
     </div>
   );
