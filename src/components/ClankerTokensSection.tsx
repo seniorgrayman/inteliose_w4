@@ -149,6 +149,7 @@ export default function ClankerTokensSection() {
 
       // Generate AI analysis based on available data
       let aiAnalysis: AIAnalysis | null = null;
+      let aiAnalysisError: string | null = null;
       
       // Create token data for analysis from DexScreener or Clanker data
       const analysisTokenData: TokenData = tokenData || {
@@ -163,13 +164,17 @@ export default function ClankerTokensSection() {
         address: token.contract_address,
       };
       
-      aiAnalysis = await generateAIAnalysis(
-        token.name,
-        token.symbol,
-        analysisTokenData,
-        securityData,
-        "Base"
-      );
+      try {
+        aiAnalysis = await generateAIAnalysis(
+          token.name,
+          token.symbol,
+          analysisTokenData,
+          securityData,
+          "Base"
+        );
+      } catch (aiError) {
+        aiAnalysisError = "AI analysis failed. Please try again later.";
+      }
 
       setAnalysis({
         tokenAddress: token.contract_address,
@@ -177,10 +182,13 @@ export default function ClankerTokensSection() {
         securityData,
         aiAnalysis,
         isLoading: false,
-        error: null,
+        error: aiAnalysisError,
       });
     } catch (error) {
-      // If DexScreener fails, just use Clanker data and AI analysis
+      // If DexScreener fails, just use Clanker data
+      let aiAnalysis: AIAnalysis | null = null;
+      let aiAnalysisError: string | null = null;
+
       try {
         const analysisTokenData: TokenData = {
           name: token.name,
@@ -194,29 +202,25 @@ export default function ClankerTokensSection() {
           address: token.contract_address,
         };
         
-        const aiAnalysis = await generateAIAnalysis(
+        aiAnalysis = await generateAIAnalysis(
           token.name,
           token.symbol,
           analysisTokenData,
           null,
           "Base"
         );
-        
-        setAnalysis({
-          tokenAddress: token.contract_address,
-          tokenData: null,
-          securityData: null,
-          aiAnalysis,
-          isLoading: false,
-          error: null,
-        });
-      } catch (err) {
-        setAnalysis((prev) => ({
-          ...prev,
-          error: "Failed to analyze token",
-          isLoading: false,
-        }));
+      } catch (aiError) {
+        aiAnalysisError = "AI analysis failed. Please try again later.";
       }
+      
+      setAnalysis({
+        tokenAddress: token.contract_address,
+        tokenData: null,
+        securityData: null,
+        aiAnalysis,
+        isLoading: false,
+        error: aiAnalysisError,
+      });
     }
   };
 
@@ -601,7 +605,7 @@ export default function ClankerTokensSection() {
                     )}
 
                     {/* AI Analysis */}
-                    {analysis.aiAnalysis && (
+                    {analysis.aiAnalysis ? (
                       <GlassCard glow>
                         <div className="flex items-center gap-2.5 mb-4">
                           <div className="w-7 h-7 rounded-lg bg-primary/8 border border-primary/15 flex items-center justify-center">
@@ -655,7 +659,19 @@ export default function ClankerTokensSection() {
                           </div>
                         </div>
                       </GlassCard>
-                    )}
+                    ) : analysis.error ? (
+                      <GlassCard>
+                        <div className="flex items-start gap-3 bg-destructive/10 border border-destructive/20 rounded-2xl px-5 py-4">
+                          <AlertCircle size={18} className="text-destructive mt-0.5 shrink-0" />
+                          <div>
+                            <p className="font-display font-semibold text-destructive">AI Analysis Unavailable</p>
+                            <p className="text-sm text-muted-foreground/80 mt-1">
+                              {analysis.error}
+                            </p>
+                          </div>
+                        </div>
+                      </GlassCard>
+                    ) : null}
                   </>
                 )}
               </div>
