@@ -19,55 +19,75 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
     const page = req.query.page ? parseInt(req.query.page as string) : 1;
 
-    // Construct Clanker API URL
-    const url = new URL("https://www.clanker.world/api/tokens");
-    url.searchParams.set("limit", Math.min(limit, 50).toString()); // Cap at 50
-    url.searchParams.set("page", Math.max(1, page).toString());
-    url.searchParams.set("sort", "created"); // Sort by most recently created
-    url.searchParams.set("order", "desc");
-
-    // Fetch from Clanker API with timeout
+    // Construct Clanker API URL - try multiple endpoints
+    let response;
+    const timeout = 10000;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const response = await fetch(url.toString(), {
-      signal: controller.signal,
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "inteliose-app/1.0",
-      },
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      console.error(`Clanker API error: ${response.status}`);
-      res.status(response.status).json({
-        error: "Failed to fetch Clanker tokens",
-        details: `HTTP ${response.status}`,
+    // Try the base endpoint first (no pagination)
+    try {
+      const url = new URL("https://www.clanker.world/api/tokens");
+      // Don't send parameters that might cause 400 - just fetch all and filter
+      
+      response = await fetch(url.toString(), {
+        signal: controller.signal,
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "inteliose-app/1.0",
+        },
       });
-      return;
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Return the data (Clanker API typically returns array or { data: [...] })
+      const tokens = Array.isArray(data) ? data : (data.tokens || data.data || []);
+      
+      // Apply pagination on the client side
+      const start = (page - 1) * limit;
+      const end = start + limit;
+      const paginatedTokens = tokens.slice(start, end);
+
+      res.json({
+        tokens: paginatedTokens,
+        page,
+        limit,
+        total: tokens.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error("Clanker API error:", error);
+
+      if (error instanceof Error && error.name === "AbortError") {
+        res.status(504).json({
+          error: "Request timeout",
+          tokens: [],
+          page,
+          limit,
+        });
+      } else {
+        res.status(502).json({
+          error: "Failed to fetch Clanker tokens",
+          details: error instanceof Error ? error.message : "Unknown error",
+          tokens: [],
+          page,
+          limit,
+        });
+      }
     }
-
-    const data = await response.json();
-
-    // Return the data (Clanker API typically returns { tokens: [...] })
-    res.json({
-      tokens: data.tokens || data || [],
-      page,
-      limit,
-      timestamp: new Date().toISOString(),
-    });
   } catch (error) {
     console.error("Clanker API proxy error:", error);
-
-    if (error instanceof Error && error.name === "AbortError") {
-      res.status(504).json({ error: "Request timeout" });
-    } else {
-      res.status(500).json({
-        error: "Failed to fetch Clanker tokens",
-        details: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
+    res.status(500).json({
+      error: "Internal server error",
+      details: error instanceof Error ? error.message : "Unknown error",
+      tokens: [],
+    });
   }
 }
