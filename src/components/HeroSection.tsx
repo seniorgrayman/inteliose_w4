@@ -3,9 +3,9 @@ import Navbar from "./Navbar";
 import { Link } from "react-router-dom";
 
 const HeroSection = () => {
-
   // Using a public example image URL – replace with your own if needed
   const bgImageUrl =
+    "https://www.shutterstock.com/image-illustration/base-logo-coins-metallic-effects-600nw-2518016629.jpg";
     "https://www.shutterstock.com/image-illustration/base-logo-coins-metallic-effects-600nw-2518016629.jpg";
 
   return (

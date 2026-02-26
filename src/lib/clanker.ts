@@ -52,7 +52,7 @@ export async function fetchClankerTokens(
     url.searchParams.set("page", Math.max(1, page).toString());
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 12000);
 
     const response = await fetch(url.toString(), {
       signal: controller.signal,
@@ -64,7 +64,14 @@ export async function fetchClankerTokens(
     clearTimeout(timeout);
 
     if (!response.ok) {
-      console.error(`Failed to fetch Clanker tokens: ${response.status}`);
+      console.warn(`Clanker API returned ${response.status}: ${response.statusText}`);
+      // Try to parse error response
+      try {
+        const errorData = await response.json();
+        console.warn("Error details:", errorData);
+      } catch {
+        // If response isn't JSON, just log the status
+      }
       return [];
     }
 
@@ -72,6 +79,7 @@ export async function fetchClankerTokens(
     return data.tokens || [];
   } catch (error) {
     console.error("Error fetching Clanker tokens:", error);
+    // Return empty array so UI shows empty state instead of crashing
     return [];
   }
 }
