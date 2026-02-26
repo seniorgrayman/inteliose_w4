@@ -63,7 +63,7 @@ const HeroSection = () => {
 
         <p className="text-base text-sm md:text-lg text-white/90 max-w-2xl">
           Inteliose is a founder and traders centric intelligence platform
-          leveraging web4 on base chain. We analyze your token, classify risk
+          leveraging web4 on base. We analyze your token, classify risk
           baselines, and surface failure modes before they burn your project.
         </p>
 
