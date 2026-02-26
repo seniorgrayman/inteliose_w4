@@ -15,7 +15,6 @@ import AgentCardPreview from "@/components/AgentCardPreview";
 import BurnConfirmModal from "@/components/BurnConfirmModal";
 import ComingSoonModal from "@/components/ComingSoonModal";
 import ClankerTokensSection from "@/components/ClankerTokensSection";
-import AgentCardComingSoonModal from "@/components/AgentCardComingSoonModal";
 import FarcasterStatusCard from "@/components/FarcasterStatusCard";
 import { useWallet, getEVMProviderForType } from "@/contexts/WalletContext";
 import { useBurn } from "@/hooks/useBurn";
@@ -408,8 +407,12 @@ const Dashboard = () => {
             A2A
           </button>
           <button
-            onClick={() => setComingSoonModal("agent-card")}
-            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap text-muted-foreground hover:text-foreground`}
+            onClick={() => setActiveTab("agent-card")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
+              activeTab === "agent-card"
+                ? "bg-primary/10 border border-primary/20 text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
             <FileCode size={14} />
             <span className="hidden sm:inline">Agent Card</span>
@@ -933,10 +936,6 @@ const Dashboard = () => {
         burnError={burnError}
         onConfirm={confirmBurn}
         onCancel={cancelBurn}
-      />
-      <AgentCardComingSoonModal
-        isOpen={comingSoonModal === "agent-card"}
-        onClose={() => setComingSoonModal(null)}
       />
     </div>
   );

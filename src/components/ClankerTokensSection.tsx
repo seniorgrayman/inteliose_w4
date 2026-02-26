@@ -592,6 +592,8 @@ export default function ClankerTokensSection() {
           </div>
         )}
       </div>
+
+      <AnalysisModal />
     </div>
   );
 }
