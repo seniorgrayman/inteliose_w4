@@ -14,7 +14,7 @@ import A2AActivityFeed from "@/components/A2AActivityFeed";
 import AgentCardPreview from "@/components/AgentCardPreview";
 import BurnConfirmModal from "@/components/BurnConfirmModal";
 import ComingSoonModal from "@/components/ComingSoonModal";
-import ClankerComingSoonModal from "@/components/ClankerComingSoonModal";
+import ClankerTokensSection from "@/components/ClankerTokensSection";
 import AgentCardComingSoonModal from "@/components/AgentCardComingSoonModal";
 import FarcasterStatusCard from "@/components/FarcasterStatusCard";
 import { useWallet, getEVMProviderForType } from "@/contexts/WalletContext";
@@ -117,9 +117,9 @@ const Dashboard = () => {
   const [mintAuthority, setMintAuthority] = useState<string | null>(null);
   const { isConnected, fullWalletAddress, walletType, openConnectModal, disconnect } = useWallet();
   const connectedAddress = isConnected ? fullWalletAddress : null;
-  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch" | "agent-status" | "a2a-activity" | "agent-card" | "farcaster">("analyze");
+  const [activeTab, setActiveTab] = useState<"analyze" | "conlaunch" | "agent-status" | "a2a-activity" | "clanker" | "agent-card" | "farcaster">("analyze");
   const [walletDropdownOpen, setWalletDropdownOpen] = useState(false);
-  const [comingSoonModal, setComingSoonModal] = useState<"clanker" | "agent-card" | null>(null);
+  const [comingSoonModal, setComingSoonModal] = useState<"agent-card" | null>(null);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close wallet dropdown on outside click
@@ -374,8 +374,12 @@ const Dashboard = () => {
             <span className="sm:hidden">Analyze</span>
           </button>
           <button
-            onClick={() => setComingSoonModal("clanker")}
-            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap text-muted-foreground hover:text-foreground`}
+            onClick={() => setActiveTab("clanker")}
+            className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-display font-semibold transition-all whitespace-nowrap ${
+              activeTab === "clanker"
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
             <Radio size={14} />
             Clanker
@@ -900,6 +904,10 @@ const Dashboard = () => {
           <ConLaunchLiveSection />
         )}
 
+        {activeTab === "clanker" && (
+          <ClankerTokensSection />
+        )}
+
         {activeTab === "agent-status" && (
           <AgentStatusCard />
         )}
@@ -926,14 +934,6 @@ const Dashboard = () => {
         onConfirm={confirmBurn}
         onCancel={cancelBurn}
       />
-
-      {/* Clanker Coming Soon Modal */}
-      <ClankerComingSoonModal
-        isOpen={comingSoonModal === "clanker"}
-        onClose={() => setComingSoonModal(null)}
-      />
-
-      {/* Agent Card Coming Soon Modal */}
       <AgentCardComingSoonModal
         isOpen={comingSoonModal === "agent-card"}
         onClose={() => setComingSoonModal(null)}
